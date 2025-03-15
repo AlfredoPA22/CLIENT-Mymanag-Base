@@ -1,0 +1,34 @@
+@layer tailwind-base, primereact, tailwind-utilities;
+
+@layer tailwind-base {
+  @tailwind base;
+}
+
+@layer tailwind-utilities {
+  @tailwind components;
+  @tailwind utilities;
+}
+
+@layer base {
+  :root {
+    --transparent: transparent;
+    --color-primary: #186d54;
+    --color-secondary: #acacac;
+    --color-tertiary: #acb78f;
+    --color-quaternary: #e8e5c2;
+    --color-quinary: #ededdd;
+    --dark: #083744;
+    --light: #349ada;
+  }
+}
+
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1;
+  font-weight: 400;
+  font-size: 15px;
+}
+
+.p-tag-secondary {
+  background-color: var(--color-secondary) !important;
+}

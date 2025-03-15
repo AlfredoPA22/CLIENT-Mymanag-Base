@@ -1,0 +1,88 @@
+import { useMutation } from "@apollo/client";
+import { jwtDecode } from "jwt-decode";
+import { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+
+import { LOGIN } from "../../../graphql/mutations/User";
+
+import { RootState } from "../../../redux/store";
+import { DecodedToken, ILoginInput } from "../../../utils/interfaces/User";
+import {
+  resetAuth,
+  setIsAuthenticated,
+  setLogin,
+} from "../../../redux/slices/authSlice";
+import { showToast } from "../../../utils/toastUtils";
+import { ToastSeverity } from "../../../utils/enums/toast.enum";
+import { resetNavbar } from "../../../redux/slices/navbarSlice";
+import { resetPurchaseOrder } from "../../../redux/slices/purchaseOrderSlice";
+import { resetSaleOrder } from "../../../redux/slices/saleOrderSlice";
+
+const useAuth = () => {
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  const { token, userName, userId, isAuthenticated } = useSelector(
+    (state: RootState) => state.authSlice
+  );
+  const [loadingLogin, setLoadingLogin] = useState<boolean>(false);
+  const [loginMutation] = useMutation(LOGIN);
+
+  const login = async (credentials: ILoginInput) => {
+    try {
+      setLoadingLogin(true);
+      const { data } = await loginMutation({ variables: credentials });
+      const token = data?.login;
+
+      if (token) {
+        const decoded: DecodedToken = jwtDecode(token);
+        dispatch(
+          setLogin({
+            token,
+            isAuthenticated: decoded.access,
+            userId: decoded.id as string,
+            userName: decoded.username ? decoded.username : "",
+          })
+        );
+        navigate("/");
+      } else {
+        showToast({
+          detail: "Usuario no valido",
+          severity: ToastSeverity.Error,
+        });
+      }
+    } catch (error: any) {
+      showToast({ detail: error.message, severity: ToastSeverity.Error });
+    } finally {
+      setLoadingLogin(false);
+    }
+  };
+
+  const logout = async () => {
+    dispatch(resetAuth());
+    dispatch(resetNavbar());
+    dispatch(resetPurchaseOrder());
+    dispatch(resetSaleOrder());
+    localStorage.clear();
+    navigate("/login");
+  };
+
+  const checkAuthentication = async () => {
+    if (!token) {
+      dispatch(setIsAuthenticated(false));
+    }
+  };
+
+  return {
+    userId,
+    userName,
+    loadingLogin,
+    isAuthenticated,
+    login,
+    logout,
+    checkAuthentication,
+  };
+};
+
+export default useAuth;
