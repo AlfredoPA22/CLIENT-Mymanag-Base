@@ -1,5 +1,5 @@
+import { Menubar } from "primereact/menubar";
 import { MenuItem } from "primereact/menuitem";
-import { TabMenu } from "primereact/tabmenu";
 import { useEffect } from "react";
 import {
   MdCategory,
@@ -8,10 +8,9 @@ import {
 } from "react-icons/md";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import useAuth from "../../pages/auth/hooks/useAuth";
 import { setCurrentModule } from "../../redux/slices/navbarSlice";
 import { RootState } from "../../redux/store";
-import useAuth from "../../pages/auth/hooks/useAuth";
-import { Menubar } from "primereact/menubar";
 
 const Navbar = () => {
   const navigate = useNavigate();
