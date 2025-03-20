@@ -11,7 +11,7 @@ const HeaderHome: FC = () => {
   }
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 w-screen gap-2 p-2">
+    <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-2">
       <section className="rounded-3xl font-bold bg-white p-5 shadow-xl">
         <div className="flex items-center justify-between">
           <label>Cantidad de ventas</label>

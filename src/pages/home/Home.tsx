@@ -150,10 +150,9 @@ const Home: FC = () => {
   // }, [loadingListPurchases, listPurchases]);
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col w-full gap-5">
       <HeaderHome />
       <Card
-        className="m-2"
         title="Buscar productos"
       >
         <SearchProductForm />
