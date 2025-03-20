@@ -198,12 +198,13 @@ const SaleOrderForm = () => {
           disabled={saleOrderInitialized}
         />
 
-        <div>
+        <div className="flex justify-center">
           {!saleOrderInitialized ? (
             <Button
+              icon="pi pi-plus"
               type="submit"
               severity="success"
-              label="Crear Orden de venta"
+              label="Crear venta"
               disabled={!isValid || isSubmitting}
             />
           ) : (
@@ -217,7 +218,7 @@ const SaleOrderForm = () => {
         </div>
       </section>
       {saleOrderInitialized && (
-        <section className="flex justify-center items-center gap-10 order-3 md:order-2">
+        <section className="flex flex-col justify-center items-center gap-2 order-3 md:order-2">
           <LabelInput name="date" label="Total de venta: " />
           <Tag
             value={`${saleOrderData?.total} ${currencySymbol}`}
@@ -246,6 +247,7 @@ const SaleOrderForm = () => {
                   {getStatus(saleOrderData?.status)?.label}
                 </Tag>
                 <Button
+                  icon="pi pi-check-circle"
                   type="button"
                   severity="success"
                   label="Aprobar venta"

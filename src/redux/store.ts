@@ -15,6 +15,7 @@ import navbarSlice from "./slices/navbarSlice";
 import purchaseOrderSlice from "./slices/purchaseOrderSlice";
 import saleOrderSlice from "./slices/saleOrderSlice";
 import authSlice from "./slices/authSlice";
+import blockUISlice from "./slices/blockUISlice";
 
 const persistConfig = {
   key: "root",
@@ -27,6 +28,7 @@ const rootReducer = combineReducers({
   purchaseOrderSlice: purchaseOrderSlice.reducer,
   saleOrderSlice: saleOrderSlice.reducer,
   authSlice: authSlice.reducer,
+  blockUISlice: blockUISlice.reducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

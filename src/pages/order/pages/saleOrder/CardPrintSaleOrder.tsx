@@ -302,7 +302,7 @@ const CardPrintSaleOrderDetail: FC<CardPrintSaleOrderDetailProps> = ({
                 />
               </div>
             </section>
-            <section className="flex justify-center items-center gap-10">
+            <section className="flex flex-col justify-center items-center gap-2">
               <LabelInput name="date" label="Total de venta: " />
               <Tag
                 value={`${dataPrintSaleOrder?.total} ${currencySymbol}`}

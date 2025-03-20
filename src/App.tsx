@@ -1,17 +1,29 @@
+import { useSelector } from "react-redux";
+
+import { BlockUI } from "primereact/blockui";
 import { ConfirmDialog } from "primereact/confirmdialog";
-import { Provider } from "react-redux";
+
 import "./App.css";
+
+import LoadingSpinner from "./components/LoadingSpinner/LoadingSpinner";
 import ToastGlobal from "./components/toast/ToastGlobal";
-import store from "./redux/store";
+
+import { getIsBlocked } from "./redux/accessors/blockUI.accessor";
+
 import AppRoutes from "./routes/AppRoutes";
 
 function App() {
   return (
-    <Provider store={store}>
+    <>
+      <BlockUI
+        blocked={useSelector(getIsBlocked)}
+        template={<LoadingSpinner />}
+        fullScreen
+      />
       <ToastGlobal />
       <ConfirmDialog />
       <AppRoutes />
-    </Provider>
+    </>
   );
 }
 

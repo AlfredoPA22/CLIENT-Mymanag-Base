@@ -75,10 +75,14 @@ const BrandList = () => {
 
   const tableHeaderTemplate = () => {
     return (
-      <div className="flex justify-end">
+      <div className="flex justify-between items-center m-2 px-5">
+        <h1 className="text-2xl font-bold">Lista de marcas</h1>
+
         <Button
-          label="Crear Marca"
+          icon="pi pi-plus"
           severity="success"
+          tooltip="Nueva marca"
+          tooltipOptions={{ position: "left" }}
           onClick={() => setVisibleForm(true)}
           rounded
         />
@@ -110,7 +114,8 @@ const BrandList = () => {
       <div className="flex justify-center gap-2">
         <Button
           tooltip="eliminar marca"
-          icon="pi pi-times"
+          tooltipOptions={{ position: "left" }}
+          icon="pi pi-trash"
           rounded
           severity="danger"
           aria-label="Cancel"
@@ -180,11 +185,7 @@ const BrandList = () => {
   const { filters, renderFilterInput } = useTableGlobalFilter(columns);
 
   return (
-    <Card
-      className="size-full"
-      title="Lista de Marcas"
-      subTitle={tableHeaderTemplate}
-    >
+    <Card className="size-full" header={tableHeaderTemplate}>
       {loadingListBrand ? (
         "cargando..."
       ) : (

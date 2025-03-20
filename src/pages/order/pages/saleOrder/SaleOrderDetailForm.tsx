@@ -126,9 +126,10 @@ const SaleOrderDetailForm: FC<SaleOrderDetailFormProps> = ({ saleOrderId }) => {
                 onChange={handleChange}
               />
             </section>
-            <section className="flex items-end">
+            <section className="flex items-end justify-center">
               <Button
                 className="md:col-span-2"
+                icon="pi pi-plus"
                 type="submit"
                 severity="success"
                 label="Agregar producto"

@@ -87,7 +87,7 @@ const SaleOrderDetail: FC<SaleOrderDetailProps> = ({ saleOrderId }) => {
               />
             </div>
           </section>
-          <section className="flex justify-center items-center gap-10">
+          <section className="flex flex-col justify-center items-center gap-2">
             <LabelInput name="date" label="Total de venta: " />
             <Tag
               value={`${data?.findSaleOrder.total} ${currencySymbol}`}
@@ -127,6 +127,7 @@ const SaleOrderDetail: FC<SaleOrderDetailProps> = ({ saleOrderId }) => {
                     {getStatus(data?.findSaleOrder.status)?.label}
                   </Tag>
                   <Button
+                    icon="pi pi-check-circle"
                     type="button"
                     severity="success"
                     label="Aprobar venta"

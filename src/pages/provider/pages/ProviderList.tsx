@@ -42,10 +42,14 @@ const ProviderList = () => {
 
   const tableHeaderTemplate = () => {
     return (
-      <div className="flex justify-end">
+      <div className="flex justify-between items-center m-2 px-5">
+        <h1 className="text-2xl font-bold">Lista de proveedores</h1>
+
         <Button
-          label="Crear Proveedor"
+          icon="pi pi-plus"
           severity="success"
+          tooltip="Nuevo proveedor"
+          tooltipOptions={{ position: "left" }}
           onClick={() => setVisibleForm(true)}
           rounded
         />
@@ -77,7 +81,8 @@ const ProviderList = () => {
       <div className="flex justify-center gap-2">
         <Button
           tooltip="Eliminar proveedor"
-          icon="pi pi-times"
+          tooltipOptions={{ position: "left" }}
+          icon="pi pi-trash"
           rounded
           severity="danger"
           aria-label="Cancel"
@@ -150,8 +155,7 @@ const ProviderList = () => {
   return (
     <Card
       className="size-full"
-      title="Lista de Proveedores"
-      subTitle={tableHeaderTemplate}
+      header={tableHeaderTemplate}
     >
       {loadingListProvider ? (
         "cargando..."

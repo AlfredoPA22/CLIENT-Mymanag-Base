@@ -42,25 +42,6 @@ export const LIST_PRODUCT_SELECT = gql`
   }
 `;
 
-export const LIST_PRODUCT_BY_CATEGORY = gql`
-  query listFoodByCategory($id_category: String!) {
-    listFoodByCategory(id_category: $id_category) {
-      _id
-      category {
-        _id
-        name
-        color
-      }
-      code
-      description
-      image
-      is_active
-      name
-      sale_price
-    }
-  }
-`;
-
 export const LIST_PRODUCT_SERIAL_BY_PRODUCT = gql`
   query ListProductSerialByProduct($productId: String!) {
     listProductSerialByProduct(productId: $productId) {
@@ -83,6 +64,37 @@ export const LIST_PRODUCT_SERIAL_BY_PRODUCT = gql`
       }
       serial
       status
+    }
+  }
+`;
+
+export const SEARCH_PRODUCT = gql`
+  query SearchProduct($serial: String!) {
+    searchProduct(serial: $serial) {
+      _id
+      brand {
+        _id
+        count_product
+        description
+        is_active
+        name
+      }
+      category {
+        _id
+        count_product
+        description
+        is_active
+        name
+      }
+      code
+      description
+      image
+      last_cost_price
+      name
+      sale_price
+      status
+      stock
+      stock_type
     }
   }
 `;

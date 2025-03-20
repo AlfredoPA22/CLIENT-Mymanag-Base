@@ -2,7 +2,7 @@ import { type FC } from "react";
 
 import { Route, Routes } from "react-router-dom";
 import Dashboard from "../components/dashboard/Dashboard";
-import Home from "../components/Home";
+import Home from "../pages/home/Home";
 import ProductRoutes from "../pages/product/ProductRoutes";
 import OrderRoutes from "../pages/order/OrderRoutes";
 import ClientRoutes from "../pages/client/ClientRoutes";

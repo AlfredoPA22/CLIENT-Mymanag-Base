@@ -89,8 +89,8 @@ const PurchaseOrderDetail: FC<PurchaseOrderDetailProps> = ({
               />
             </div>
           </section>
-          <section className="flex justify-center items-center gap-10">
-            <LabelInput name="date" label="Total de compra: " />
+          <section className="flex flex-col justify-center items-center gap-2">
+            <LabelInput name="date" label="Total de compra" />
             <Tag
               value={`${data?.findPurchaseOrder.total} ${currencySymbol}`}
               severity={"info"}
@@ -129,6 +129,7 @@ const PurchaseOrderDetail: FC<PurchaseOrderDetailProps> = ({
                     {getStatus(data?.findPurchaseOrder.status)?.label}
                   </Tag>
                   <Button
+                    icon="pi pi-check-circle"
                     type="button"
                     severity="success"
                     label="Aprobar compra"

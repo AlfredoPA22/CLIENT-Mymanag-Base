@@ -5,6 +5,7 @@ export const CREATE_PRODUCT = gql`
     $name: String!
     $code: String!
     $description: String
+    $image: String
     $sale_price: Float
     $category: String!
     $brand: String!
@@ -15,6 +16,7 @@ export const CREATE_PRODUCT = gql`
         name: $name
         code: $code
         description: $description
+        image: $image
         sale_price: $sale_price
         category: $category
         brand: $brand

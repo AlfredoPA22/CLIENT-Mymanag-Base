@@ -75,10 +75,14 @@ const CategoryList = () => {
 
   const tableHeaderTemplate = () => {
     return (
-      <div className="flex justify-end">
+      <div className="flex justify-between items-center m-2 px-5">
+        <h1 className="text-2xl font-bold">Lista de categorias</h1>
+
         <Button
-          label="Crear Categoria"
+          icon="pi pi-plus"
           severity="success"
+          tooltip="Nueva categoria"
+          tooltipOptions={{ position: "left" }}
           onClick={() => setVisibleForm(true)}
           rounded
         />
@@ -110,7 +114,8 @@ const CategoryList = () => {
       <div className="flex justify-center gap-2">
         <Button
           tooltip="eliminar categoria"
-          icon="pi pi-times"
+          tooltipOptions={{ position: "left" }}
+          icon="pi pi-trash"
           rounded
           severity="danger"
           aria-label="Cancel"
@@ -182,8 +187,7 @@ const CategoryList = () => {
   return (
     <Card
       className="size-full"
-      title="Lista de Categorias"
-      subTitle={tableHeaderTemplate}
+      header={tableHeaderTemplate}
     >
       {loadingListCategory ? (
         "cargando..."

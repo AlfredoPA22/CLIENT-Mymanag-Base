@@ -82,7 +82,7 @@ const SerialByDetailList: FC<SerialByDetailListProps> = ({
       <div className="flex justify-center">
         <Button
           tooltip="eliminar serial"
-          icon="pi pi-times"
+          icon="pi pi-trash"
           rounded
           severity="danger"
           aria-label="Cancel"

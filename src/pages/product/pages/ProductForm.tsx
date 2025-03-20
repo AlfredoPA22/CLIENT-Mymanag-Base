@@ -1,21 +1,23 @@
-import { IProductInput } from "../../../utils/interfaces/Product";
-import { useFormikForm } from "../../../hooks/useFormikForm";
-import FieldTextInput from "../../../components/textInput/FieldTextInput";
-import FieldTextareaInput from "../../../components/textAreaInput/FieldTextareaInput";
-import { Button } from "primereact/button";
 import { useMutation } from "@apollo/client";
-import { LIST_PRODUCT } from "../../../graphql/queries/Product";
+import { AutoCompleteChangeEvent } from "primereact/autocomplete";
+import { Button } from "primereact/button";
 import { FC, useState } from "react";
 import DropdownInput from "../../../components/dropdownInput/DropdownInput";
-import useCategoryList from "../hooks/useCategoryList";
-import { AutoCompleteChangeEvent } from "primereact/autocomplete";
-import { schemaFormProduct } from "../validations/FormProductValidation";
+import FieldSimpleFileUpload from "../../../components/fileuploadInput/FileUploadInput";
+import FieldTextareaInput from "../../../components/textAreaInput/FieldTextareaInput";
+import FieldTextInput from "../../../components/textInput/FieldTextInput";
 import { CREATE_PRODUCT } from "../../../graphql/mutations/Product";
-import { LIST_CATEGORY } from "../../../graphql/queries/Category";
 import { LIST_BRAND } from "../../../graphql/queries/Brand";
-import useBrandList from "../hooks/useBrandList";
+import { LIST_CATEGORY } from "../../../graphql/queries/Category";
+import { LIST_PRODUCT } from "../../../graphql/queries/Product";
+import { useFormikForm } from "../../../hooks/useFormikForm";
 import { stockType } from "../../../utils/enums/stockType.enum";
+import { IProductInput } from "../../../utils/interfaces/Product";
+import { uploadImage } from "../../../utils/uploadImage";
+import useBrandList from "../hooks/useBrandList";
+import useCategoryList from "../hooks/useCategoryList";
 import { stockTypeOptions } from "../utils/stockTypeMock";
+import { schemaFormProduct } from "../validations/FormProductValidation";
 
 interface ProductFormProps {
   setVisibleForm: (isVisible: boolean) => void;
@@ -30,15 +32,18 @@ const ProductForm: FC<ProductFormProps> = ({ setVisibleForm }) => {
     ],
   });
 
-  const [selectedStockType, setSelectedStockType] = useState(null);
+  const [selectedStockType, setSelectedStockType] = useState(stockType.SERIALIZADO);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [selectedBrand, setSelectedBrand] = useState(null);
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const { listCategory } = useCategoryList();
   const { listBrand } = useBrandList();
+
   const initialValues: IProductInput = {
     name: "",
     code: "",
     description: "",
+    image: "",
     sale_price: "",
     category: "",
     brand: "",
@@ -46,6 +51,10 @@ const ProductForm: FC<ProductFormProps> = ({ setVisibleForm }) => {
   };
 
   const onSubmit = async () => {
+    if (selectedImage) {
+      const data = await uploadImage(selectedImage);
+      values.image = data;
+    }
     await createProduct({ variables: values });
     setVisibleForm(false);
     resetForm();
@@ -54,6 +63,7 @@ const ProductForm: FC<ProductFormProps> = ({ setVisibleForm }) => {
   const handleStockTypeChange = async (e: AutoCompleteChangeEvent) => {
     const { value } = e.target;
     setSelectedStockType(value ? value : "");
+    console.log(value)
     e.target.value = value ? value : "";
     setFieldValue(e.target.name, e.target.value);
   };
@@ -70,6 +80,15 @@ const ProductForm: FC<ProductFormProps> = ({ setVisibleForm }) => {
     setSelectedBrand(value ? value : "");
     e.target.value = value ? value._id : "";
     setFieldValue(e.target.name, e.target.value);
+  };
+
+  const onFileSelect = (e: { files: File[] }) => {
+    const file: File = e.files[0];
+    setSelectedImage(file);
+  };
+
+  const handleFileClear = () => {
+    setSelectedImage(null);
   };
 
   const {
@@ -92,6 +111,16 @@ const ProductForm: FC<ProductFormProps> = ({ setVisibleForm }) => {
   return (
     <form onSubmit={handleSubmit} className="grid gap-4">
       <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <FieldTextInput
+          label="Codigo"
+          type="text"
+          name="code"
+          placeholder="Codigo"
+          value={values.code}
+          error={errors.code ? errors.code : ""}
+          onChange={handleChange}
+        />
+
         <FieldTextInput
           label="Nombre"
           type="text"
@@ -162,6 +191,20 @@ const ProductForm: FC<ProductFormProps> = ({ setVisibleForm }) => {
           cols={30}
           error={errors.description ? errors.description : ""}
           onChange={handleChange}
+        />
+
+        <FieldSimpleFileUpload
+          id="image"
+          label="Imagen"
+          onSelect={onFileSelect}
+          name="image"
+          chooseLabel="Buscar archivo"
+          mode="basic"
+          auto={false}
+          customUpload={true}
+          style={{ display: values.image ? "none" : "block" }}
+          onFileClear={handleFileClear}
+          file={selectedImage}
         />
       </section>
 

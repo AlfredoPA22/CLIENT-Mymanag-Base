@@ -126,7 +126,7 @@ const SaleOrderDetailList: FC<SaleOrderDetailListProps> = ({ saleOrderId }) => {
 
         <Button
           tooltip="eliminar detalle"
-          icon="pi pi-times"
+          icon="pi pi-trash"
           rounded
           severity="danger"
           aria-label="Cancel"

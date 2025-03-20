@@ -194,12 +194,13 @@ const PurchaseOrderForm = () => {
           disabled={purchaseOrderInitialized}
         />
 
-        <div>
+        <div className="flex justify-center">
           {!purchaseOrderInitialized ? (
             <Button
+              icon="pi pi-plus"
               type="submit"
               severity="success"
-              label="Crear Orden de compra"
+              label="Crear compra"
               disabled={!isValid || isSubmitting}
             />
           ) : (
@@ -213,8 +214,8 @@ const PurchaseOrderForm = () => {
         </div>
       </section>
       {purchaseOrderInitialized && (
-        <section className="flex justify-center items-center gap-10 order-3 md:order-2">
-          <LabelInput name="date" label="Total de compra: " />
+        <section className="flex flex-col justify-center items-center gap-2 order-3 md:order-2">
+          <LabelInput name="date" label="Total de compra" />
           <Tag
             value={`${purchaseOrderData?.total} ${currencySymbol}`}
             severity={"info"}
@@ -242,6 +243,7 @@ const PurchaseOrderForm = () => {
                   {getStatus(purchaseOrderData?.status)?.label}
                 </Tag>
                 <Button
+                  icon="pi pi-check-circle"
                   type="button"
                   severity="success"
                   label="Aprobar compra"

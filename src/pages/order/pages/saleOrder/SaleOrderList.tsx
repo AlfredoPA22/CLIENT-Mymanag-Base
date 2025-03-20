@@ -16,9 +16,7 @@ import useTableGlobalFilter from "../../../../hooks/useTableGlobalFilter";
 import { currencySymbol } from "../../../../utils/constants/currencyConstants";
 import { orderStatus } from "../../../../utils/enums/orderStatus.enum";
 import { ToastSeverity } from "../../../../utils/enums/toast.enum";
-import {
-  ISaleOrder
-} from "../../../../utils/interfaces/SaleOrder";
+import { ISaleOrder } from "../../../../utils/interfaces/SaleOrder";
 import { DataTableColumn } from "../../../../utils/interfaces/Table";
 import { showToast } from "../../../../utils/toastUtils";
 import useSaleOrderList from "../../hooks/useSaleOrderList";
@@ -83,10 +81,14 @@ const SaleOrderList = () => {
 
   const tableHeaderTemplate = () => {
     return (
-      <div className="flex justify-end">
+      <div className="flex justify-between items-center m-2 px-5">
+        <h1 className="text-2xl font-bold">Lista de ventas</h1>
+
         <Button
-          label="Nueva orden de venta"
+          icon="pi pi-plus"
           severity="success"
+          tooltip="Nueva venta"
+          tooltipOptions={{ position: "left" }}
           onClick={() => navigate("/order/newSaleOrder")}
           rounded
         />
@@ -112,16 +114,18 @@ const SaleOrderList = () => {
     }
   };
 
-   const confirmDeleteSaleOrder = async (saleOrderId: string) => {
-      confirmDialog({
-        message: "¿Esta seguro que desea eliminar la venta?",
-        header: "Confirmacion",
-        icon: "pi pi-info-circle",
-        defaultFocus: "reject",
-        acceptClassName: "p-button-danger",
-        accept: () => handleDeleteSaleOrder(saleOrderId),
-      });
-    };
+  const confirmDeleteSaleOrder = async (saleOrderId: string) => {
+    confirmDialog({
+      message: "¿Esta seguro que desea eliminar la venta?",
+      header: "Confirmacion",
+      icon: "pi pi-info-circle",
+      defaultFocus: "reject",
+      acceptClassName: "p-button-danger",
+      rejectLabel: "Cancelar",
+      acceptLabel: "Aceptar",
+      accept: () => handleDeleteSaleOrder(saleOrderId),
+    });
+  };
 
   const handleGeneratePDF = async (saleOrderId: string) => {
     try {
@@ -146,6 +150,7 @@ const SaleOrderList = () => {
           <div className="flex justify-center gap-2">
             <Button
               tooltip="Completar venta"
+              tooltipOptions={{ position: "left" }}
               icon="pi pi-align-justify"
               rounded
               severity="info"
@@ -155,7 +160,8 @@ const SaleOrderList = () => {
 
             <Button
               tooltip="Eliminar venta"
-              icon="pi pi-times"
+              tooltipOptions={{ position: "left" }}
+              icon="pi pi-trash"
               rounded
               severity="danger"
               aria-label="Cancel"
@@ -168,6 +174,7 @@ const SaleOrderList = () => {
           <div className="flex justify-center gap-2">
             <Button
               tooltip="Completar venta"
+              tooltipOptions={{ position: "left" }}
               icon="pi pi-align-justify"
               rounded
               severity="info"
@@ -176,6 +183,7 @@ const SaleOrderList = () => {
             />
             <Button
               tooltip="Imprimir venta"
+              tooltipOptions={{ position: "left" }}
               icon="pi pi-download"
               rounded
               severity="warning"
@@ -190,6 +198,7 @@ const SaleOrderList = () => {
         <div className="flex justify-center gap-2">
           <Button
             tooltip="Ver detalle de venta"
+            tooltipOptions={{ position: "left" }}
             icon="pi pi-eye"
             rounded
             severity="info"
@@ -198,6 +207,7 @@ const SaleOrderList = () => {
           />
           <Button
             tooltip="Imprimir venta"
+            tooltipOptions={{ position: "left" }}
             icon="pi pi-download"
             rounded
             severity="warning"
@@ -206,7 +216,8 @@ const SaleOrderList = () => {
           />
           <Button
             tooltip="Anular y eliminar venta"
-            icon="pi pi-times"
+            tooltipOptions={{ position: "left" }}
+            icon="pi pi-trash"
             rounded
             severity="danger"
             aria-label="Cancel"
@@ -259,11 +270,7 @@ const SaleOrderList = () => {
   const { filters, renderFilterInput } = useTableGlobalFilter(columns);
 
   return (
-    <Card
-      className="size-full"
-      title="Lista de Ventas"
-      subTitle={tableHeaderTemplate}
-    >
+    <Card className="size-full" header={tableHeaderTemplate}>
       {loadingListSaleOrder ? (
         "cargando..."
       ) : (

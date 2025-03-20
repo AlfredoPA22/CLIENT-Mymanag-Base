@@ -11,6 +11,7 @@ import { useNavigate } from "react-router-dom";
 import { setCurrentModule } from "../../redux/slices/navbarSlice";
 import { RootState } from "../../redux/store";
 import useAuth from "../../pages/auth/hooks/useAuth";
+import { Menubar } from "primereact/menubar";
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -102,23 +103,26 @@ const Navbar = () => {
   }, [currentModule, navigate]);
 
   return (
-    <nav
-      data-testid="navbar-component"
-      className="fixed z-10 w-full sm:relative"
-    >
-      <section className="mx-auto px-4 py-2 max-sm:pb-0 sm:px-6 lg:px-8">
-        <div className="flex items-center max-sm:justify-between">
-          <div className="hidden justify-self-start sm:block sm:grow">
-            <div className="flex items-baseline space-x-2">
-              <TabMenu model={items} activeIndex={currentModule} />
-            </div>
-          </div>
-        </div>
-        <div className="mb-0 flex items-center justify-center pb-0 sm:hidden">
-          <TabMenu model={items} activeIndex={currentModule} />
-        </div>
-      </section>
-    </nav>
+    <div className="m-2">
+      <Menubar className="font-bold" model={items} />
+    </div>
+    // <nav
+    //   data-testid="navbar-component"
+    //   className="fixed z-10 w-full sm:relative"
+    // >
+    //   <section className="mx-auto px-4 py-2 max-sm:pb-0 sm:px-6 lg:px-8">
+    //     <div className="flex items-center max-sm:justify-between">
+    //       <div className="hidden justify-self-start sm:block sm:grow">
+    //         <div className="flex items-baseline space-x-2">
+    //           <TabMenu model={items} activeIndex={currentModule} />
+    //         </div>
+    //       </div>
+    //     </div>
+    //     <div className="mb-0 flex items-center justify-center pb-0 sm:hidden">
+    //       <TabMenu model={items} activeIndex={currentModule} />
+    //     </div>
+    //   </section>
+    // </nav>
   );
 };
 

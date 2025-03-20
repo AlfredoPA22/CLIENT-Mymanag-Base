@@ -81,10 +81,14 @@ const PurchaseOrderList = () => {
 
   const tableHeaderTemplate = () => {
     return (
-      <div className="flex justify-end">
+      <div className="flex justify-between items-center m-2 px-5">
+        <h1 className="text-2xl font-bold">Lista de compras</h1>
+
         <Button
-          label="Nueva orden de compra"
+          icon="pi pi-plus"
           severity="success"
+          tooltip="Nueva compra"
+          tooltipOptions={{ position: "left" }}
           onClick={() => navigate("/order/newPurchaseOrder")}
           rounded
         />
@@ -203,6 +207,7 @@ const PurchaseOrderList = () => {
           <div className="flex justify-center gap-2">
             <Button
               tooltip="Completar compra"
+              tooltipOptions={{ position: "left" }}
               icon="pi pi-align-justify"
               rounded
               severity="info"
@@ -214,7 +219,8 @@ const PurchaseOrderList = () => {
 
             <Button
               tooltip="Eliminar compra"
-              icon="pi pi-times"
+              tooltipOptions={{ position: "left" }}
+              icon="pi pi-trash"
               rounded
               severity="danger"
               aria-label="Cancel"
@@ -227,6 +233,7 @@ const PurchaseOrderList = () => {
           <div className="flex justify-center gap-2">
             <Button
               tooltip="Completar compra"
+              tooltipOptions={{ position: "left" }}
               icon="pi pi-align-justify"
               rounded
               severity="info"
@@ -237,6 +244,7 @@ const PurchaseOrderList = () => {
             />
             <Button
               tooltip="Imprimir compra"
+              tooltipOptions={{ position: "left" }}
               icon="pi pi-download"
               rounded
               severity="warning"
@@ -251,6 +259,7 @@ const PurchaseOrderList = () => {
         <div className="flex justify-center gap-2">
           <Button
             tooltip="Ver detalle de compra"
+            tooltipOptions={{ position: "left" }}
             icon="pi pi-eye"
             rounded
             severity="info"
@@ -259,6 +268,7 @@ const PurchaseOrderList = () => {
           />
           <Button
             tooltip="Imprimir compra"
+            tooltipOptions={{ position: "left" }}
             icon="pi pi-download"
             rounded
             severity="warning"
@@ -267,7 +277,8 @@ const PurchaseOrderList = () => {
           />
           <Button
             tooltip="Eliminar compra"
-            icon="pi pi-times"
+            tooltipOptions={{ position: "left" }}
+            icon="pi pi-trash"
             rounded
             severity="danger"
             aria-label="Cancel"
@@ -319,11 +330,7 @@ const PurchaseOrderList = () => {
   const { filters, renderFilterInput } = useTableGlobalFilter(columns);
 
   return (
-    <Card
-      className="size-full"
-      title="Lista de Compras"
-      subTitle={tableHeaderTemplate}
-    >
+    <Card className="size-full" header={tableHeaderTemplate}>
       {loadingListPurchaseOrder ? (
         "cargando..."
       ) : (

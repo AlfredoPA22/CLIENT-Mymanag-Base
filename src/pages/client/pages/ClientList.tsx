@@ -45,10 +45,14 @@ const ClientList = () => {
 
   const tableHeaderTemplate = () => {
     return (
-      <div className="flex justify-end">
+      <div className="flex justify-between items-center m-2 px-5">
+        <h1 className="text-2xl font-bold">Lista de clientes</h1>
+
         <Button
-          label="Crear Cliente"
+          icon="pi pi-plus"
           severity="success"
+          tooltip="Nuevo cliente"
+          tooltipOptions={{ position: "left" }}
           onClick={() => setVisibleForm(true)}
           rounded
         />
@@ -80,7 +84,8 @@ const ClientList = () => {
       <div className="flex justify-center gap-2">
         <Button
           tooltip="Eliminar cliente"
-          icon="pi pi-times"
+          tooltipOptions={{ position: "left" }}
+          icon="pi pi-trash"
           rounded
           severity="danger"
           aria-label="Cancel"
@@ -88,6 +93,7 @@ const ClientList = () => {
         />
         <Button
           tooltip="Ver ventas"
+          tooltipOptions={{ position: "left" }}
           icon="pi pi-list"
           rounded
           severity="info"
@@ -143,14 +149,12 @@ const ClientList = () => {
       sortable: true,
       style: { width: "30%" },
       fieldEditor: (options: ColumnEditorOptions) => textEditor(options),
-
     },
     {
       field: "lastName",
       header: "Apellidos",
       style: { width: "30%" },
       fieldEditor: (options: ColumnEditorOptions) => textEditor(options),
-
     },
     {
       field: "phoneNumber",
@@ -158,18 +162,13 @@ const ClientList = () => {
       sortable: true,
       style: { width: "15%", textAlign: "center" },
       fieldEditor: (options: ColumnEditorOptions) => textEditor(options),
-
     },
   ]);
 
   const { filters, renderFilterInput } = useTableGlobalFilter(columns);
 
   return (
-    <Card
-      className="size-full"
-      title="Lista de Clientes"
-      subTitle={tableHeaderTemplate}
-    >
+    <Card className="size-full" header={tableHeaderTemplate}>
       {loadingListClient ? (
         "cargando..."
       ) : (

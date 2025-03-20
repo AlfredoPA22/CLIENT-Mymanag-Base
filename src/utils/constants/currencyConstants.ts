@@ -1,1 +1,1 @@
-export const currencySymbol = '$US'
+export const currencySymbol = 'BOB'

@@ -3,6 +3,8 @@ import { useState } from "react";
 import { ObjectSchema } from "yup";
 import { showToast } from "../utils/toastUtils";
 import { ToastSeverity } from "../utils/enums/toast.enum";
+import { useDispatch } from "react-redux";
+import { setIsBlocked } from "../redux/slices/blockUISlice";
 
 interface HookFormikFormProps<T> {
   initialValues: T;
@@ -17,14 +19,14 @@ export const useFormikForm = <T extends FormikValues>({
   msgSuccess,
   validationSchema,
 }: HookFormikFormProps<T>) => {
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const dispatch = useDispatch();
 
   const formik = useFormik({
     initialValues,
     validationSchema: validationSchema || undefined,
     onSubmit: async () => {
       try {
-        setIsSubmitting(true);
+        dispatch(setIsBlocked(true));
         await handleSubmit();
         if (msgSuccess) {
           showToast({
@@ -36,10 +38,10 @@ export const useFormikForm = <T extends FormikValues>({
       } catch (error: any) {
         showToast({ detail: error.message, severity: ToastSeverity.Error });
       } finally {
-        setIsSubmitting(false);
+        dispatch(setIsBlocked(false));
       }
     },
   });
 
-  return { ...formik, isSubmitting };
+  return { ...formik };
 };
