@@ -1,14 +1,11 @@
 import { Button } from "primereact/button";
 import { Card } from "primereact/card";
 import { Dialog } from "primereact/dialog";
-import { Tag } from "primereact/tag";
 import { useState } from "react";
 import Table from "../../../../components/datatable/Table";
 import useTableGlobalFilter from "../../../../hooks/useTableGlobalFilter";
 import { IRole } from "../../../../utils/interfaces/Role";
 import { DataTableColumn } from "../../../../utils/interfaces/Table";
-import { IUser } from "../../../../utils/interfaces/User";
-import { Status } from "../../../../utils/types/StatusType";
 import useRoleList from "../../hooks/useRoleList";
 import RoleForm from "./RoleForm";
 
@@ -33,39 +30,39 @@ const RoleList = () => {
   //       },
   //     ],
   //   });
-  const getStatus = (rowData: IUser): Status | null => {
-    switch (rowData.is_active) {
-      case false:
-        return {
-          severity: "danger",
-          label: "Inactivo",
-        };
+  // const getStatus = (rowData: IUser): Status | null => {
+  //   switch (rowData.is_active) {
+  //     case false:
+  //       return {
+  //         severity: "danger",
+  //         label: "Inactivo",
+  //       };
 
-      case true:
-        return {
-          severity: "success",
-          label: "Activo",
-        };
-      default:
-        return null;
-    }
-  };
+  //     case true:
+  //       return {
+  //         severity: "success",
+  //         label: "Activo",
+  //       };
+  //     default:
+  //       return null;
+  //   }
+  // };
 
-  const statusBodyTemplate = (rowData: IUser) => {
-    const status = getStatus(rowData);
-    if (status) {
-      const { severity, label } = status;
-      return (
-        <Tag
-          value={rowData.is_active}
-          severity={severity as "danger" | "success"}
-        >
-          {label}
-        </Tag>
-      );
-    }
-    return null;
-  };
+  // const statusBodyTemplate = (rowData: IUser) => {
+  //   const status = getStatus(rowData);
+  //   if (status) {
+  //     const { severity, label } = status;
+  //     return (
+  //       <Tag
+  //         value={rowData.is_active}
+  //         severity={severity as "danger" | "success"}
+  //       >
+  //         {label}
+  //       </Tag>
+  //     );
+  //   }
+  //   return null;
+  // };
 
   const tableHeaderTemplate = () => {
     return (

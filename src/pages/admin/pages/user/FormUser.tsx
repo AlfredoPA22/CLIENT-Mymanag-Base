@@ -1,21 +1,17 @@
 import { useMutation } from "@apollo/client";
 import { Button } from "primereact/button";
 
-import { TreeSelectChangeEvent } from "primereact/treeselect";
+import { AutoCompleteChangeEvent } from "primereact/autocomplete";
 import { FC, useState } from "react";
+import DropdownInput from "../../../../components/dropdownInput/DropdownInput";
 import LoadingSpinner from "../../../../components/LoadingSpinner/LoadingSpinner";
-import FieldTextareaInput from "../../../../components/textAreaInput/FieldTextareaInput";
 import FieldTextInput from "../../../../components/textInput/FieldTextInput";
-import TreeSelectInput from "../../../../components/TreeSelectInput/TreeSelectInput";
 import { CREATE_USER } from "../../../../graphql/mutations/User";
 import { LIST_USER } from "../../../../graphql/queries/User";
 import { useFormikForm } from "../../../../hooks/useFormikForm";
 import { IUserInput } from "../../../../utils/interfaces/User";
 import useRoleList from "../../hooks/useRoleList";
-import { schemaFormRole } from "../../validations/FormRoleValidation";
-import { AutoCompleteChangeEvent } from "primereact/autocomplete";
 import { schemaFormUser } from "../../validations/FormUserValidation";
-import DropdownInput from "../../../../components/dropdownInput/DropdownInput";
 
 interface UserFormProps {
   setVisibleForm: (isVisible: boolean) => void;

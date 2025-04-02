@@ -1,12 +1,12 @@
 import { useQuery } from "@apollo/client";
 import { Card } from "primereact/card";
-import { FC, useEffect } from "react";
+import { useEffect } from "react";
+import { useParams } from "react-router-dom";
+import LoadingSpinner from "../../../components/LoadingSpinner/LoadingSpinner";
 import { FIND_PRODUCT } from "../../../graphql/queries/Product";
 import { ToastSeverity } from "../../../utils/enums/toast.enum";
 import { showToast } from "../../../utils/toastUtils";
 import ProductCard from "./ProductCard";
-import { useParams } from "react-router-dom";
-import LoadingSpinner from "../../../components/LoadingSpinner/LoadingSpinner";
 
 const ProductDetail = () => {
   const { id } = useParams();

@@ -1,9 +1,9 @@
 import { useQuery } from "@apollo/client";
-import { Card } from "primereact/card";
 import { Tag } from "primereact/tag";
 import { FC, useEffect, useState } from "react";
 import Table from "../../../components/datatable/Table";
 import LabelInput from "../../../components/labelInput/LabelInput";
+import LoadingSpinner from "../../../components/LoadingSpinner/LoadingSpinner";
 import TextLink from "../../../components/TextLink/TextLink";
 import { LIST_SALE_ORDER_BY_CLIENT } from "../../../graphql/queries/Client";
 import useTableGlobalFilter from "../../../hooks/useTableGlobalFilter";
@@ -15,7 +15,6 @@ import { ISaleOrder } from "../../../utils/interfaces/SaleOrder";
 import { DataTableColumn } from "../../../utils/interfaces/Table";
 import { showToast } from "../../../utils/toastUtils";
 import { getStatus } from "../../order/utils/getStatus";
-import LoadingSpinner from "../../../components/LoadingSpinner/LoadingSpinner";
 
 interface ClientSaleOrderListProps {
   client: IClient;

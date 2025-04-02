@@ -8,11 +8,10 @@ import {
 } from "react-icons/md";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
+import logo from "../../assets/LOGO.png";
 import useAuth from "../../pages/auth/hooks/useAuth";
 import { setCurrentModule } from "../../redux/slices/navbarSlice";
 import { RootState } from "../../redux/store";
-import { Avatar } from "primereact/avatar";
-import logo from "../../assets/LOGO.png"
 
 
 const Navbar = () => {

@@ -1,8 +1,8 @@
 import { useQuery } from "@apollo/client";
-import { Card } from "primereact/card";
 import { Tag } from "primereact/tag";
 import { FC, useEffect, useState } from "react";
 import Table from "../../../components/datatable/Table";
+import LoadingSpinner from "../../../components/LoadingSpinner/LoadingSpinner";
 import TextLink from "../../../components/TextLink/TextLink";
 import { LIST_PRODUCT_SERIAL_BY_PRODUCT } from "../../../graphql/queries/Product";
 import useTableGlobalFilter from "../../../hooks/useTableGlobalFilter";
@@ -13,7 +13,6 @@ import { IProductSerial } from "../../../utils/interfaces/ProductSerial";
 import { DataTableColumn } from "../../../utils/interfaces/Table";
 import { showToast } from "../../../utils/toastUtils";
 import { getStatus } from "../../order/utils/getStatus";
-import LoadingSpinner from "../../../components/LoadingSpinner/LoadingSpinner";
 
 interface ProductSerialListProps {
   product: IProduct;
