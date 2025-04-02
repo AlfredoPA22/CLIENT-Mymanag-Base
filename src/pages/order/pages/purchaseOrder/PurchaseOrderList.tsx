@@ -28,6 +28,7 @@ import { showToast } from "../../../../utils/toastUtils";
 import usePurchaseOrderList from "../../hooks/usePurchaseOrderList";
 import { getDate } from "../../utils/getDate";
 import { getStatus } from "../../utils/getStatus";
+import LoadingSpinner from "../../../../components/LoadingSpinner/LoadingSpinner";
 
 const PurchaseOrderList = () => {
   const { listPurchaseOrder, loadingListPurchaseOrder } =
@@ -82,7 +83,7 @@ const PurchaseOrderList = () => {
   const tableHeaderTemplate = () => {
     return (
       <div className="flex justify-between items-center m-2 px-5">
-        <h1 className="text-2xl font-bold">Lista de compras</h1>
+        <h1 className="text-2xl font-bold">{`Lista de compras (${listPurchaseOrder.length})`}</h1>
 
         <Button
           icon="pi pi-plus"
@@ -90,7 +91,7 @@ const PurchaseOrderList = () => {
           tooltip="Nueva compra"
           tooltipOptions={{ position: "left" }}
           onClick={() => navigate("/order/newPurchaseOrder")}
-          rounded
+          raised
         />
       </div>
     );
@@ -209,7 +210,7 @@ const PurchaseOrderList = () => {
               tooltip="Completar compra"
               tooltipOptions={{ position: "left" }}
               icon="pi pi-align-justify"
-              rounded
+              raised
               severity="info"
               aria-label="Cancel"
               onClick={() =>
@@ -221,7 +222,7 @@ const PurchaseOrderList = () => {
               tooltip="Eliminar compra"
               tooltipOptions={{ position: "left" }}
               icon="pi pi-trash"
-              rounded
+              raised
               severity="danger"
               aria-label="Cancel"
               onClick={() => confirmDeletePurchaseOrder(rowData._id)}
@@ -235,7 +236,7 @@ const PurchaseOrderList = () => {
               tooltip="Completar compra"
               tooltipOptions={{ position: "left" }}
               icon="pi pi-align-justify"
-              rounded
+              raised
               severity="info"
               aria-label="Cancel"
               onClick={() =>
@@ -246,7 +247,7 @@ const PurchaseOrderList = () => {
               tooltip="Imprimir compra"
               tooltipOptions={{ position: "left" }}
               icon="pi pi-download"
-              rounded
+              raised
               severity="warning"
               aria-label="Cancel"
               onClick={() => handleGeneratePDF(rowData._id)}
@@ -261,7 +262,7 @@ const PurchaseOrderList = () => {
             tooltip="Ver detalle de compra"
             tooltipOptions={{ position: "left" }}
             icon="pi pi-eye"
-            rounded
+            raised
             severity="info"
             aria-label="Cancel"
             onClick={() => navigate(`/order/viewPurchaseOrder/${rowData._id}`)}
@@ -270,7 +271,7 @@ const PurchaseOrderList = () => {
             tooltip="Imprimir compra"
             tooltipOptions={{ position: "left" }}
             icon="pi pi-download"
-            rounded
+            raised
             severity="warning"
             aria-label="Cancel"
             onClick={() => handleGeneratePDF(rowData._id)}
@@ -279,7 +280,7 @@ const PurchaseOrderList = () => {
             tooltip="Eliminar compra"
             tooltipOptions={{ position: "left" }}
             icon="pi pi-trash"
-            rounded
+            raised
             severity="danger"
             aria-label="Cancel"
             onClick={() => confirmDeletePurchaseOrder(rowData._id)}
@@ -329,23 +330,21 @@ const PurchaseOrderList = () => {
 
   const { filters, renderFilterInput } = useTableGlobalFilter(columns);
 
+  if (loadingListPurchaseOrder) {
+    return <LoadingSpinner />;
+  }
+
   return (
     <Card className="size-full" header={tableHeaderTemplate}>
-      {loadingListPurchaseOrder ? (
-        "cargando..."
-      ) : (
-        <div>
-          <Table
-            columns={columns}
-            data={listPurchaseOrder}
-            emptyMessage="Sin compras."
-            size="small"
-            actionBodyTemplate={actionBodyTemplate}
-            dataFilters={filters}
-            tableHeader={renderFilterInput}
-          />
-        </div>
-      )}
+      <Table
+        columns={columns}
+        data={listPurchaseOrder}
+        emptyMessage="Sin compras."
+        size="small"
+        actionBodyTemplate={actionBodyTemplate}
+        dataFilters={filters}
+        tableHeader={renderFilterInput}
+      />
     </Card>
   );
 };

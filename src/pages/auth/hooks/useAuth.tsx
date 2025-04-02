@@ -43,6 +43,7 @@ const useAuth = () => {
             isAuthenticated: decoded.access,
             userId: decoded.id as string,
             userName: decoded.username ? decoded.username : "",
+            permissions: decoded.permissions,
           })
         );
         navigate("/");
@@ -73,6 +74,18 @@ const useAuth = () => {
       dispatch(setIsAuthenticated(false));
     }
   };
+
+  // const checkAuthorization = () => {
+  //   const currentRoute = window.location.pathname;
+
+  //   const matchingConfigs = roleBasedAccess.filter((config) =>
+  //     config.routes.some((route) => matchRoute(currentRoute, route))
+  //   );
+
+  //   const allowedRoles = matchingConfigs.map((config) => config.role);
+
+  //   return allowedRoles.some((role) => roles.includes(role));
+  // };
 
   return {
     userId,

@@ -7,10 +7,13 @@ import {
   MdProductionQuantityLimits,
 } from "react-icons/md";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import useAuth from "../../pages/auth/hooks/useAuth";
 import { setCurrentModule } from "../../redux/slices/navbarSlice";
 import { RootState } from "../../redux/store";
+import { Avatar } from "primereact/avatar";
+import logo from "../../assets/LOGO.png"
+
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -88,13 +91,39 @@ const Navbar = () => {
       },
     },
     {
+      label: "Admin",
+      icon: "pi pi-cog",
+      command: () => {
+        navigate("/admin");
+        dispatch(setCurrentModule(8));
+      },
+    },
+    {
       label: "Cerrar sesion",
-      icon: 'pi pi-sign-out',
+      icon: "pi pi-sign-out",
       command: () => {
         logout();
       },
     },
   ];
+
+  const end = (
+    <Link to={'/'}>
+    <img
+      className="w-[60px] h-[50px]"
+      alt="logo"
+      src={logo}
+    ></img>
+    </Link>
+  );
+  // const end = (
+  //   <Avatar
+  //     className="w-[50px] h-[50px]"
+  //     image="https://primefaces.org/cdn/primereact/images/avatar/amyelsner.png"
+  //     shape="circle"
+  //   />
+  // );
+
   useEffect(() => {
     if (currentModule) {
       navigate(currentModule);
@@ -103,7 +132,7 @@ const Navbar = () => {
 
   return (
     <div className="m-2">
-      <Menubar className="font-bold" model={items} />
+      <Menubar className="font-bold" model={items} end={end} />
     </div>
     // <nav
     //   data-testid="navbar-component"

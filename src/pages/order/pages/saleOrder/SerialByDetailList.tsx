@@ -16,6 +16,7 @@ import {
 } from "../../../../graphql/queries/SaleOrderDetail";
 import { ISaleOrderDetail } from "../../../../utils/interfaces/SaleOrderDetail";
 import useTableGlobalFilter from "../../../../hooks/useTableGlobalFilter";
+import LoadingSpinner from "../../../../components/LoadingSpinner/LoadingSpinner";
 
 interface SerialByDetailListProps {
   saleOrderDetailId: string;
@@ -81,7 +82,7 @@ const SerialByDetailList: FC<SerialByDetailListProps> = ({
         <Button
           tooltip="eliminar serial"
           icon="pi pi-trash"
-          rounded
+          raised
           severity="danger"
           aria-label="Cancel"
           onClick={() => handleDeleteSerial(rowData._id)}
@@ -130,23 +131,24 @@ const SerialByDetailList: FC<SerialByDetailListProps> = ({
     }
   }, [error]);
 
+  if (loadingListSerialBySaleOrder) {
+    return <LoadingSpinner />;
+  }
+
   return (
-    <Card className="size-full" title="Seriales asignados">
-      {loadingListSerialBySaleOrder ? (
-        "cargando..."
-      ) : (
-        <div>
-          <Table
-            columns={columns}
-            data={listProductSerialBySaleOrder}
-            emptyMessage="Producto sin seriales asignados."
-            size="small"
-            actionBodyTemplate={actionBodyTemplate}
-            dataFilters={filters}
-            tableHeader={renderFilterInput}
-          />
-        </div>
-      )}
+    <Card
+      className="size-full"
+      title={`Seriales asignados (${listProductSerialBySaleOrder.length})`}
+    >
+      <Table
+        columns={columns}
+        data={listProductSerialBySaleOrder}
+        emptyMessage="Producto sin seriales asignados."
+        size="small"
+        actionBodyTemplate={actionBodyTemplate}
+        dataFilters={filters}
+        tableHeader={renderFilterInput}
+      />
     </Card>
   );
 };

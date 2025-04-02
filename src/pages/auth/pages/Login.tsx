@@ -38,7 +38,7 @@ const Login = () => {
 
   const headerTemplate = () => {
     return (
-      <div className="flex justify-center rounded-t-lg bg-primary p-5 text-3xl text-white">
+      <div className="flex justify-center raised-t-lg bg-primary p-5 text-3xl text-white">
         <span>Inicio de sesión</span>
       </div>
     );
@@ -46,7 +46,7 @@ const Login = () => {
 
   return (
     <Card className="size-full overflow-auto px-3 max-md:px-0 max-sm:px-0 flex h-screen items-center justify-center bg-slate-300">
-      <Card className="rounded-t-xl shadow-2xl" header={headerTemplate}>
+      <Card className="raised-t-xl shadow-2xl" header={headerTemplate}>
         <form
           className="flex w-[260px] flex-col items-center justify-center gap-3 py-5 sm:w-[400px] sm:px-20 md:mx-10"
           onSubmit={handleSubmit}

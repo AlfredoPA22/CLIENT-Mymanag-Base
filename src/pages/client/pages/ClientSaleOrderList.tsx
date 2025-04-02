@@ -11,12 +11,11 @@ import { currencySymbol } from "../../../utils/constants/currencyConstants";
 import { orderStatus } from "../../../utils/enums/orderStatus.enum";
 import { ToastSeverity } from "../../../utils/enums/toast.enum";
 import { IClient } from "../../../utils/interfaces/Client";
-import {
-  ISaleOrder
-} from "../../../utils/interfaces/SaleOrder";
+import { ISaleOrder } from "../../../utils/interfaces/SaleOrder";
 import { DataTableColumn } from "../../../utils/interfaces/Table";
 import { showToast } from "../../../utils/toastUtils";
 import { getStatus } from "../../order/utils/getStatus";
+import LoadingSpinner from "../../../components/LoadingSpinner/LoadingSpinner";
 
 interface ClientSaleOrderListProps {
   client: IClient;
@@ -103,30 +102,20 @@ const ClientSaleOrderList: FC<ClientSaleOrderListProps> = ({ client }) => {
 
   const { filters, renderFilterInput } = useTableGlobalFilter(columns);
 
+  if (loadingListSaleOrderByClient) {
+    return <LoadingSpinner />;
+  }
+
   return (
-    <Card
-      className="size-full"
-      title={
-        client &&
-        `Lista de ventas del cliente ${client.firstName} ${client.lastName} (${client.code})`
-      }
-    >
-      {loadingListSaleOrderByClient ? (
-        "cargando..."
-      ) : (
-        <div>
-          <Table
-            columns={columns}
-            data={listSaleOrderByClient.saleOrder}
-            emptyMessage="Sin ventas."
-            size="small"
-            dataFilters={filters}
-            tableHeader={renderFilterInput}
-            footer={`Total vendido: ${listSaleOrderByClient.total} ${currencySymbol}`}
-          />
-        </div>
-      )}
-    </Card>
+      <Table
+        columns={columns}
+        data={listSaleOrderByClient.saleOrder}
+        emptyMessage="Sin ventas."
+        size="small"
+        dataFilters={filters}
+        tableHeader={renderFilterInput}
+        footer={`Total vendido: ${listSaleOrderByClient.total} ${currencySymbol}`}
+      />
   );
 };
 

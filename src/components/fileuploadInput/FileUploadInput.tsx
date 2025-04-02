@@ -40,13 +40,13 @@ const FieldSimpleFileUpload: FC<FieldSimpleFileUploadProps> = ({
       <small className="p-error">{error}</small>
 
       {file && (
-        <section className="flex h-10 items-center rounded-lg bg-secondary px-2">
+        <section className="flex h-10 items-center raised-lg bg-secondary px-2">
           <span>{file.name ? file.name : ""}</span>
           <Button
             onClick={onLocalFileClear}
             type="button"
             icon="pi pi-trash"
-            rounded
+            raised
             text
             severity="danger"
             aria-label="Cancel"

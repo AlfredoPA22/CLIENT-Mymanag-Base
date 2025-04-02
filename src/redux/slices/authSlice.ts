@@ -5,6 +5,7 @@ export interface AuthSliceState {
   token: string;
   userId: string;
   userName: string;
+  permissions: string[];
 }
 
 const initialState: AuthSliceState = {
@@ -12,6 +13,7 @@ const initialState: AuthSliceState = {
   token: "",
   userId: "",
   userName: "",
+  permissions: [],
 };
 
 const authSlice = createSlice({
@@ -23,6 +25,7 @@ const authSlice = createSlice({
       token: action.payload.token,
       userId: action.payload.userId,
       userName: action.payload.userName,
+      permissions: action.payload.permissions,
       isAuthenticated: action.payload.isAuthenticated,
     }),
     setIsAuthenticated: (state, action: PayloadAction<boolean>) => ({

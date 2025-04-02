@@ -27,6 +27,9 @@ import { ColumnEditorOptions } from "primereact/column";
 import { textEditor } from "../../../components/textEditor/textEditor";
 import { numberEditor } from "../../../components/numberEditor/numberEditor";
 import { stockType } from "../../../utils/enums/stockType.enum";
+import { Link } from "react-router-dom";
+import defaultProduct from "../../../assets/defaultProduct.jpg";
+import LoadingSpinner from "../../../components/LoadingSpinner/LoadingSpinner";
 
 const ProductList = () => {
   const { listProduct, loadingListProduct } = useProductList();
@@ -63,7 +66,7 @@ const ProductList = () => {
     if (rowData.stock_type === stockType.SERIALIZADO) {
       return (
         <Button
-          rounded
+          raised
           onClick={() => {
             setCurrentProduct(rowData);
             setVisibleList(true);
@@ -81,7 +84,7 @@ const ProductList = () => {
   const tableHeaderTemplate = () => {
     return (
       <div className="flex justify-between items-center m-2 px-5">
-        <h1 className="text-2xl font-bold">Lista de productos</h1>
+        <h1 className="text-2xl font-bold">{`Lista de productos (${listProduct.length})`}</h1>
 
         <Button
           icon="pi pi-plus"
@@ -89,7 +92,7 @@ const ProductList = () => {
           tooltip="Nuevo producto"
           tooltipOptions={{ position: "left" }}
           onClick={() => setVisibleForm(true)}
-          rounded
+          raised
         />
       </div>
     );
@@ -121,7 +124,7 @@ const ProductList = () => {
           tooltip="eliminar producto"
           tooltipOptions={{ position: "left" }}
           icon="pi pi-trash"
-          rounded
+          raised
           severity="danger"
           aria-label="Cancel"
           onClick={() => handleDeleteProduct(rowData._id)}
@@ -172,6 +175,27 @@ const ProductList = () => {
       header: "Codigo",
       sortable: true,
       style: { width: "10%" },
+      body: (rowData: IProduct) => (
+        <Link
+          className="underline hover:text-blue-300"
+          to={`/product/Detail/${rowData._id}`}
+        >
+          {rowData.code}
+        </Link>
+      ),
+    },
+    {
+      field: "image",
+      header: "Imagen",
+      sortable: true,
+      style: { width: "10%", justifyItems: "center" },
+      body: (rowData: IProduct) => (
+        <img
+          className="w-[80px] h-[80px]"
+          alt="image"
+          src={rowData.image ? rowData.image : defaultProduct}
+        />
+      ),
     },
     {
       field: "name",
@@ -230,43 +254,42 @@ const ProductList = () => {
 
   const { filters, renderFilterInput } = useTableGlobalFilter(columns);
 
+  if (loadingListProduct) {
+    return <LoadingSpinner />;
+  }
+
   return (
-    <Card
-      className="size-full"
-      header={tableHeaderTemplate}
-    >
-      {loadingListProduct ? (
-        "cargando..."
-      ) : (
-        <div>
-          <Table
-            columns={columns}
-            data={listProduct}
-            emptyMessage="Sin productos."
-            size="small"
-            actionBodyTemplate={actionBodyTemplate}
-            dataFilters={filters}
-            tableHeader={renderFilterInput}
-            editMode="row"
-            onRowEditComplete={onRowEditComplete}
-          />
-          <Dialog
-            className="md:w-[50vw] w-[90vw]"
-            header="Nuevo Producto"
-            visible={visibleForm}
-            onHide={() => setVisibleForm(false)}
-          >
-            <ProductForm setVisibleForm={setVisibleForm} />
-          </Dialog>
-          <Dialog
-            className="md:w-[50vw] w-[90vw]"
-            visible={visibleList}
-            onHide={() => setVisibleList(false)}
-          >
-            {currentProduct && <ProductSerialList product={currentProduct} />}
-          </Dialog>
-        </div>
-      )}
+    <Card className="size-full" header={tableHeaderTemplate}>
+      <Table
+        columns={columns}
+        data={listProduct}
+        emptyMessage="Sin productos."
+        size="small"
+        actionBodyTemplate={actionBodyTemplate}
+        dataFilters={filters}
+        tableHeader={renderFilterInput}
+        editMode="row"
+        onRowEditComplete={onRowEditComplete}
+      />
+      <Dialog
+        className="md:w-[50vw] w-[90vw]"
+        header="Nuevo Producto"
+        visible={visibleForm}
+        onHide={() => setVisibleForm(false)}
+      >
+        <ProductForm setVisibleForm={setVisibleForm} />
+      </Dialog>
+      <Dialog
+        className="md:w-[50vw] w-[90vw]"
+        visible={visibleList}
+        header={
+          currentProduct &&
+          `Lista de seriales del producto (${currentProduct.code}) ${currentProduct.name}`
+        }
+        onHide={() => setVisibleList(false)}
+      >
+        {currentProduct && <ProductSerialList product={currentProduct} />}
+      </Dialog>
     </Card>
   );
 };

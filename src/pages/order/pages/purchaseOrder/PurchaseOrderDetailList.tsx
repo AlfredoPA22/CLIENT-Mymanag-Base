@@ -24,6 +24,7 @@ import { DataTableRowEditCompleteEvent } from "primereact/datatable";
 import { ColumnEditorOptions } from "primereact/column";
 import { numberEditor } from "../../../../components/numberEditor/numberEditor";
 import { stockType } from "../../../../utils/enums/stockType.enum";
+import LoadingSpinner from "../../../../components/LoadingSpinner/LoadingSpinner";
 
 interface PurchaseOrderDetailListProps {
   purchaseOrderId: string;
@@ -119,7 +120,7 @@ const PurchaseOrderDetailList: FC<PurchaseOrderDetailListProps> = ({
           <Button
             tooltip="Agregar Seriales"
             icon="pi pi-cart-plus"
-            rounded
+            raised
             severity="success"
             aria-label="Cancel"
             onClick={() => {
@@ -132,7 +133,7 @@ const PurchaseOrderDetailList: FC<PurchaseOrderDetailListProps> = ({
         <Button
           tooltip="eliminar detalle"
           icon="pi pi-trash"
-          rounded
+          raised
           severity="danger"
           aria-label="Cancel"
           onClick={() => handleDeleteProduct(rowData._id)}
@@ -182,11 +183,13 @@ const PurchaseOrderDetailList: FC<PurchaseOrderDetailListProps> = ({
       field: "product.name",
       header: "Producto",
       sortable: true,
+      style: { width: "20%" },
     },
     {
       field: "purchase_price",
       header: "Precio de compra",
       sortable: true,
+      style: { width: "15%" },
       body: (rowData: IPurchaseOrderDetail) => (
         <LabelInput
           className="justify-center"
@@ -200,14 +203,14 @@ const PurchaseOrderDetailList: FC<PurchaseOrderDetailListProps> = ({
       field: "quantity",
       header: "Cantidad",
       sortable: true,
-      style: { textAlign: "center" },
+      style: { textAlign: "center", width: "10%" },
       fieldEditor: (options: ColumnEditorOptions) => numberEditor(options),
     },
     {
       field: "subtotal",
       header: "Subtotal",
       sortable: true,
-      style: { textAlign: "center" },
+      style: { textAlign: "center", width: "15%" },
       body: (rowData: IPurchaseOrderDetail) => (
         <LabelInput
           className="justify-center"
@@ -219,7 +222,7 @@ const PurchaseOrderDetailList: FC<PurchaseOrderDetailListProps> = ({
       field: "serials",
       header: "Seriales Añadidos",
       sortable: true,
-      style: { textAlign: "center" },
+      style: { textAlign: "center", width: "10%" },
       body: (rowData: IPurchaseOrderDetail) => {
         if (rowData.product.stock_type === stockType.SERIALIZADO) {
           return <span>{rowData.serials}</span>;
@@ -241,38 +244,36 @@ const PurchaseOrderDetailList: FC<PurchaseOrderDetailListProps> = ({
     }
   }, [error]);
 
+  if (loadingListPurchaseOrderDetail) {
+    return <LoadingSpinner />;
+  }
+  
   return (
-    <Card className="size-full" title="Productos de la compra">
-      {loadingListPurchaseOrderDetail ? (
-        "cargando..."
-      ) : (
-        <div>
-          <Table
-            columns={columns}
-            data={listPurchaseOrderDetail}
-            emptyMessage="Compra sin productos."
-            size="small"
-            actionBodyTemplate={actionBodyTemplate}
-            dataFilters={filters}
-            tableHeader={renderFilterInput}
-            editMode="row"
-            onRowEditComplete={onRowEditComplete}
+    <Card className="size-full" title={`Productos de la compra (${listPurchaseOrderDetail.length})`}>
+      <Table
+        columns={columns}
+        data={listPurchaseOrderDetail}
+        emptyMessage="Compra sin productos."
+        size="small"
+        actionBodyTemplate={actionBodyTemplate}
+        dataFilters={filters}
+        tableHeader={renderFilterInput}
+        editMode="row"
+        onRowEditComplete={onRowEditComplete}
+      />
+      <Dialog
+        className="md:w-[700px] w-[350px]"
+        header="Agregar serial"
+        visible={visibleForm}
+        onHide={() => setVisibleForm(false)}
+      >
+        {currentPurchaseOrderDetail && (
+          <SerialToDetail
+            purchaseOrderId={purchaseOrderId}
+            purchaseOrderDetailId={currentPurchaseOrderDetail?._id}
           />
-          <Dialog
-            className="md:w-[700px] w-[350px]"
-            header="Agregar serial"
-            visible={visibleForm}
-            onHide={() => setVisibleForm(false)}
-          >
-            {currentPurchaseOrderDetail && (
-              <SerialToDetail
-                purchaseOrderId={purchaseOrderId}
-                purchaseOrderDetailId={currentPurchaseOrderDetail?._id}
-              />
-            )}
-          </Dialog>
-        </div>
-      )}
+        )}
+      </Dialog>
     </Card>
   );
 };

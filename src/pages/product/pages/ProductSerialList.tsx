@@ -13,6 +13,7 @@ import { IProductSerial } from "../../../utils/interfaces/ProductSerial";
 import { DataTableColumn } from "../../../utils/interfaces/Table";
 import { showToast } from "../../../utils/toastUtils";
 import { getStatus } from "../../order/utils/getStatus";
+import LoadingSpinner from "../../../components/LoadingSpinner/LoadingSpinner";
 
 interface ProductSerialListProps {
   product: IProduct;
@@ -65,8 +66,7 @@ const ProductSerialList: FC<ProductSerialListProps> = ({ product }) => {
   const saleOrderBodyTemplate = (rowData: IProductSerial) => {
     if (rowData.sale_order_detail) {
       if (
-        rowData.sale_order_detail.sale_order.status ===
-        orderStatus.APROBADO
+        rowData.sale_order_detail.sale_order.status === orderStatus.APROBADO
       ) {
         return (
           <TextLink
@@ -125,29 +125,19 @@ const ProductSerialList: FC<ProductSerialListProps> = ({ product }) => {
 
   const { filters, renderFilterInput } = useTableGlobalFilter(columns);
 
+  if (loadingListProductSerial) {
+    return <LoadingSpinner />;
+  }
+
   return (
-    <Card
-      className="size-full"
-      title={
-        product &&
-        `Lista de seriales del producto (${product.code}) ${product.name}`
-      }
-    >
-      {loadingListProductSerial ? (
-        "cargando..."
-      ) : (
-        <div>
-          <Table
-            columns={columns}
-            data={listProductSerial}
-            emptyMessage="Sin seriales."
-            size="small"
-            dataFilters={filters}
-            tableHeader={renderFilterInput}
-          />
-        </div>
-      )}
-    </Card>
+    <Table
+      columns={columns}
+      data={listProductSerial}
+      emptyMessage="Sin seriales."
+      size="small"
+      dataFilters={filters}
+      tableHeader={renderFilterInput}
+    />
   );
 };
 

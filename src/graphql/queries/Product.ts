@@ -16,6 +16,7 @@ export const LIST_PRODUCT = gql`
       description
       last_cost_price
       name
+      image
       sale_price
       status
       stock
@@ -84,6 +85,31 @@ export const SEARCH_PRODUCT = gql`
         count_product
         description
         is_active
+        name
+      }
+      code
+      description
+      image
+      last_cost_price
+      name
+      sale_price
+      status
+      stock
+      stock_type
+    }
+  }
+`;
+
+export const FIND_PRODUCT = gql`
+  query FindProduct($productId: String!) {
+    findProduct(productId: $productId) {
+      _id
+      brand {
+        _id
+        name
+      }
+      category {
+        _id
         name
       }
       code

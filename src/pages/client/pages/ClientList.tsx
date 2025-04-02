@@ -20,6 +20,7 @@ import ClientSaleOrderList from "./ClientSaleOrderList";
 import { DataTableRowEditCompleteEvent } from "primereact/datatable";
 import { ColumnEditorOptions } from "primereact/column";
 import { textEditor } from "../../../components/textEditor/textEditor";
+import LoadingSpinner from "../../../components/LoadingSpinner/LoadingSpinner";
 
 const ClientList = () => {
   const { listClient, loadingListClient } = useClientList();
@@ -46,7 +47,7 @@ const ClientList = () => {
   const tableHeaderTemplate = () => {
     return (
       <div className="flex justify-between items-center m-2 px-5">
-        <h1 className="text-2xl font-bold">Lista de clientes</h1>
+        <h1 className="text-2xl font-bold">{`Lista de clientes (${listClient.length})`}</h1>
 
         <Button
           icon="pi pi-plus"
@@ -54,7 +55,7 @@ const ClientList = () => {
           tooltip="Nuevo cliente"
           tooltipOptions={{ position: "left" }}
           onClick={() => setVisibleForm(true)}
-          rounded
+          raised
         />
       </div>
     );
@@ -86,7 +87,7 @@ const ClientList = () => {
           tooltip="Eliminar cliente"
           tooltipOptions={{ position: "left" }}
           icon="pi pi-trash"
-          rounded
+          raised
           severity="danger"
           aria-label="Cancel"
           onClick={() => handleDeleteClient(rowData._id)}
@@ -95,7 +96,7 @@ const ClientList = () => {
           tooltip="Ver ventas"
           tooltipOptions={{ position: "left" }}
           icon="pi pi-list"
-          rounded
+          raised
           severity="info"
           aria-label="Cancel"
           onClick={() => {
@@ -167,12 +168,13 @@ const ClientList = () => {
 
   const { filters, renderFilterInput } = useTableGlobalFilter(columns);
 
+  if(loadingListClient){
+    return <LoadingSpinner/>
+  }
+
   return (
     <Card className="size-full" header={tableHeaderTemplate}>
-      {loadingListClient ? (
-        "cargando..."
-      ) : (
-        <div>
+      
           <Table
             columns={columns}
             data={listClient}
@@ -194,13 +196,15 @@ const ClientList = () => {
 
           <Dialog
             className="md:w-[50vw] w-[90vw]"
+            header={
+              currentClient &&
+              `Lista de ventas del cliente ${currentClient.firstName} ${currentClient.lastName} (${currentClient.code})`
+            }
             visible={visibleList}
             onHide={() => setVisibleList(false)}
           >
             {currentClient && <ClientSaleOrderList client={currentClient} />}
           </Dialog>
-        </div>
-      )}
     </Card>
   );
 };

@@ -17,6 +17,7 @@ import { LIST_PRODUCT } from "../../../../graphql/queries/Product";
 import { useNavigate } from "react-router-dom";
 import { orderStatus } from "../../../../utils/enums/orderStatus.enum";
 import { currencySymbol } from "../../../../utils/constants/currencyConstants";
+import LoadingSpinner from "../../../../components/LoadingSpinner/LoadingSpinner";
 
 interface PurchaseOrderDetailProps {
   purchaseOrderId: string;
@@ -69,33 +70,26 @@ const PurchaseOrderDetail: FC<PurchaseOrderDetailProps> = ({
 
   const date = getDate(data?.findPurchaseOrder.date) || "";
 
+  if(loadingPurchaseOrder){
+    return <LoadingSpinner/>
+  }
+
   return (
-    <Card className="flex flex-col m-2">
-      {loadingPurchaseOrder ? (
-        "cargando"
-      ) : (
+    <Card className="flex flex-col mb-2">
         <div className="flex md:flex-row flex-col justify-between items-center gap-10">
-          <section className="md:flex grid *:justify-center items-end gap-10">
-            <div>
+          <section className="md:flex grid grid-cols-2 justify-center items-end gap-10">
+            <div className="flex flex-col gap-2">
               <LabelInput name="date" label="Fecha de compra" />
-              <Tag value={date} severity={"info"} className="text-xl" />
+              {date}
             </div>
-            <div>
+            <div className="flex flex-col gap-2">
               <LabelInput name="provider" label="Proveedor" />
-              <Tag
-                value={`${data?.findPurchaseOrder.provider.name}`}
-                severity={"info"}
-                className="text-xl"
-              />
+              {data?.findPurchaseOrder.provider.name}
             </div>
           </section>
           <section className="flex flex-col justify-center items-center gap-2">
             <LabelInput name="date" label="Total de compra" />
-            <Tag
-              value={`${data?.findPurchaseOrder.total} ${currencySymbol}`}
-              severity={"info"}
-              className="text-xl"
-            />
+            {data?.findPurchaseOrder.total} {currencySymbol}
           </section>
           <section className="flex justify-start items-start">
             <div className="flex flex-col gap-2 items-center justify-center">
@@ -140,7 +134,6 @@ const PurchaseOrderDetail: FC<PurchaseOrderDetailProps> = ({
             </div>
           </section>
         </div>
-      )}
     </Card>
   );
 };

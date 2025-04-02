@@ -10,7 +10,10 @@ import { Status } from "../../../utils/types/StatusType";
 import useCategoryList from "../hooks/useCategoryList";
 import CategoryForm from "./CategoryForm";
 import { useMutation } from "@apollo/client";
-import { DELETE_CATEGORY, UPDATE_CATEGORY } from "../../../graphql/mutations/Category";
+import {
+  DELETE_CATEGORY,
+  UPDATE_CATEGORY,
+} from "../../../graphql/mutations/Category";
 import { LIST_CATEGORY } from "../../../graphql/queries/Category";
 import { showToast } from "../../../utils/toastUtils";
 import { ToastSeverity } from "../../../utils/enums/toast.enum";
@@ -18,6 +21,7 @@ import useTableGlobalFilter from "../../../hooks/useTableGlobalFilter";
 import { ColumnEditorOptions } from "primereact/column";
 import { textEditor } from "../../../components/textEditor/textEditor";
 import { DataTableRowEditCompleteEvent } from "primereact/datatable";
+import LoadingSpinner from "../../../components/LoadingSpinner/LoadingSpinner";
 
 const CategoryList = () => {
   const { listCategory, loadingListCategory } = useCategoryList();
@@ -76,7 +80,7 @@ const CategoryList = () => {
   const tableHeaderTemplate = () => {
     return (
       <div className="flex justify-between items-center m-2 px-5">
-        <h1 className="text-2xl font-bold">Lista de categorias</h1>
+        <h1 className="text-2xl font-bold">{`Lista de categorias (${listCategory.length})`}</h1>
 
         <Button
           icon="pi pi-plus"
@@ -84,7 +88,7 @@ const CategoryList = () => {
           tooltip="Nueva categoria"
           tooltipOptions={{ position: "left" }}
           onClick={() => setVisibleForm(true)}
-          rounded
+          raised
         />
       </div>
     );
@@ -116,7 +120,7 @@ const CategoryList = () => {
           tooltip="eliminar categoria"
           tooltipOptions={{ position: "left" }}
           icon="pi pi-trash"
-          rounded
+          raised
           severity="danger"
           aria-label="Cancel"
           onClick={() => handleDeleteCategory(rowData._id)}
@@ -184,35 +188,30 @@ const CategoryList = () => {
 
   const { filters, renderFilterInput } = useTableGlobalFilter(columns);
 
+  if (loadingListCategory) {
+    return <LoadingSpinner />;
+  }
+
   return (
-    <Card
-      className="size-full"
-      header={tableHeaderTemplate}
-    >
-      {loadingListCategory ? (
-        "cargando..."
-      ) : (
-        <div>
-          <Table
-            columns={columns}
-            data={listCategory}
-            emptyMessage="Sin categorias."
-            size="small"
-            actionBodyTemplate={actionBodyTemplate}
-            dataFilters={filters}
-            tableHeader={renderFilterInput}
-            editMode="row"
-            onRowEditComplete={onRowEditComplete}
-          />
-          <Dialog
-            header="Nueva Categoria"
-            visible={visibleForm}
-            onHide={() => setVisibleForm(false)}
-          >
-            <CategoryForm setVisibleForm={setVisibleForm} />
-          </Dialog>
-        </div>
-      )}
+    <Card className="size-full" header={tableHeaderTemplate}>
+      <Table
+        columns={columns}
+        data={listCategory}
+        emptyMessage="Sin categorias."
+        size="small"
+        actionBodyTemplate={actionBodyTemplate}
+        dataFilters={filters}
+        tableHeader={renderFilterInput}
+        editMode="row"
+        onRowEditComplete={onRowEditComplete}
+      />
+      <Dialog
+        header="Nueva Categoria"
+        visible={visibleForm}
+        onHide={() => setVisibleForm(false)}
+      >
+        <CategoryForm setVisibleForm={setVisibleForm} />
+      </Dialog>
     </Card>
   );
 };

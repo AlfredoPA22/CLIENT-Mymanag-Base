@@ -24,6 +24,7 @@ import { generatePDF } from "../../utils/generateSaleOrderPDF";
 import { getDate } from "../../utils/getDate";
 import { getStatus } from "../../utils/getStatus";
 import { confirmDialog } from "primereact/confirmdialog";
+import LoadingSpinner from "../../../../components/LoadingSpinner/LoadingSpinner";
 
 const SaleOrderList = () => {
   const { listSaleOrder, loadingListSaleOrder } = useSaleOrderList();
@@ -82,7 +83,7 @@ const SaleOrderList = () => {
   const tableHeaderTemplate = () => {
     return (
       <div className="flex justify-between items-center m-2 px-5">
-        <h1 className="text-2xl font-bold">Lista de ventas</h1>
+        <h1 className="text-2xl font-bold">{`Lista de ventas (${listSaleOrder.length})`}</h1>
 
         <Button
           icon="pi pi-plus"
@@ -90,7 +91,7 @@ const SaleOrderList = () => {
           tooltip="Nueva venta"
           tooltipOptions={{ position: "left" }}
           onClick={() => navigate("/order/newSaleOrder")}
-          rounded
+          raised
         />
       </div>
     );
@@ -152,7 +153,7 @@ const SaleOrderList = () => {
               tooltip="Completar venta"
               tooltipOptions={{ position: "left" }}
               icon="pi pi-align-justify"
-              rounded
+              raised
               severity="info"
               aria-label="Cancel"
               onClick={() => navigate(`/order/editSaleOrder/${rowData._id}`)}
@@ -162,7 +163,7 @@ const SaleOrderList = () => {
               tooltip="Eliminar venta"
               tooltipOptions={{ position: "left" }}
               icon="pi pi-trash"
-              rounded
+              raised
               severity="danger"
               aria-label="Cancel"
               onClick={() => confirmDeleteSaleOrder(rowData._id)}
@@ -176,7 +177,7 @@ const SaleOrderList = () => {
               tooltip="Completar venta"
               tooltipOptions={{ position: "left" }}
               icon="pi pi-align-justify"
-              rounded
+              raised
               severity="info"
               aria-label="Cancel"
               onClick={() => navigate(`/order/editSaleOrder/${rowData._id}`)}
@@ -185,7 +186,7 @@ const SaleOrderList = () => {
               tooltip="Imprimir venta"
               tooltipOptions={{ position: "left" }}
               icon="pi pi-download"
-              rounded
+              raised
               severity="warning"
               aria-label="Cancel"
               onClick={() => handleGeneratePDF(rowData._id)}
@@ -200,7 +201,7 @@ const SaleOrderList = () => {
             tooltip="Ver detalle de venta"
             tooltipOptions={{ position: "left" }}
             icon="pi pi-eye"
-            rounded
+            raised
             severity="info"
             aria-label="Cancel"
             onClick={() => navigate(`/order/viewSaleOrder/${rowData._id}`)}
@@ -209,7 +210,7 @@ const SaleOrderList = () => {
             tooltip="Imprimir venta"
             tooltipOptions={{ position: "left" }}
             icon="pi pi-download"
-            rounded
+            raised
             severity="warning"
             aria-label="Cancel"
             onClick={() => handleGeneratePDF(rowData._id)}
@@ -218,7 +219,7 @@ const SaleOrderList = () => {
             tooltip="Anular y eliminar venta"
             tooltipOptions={{ position: "left" }}
             icon="pi pi-trash"
-            rounded
+            raised
             severity="danger"
             aria-label="Cancel"
             onClick={() => confirmDeleteSaleOrder(rowData._id)}
@@ -269,23 +270,21 @@ const SaleOrderList = () => {
 
   const { filters, renderFilterInput } = useTableGlobalFilter(columns);
 
+  if (loadingListSaleOrder) {
+    return <LoadingSpinner />;
+  }
+
   return (
     <Card className="size-full" header={tableHeaderTemplate}>
-      {loadingListSaleOrder ? (
-        "cargando..."
-      ) : (
-        <div>
-          <Table
-            columns={columns}
-            data={listSaleOrder}
-            emptyMessage="Sin ventas."
-            size="small"
-            actionBodyTemplate={actionBodyTemplate}
-            dataFilters={filters}
-            tableHeader={renderFilterInput}
-          />
-        </div>
-      )}
+      <Table
+        columns={columns}
+        data={listSaleOrder}
+        emptyMessage="Sin ventas."
+        size="small"
+        actionBodyTemplate={actionBodyTemplate}
+        dataFilters={filters}
+        tableHeader={renderFilterInput}
+      />
     </Card>
   );
 };

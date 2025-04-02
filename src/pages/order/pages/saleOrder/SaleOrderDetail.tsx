@@ -17,6 +17,7 @@ import { getDate } from "../../utils/getDate";
 import { getStatus } from "../../utils/getStatus";
 import { orderStatus } from "../../../../utils/enums/orderStatus.enum";
 import { currencySymbol } from "../../../../utils/constants/currencyConstants";
+import LoadingSpinner from "../../../../components/LoadingSpinner/LoadingSpinner";
 
 interface SaleOrderDetailProps {
   saleOrderId: string;
@@ -67,41 +68,47 @@ const SaleOrderDetail: FC<SaleOrderDetailProps> = ({ saleOrderId }) => {
 
   const date = getDate(data?.findSaleOrder.date) || "";
 
+  if (loadingSaleOrder) {
+    return <LoadingSpinner />;
+  }
+
   return (
-    <Card className="flex flex-col m-2">
-      {loadingSaleOrder ? (
-        "cargando"
-      ) : (
-        <div className="flex md:flex-row flex-col justify-between items-center gap-10">
-          <section className="md:flex grid *:justify-center items-end gap-10">
-            <div>
-              <LabelInput name="date" label="Fecha de venta" />
-              <Tag value={date} severity={"info"} className="text-xl" />
-            </div>
-            <div>
-              <LabelInput name="client" label="Cliente" />
+    <Card className="flex flex-col mb-2">
+      <div className="flex md:flex-row flex-col justify-between items-center gap-10">
+        <section className="md:flex grid grid-cols-2 justify-center items-end gap-10">
+          <div className="flex flex-col gap-2">
+            <LabelInput name="date" label="Fecha de venta" />
+            {date}
+          </div>
+          <div className="flex flex-col gap-2">
+            <LabelInput name="client" label="Cliente" />
+            {`${data?.findSaleOrder.client.firstName} ${data?.findSaleOrder.client.lastName}`}
+          </div>
+        </section>
+        <section className="flex flex-col justify-center items-center gap-2">
+          <LabelInput name="date" label="Total de venta: " />
+          {`${data?.findSaleOrder.total} ${currencySymbol}`}
+        </section>
+        <section className="flex justify-start items-start">
+          <div className="flex flex-col gap-2 items-center justify-center">
+            <span className="text-2xl font-bold">
+              {data?.findSaleOrder.code}
+            </span>
+            {data?.findSaleOrder.status &&
+            data?.findSaleOrder.status === orderStatus.APROBADO ? (
               <Tag
-                value={`${data?.findSaleOrder.client.firstName} ${data?.findSaleOrder.client.lastName}`}
-                severity={"info"}
-                className="text-xl"
-              />
-            </div>
-          </section>
-          <section className="flex flex-col justify-center items-center gap-2">
-            <LabelInput name="date" label="Total de venta: " />
-            <Tag
-              value={`${data?.findSaleOrder.total} ${currencySymbol}`}
-              severity={"info"}
-              className="text-xl"
-            />
-          </section>
-          <section className="flex justify-start items-start">
-            <div className="flex flex-col gap-2 items-center justify-center">
-              <span className="text-2xl font-bold">
-                {data?.findSaleOrder.code}
-              </span>
-              {data?.findSaleOrder.status &&
-              data?.findSaleOrder.status === orderStatus.APROBADO ? (
+                severity={
+                  getStatus(data?.findSaleOrder.status)?.severity as
+                    | "danger"
+                    | "success"
+                    | "info"
+                    | "warning"
+                }
+              >
+                {getStatus(data?.findSaleOrder.status)?.label}
+              </Tag>
+            ) : (
+              <>
                 <Tag
                   severity={
                     getStatus(data?.findSaleOrder.status)?.severity as
@@ -113,32 +120,18 @@ const SaleOrderDetail: FC<SaleOrderDetailProps> = ({ saleOrderId }) => {
                 >
                   {getStatus(data?.findSaleOrder.status)?.label}
                 </Tag>
-              ) : (
-                <>
-                  <Tag
-                    severity={
-                      getStatus(data?.findSaleOrder.status)?.severity as
-                        | "danger"
-                        | "success"
-                        | "info"
-                        | "warning"
-                    }
-                  >
-                    {getStatus(data?.findSaleOrder.status)?.label}
-                  </Tag>
-                  <Button
-                    icon="pi pi-check-circle"
-                    type="button"
-                    severity="success"
-                    label="Aprobar venta"
-                    onClick={setApproveSaleOrder}
-                  />
-                </>
-              )}
-            </div>
-          </section>
-        </div>
-      )}
+                <Button
+                  icon="pi pi-check-circle"
+                  type="button"
+                  severity="success"
+                  label="Aprobar venta"
+                  onClick={setApproveSaleOrder}
+                />
+              </>
+            )}
+          </div>
+        </section>
+      </div>
     </Card>
   );
 };

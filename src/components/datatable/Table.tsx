@@ -6,7 +6,11 @@ import {
   ColumnFilterElementTemplateOptions,
   ColumnProps,
 } from "primereact/column";
-import { DataTable, DataTableRowEditCompleteEvent } from "primereact/datatable";
+import {
+  DataTable,
+  DataTableRowEditCompleteEvent,
+  DataTableSelectionSingleChangeEvent,
+} from "primereact/datatable";
 
 import { IndexSignature } from "../../utils/interfaces/Table";
 import { FilterMatchMode } from "primereact/api";
@@ -44,6 +48,7 @@ interface TableProps<T> {
   onRowEditComplete?: (e: DataTableRowEditCompleteEvent) => void;
   selecTable?: boolean;
   onSelected?: (row: T | null) => void;
+  onSelectionChange?: (e: DataTableSelectionSingleChangeEvent<any[]>) => void;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -61,6 +66,7 @@ const Table: FC<TableProps<any>> = ({
   footer,
   editMode,
   onRowEditComplete,
+  onSelectionChange,
 }) => {
   return (
     <>
@@ -82,12 +88,9 @@ const Table: FC<TableProps<any>> = ({
         footer={footer}
         editMode={editMode ? "row" : undefined} // Activar modo edición por filas
         onRowEditComplete={onRowEditComplete} // Manejar la edición de filas
+        selectionMode="single"
+        onSelectionChange={onSelectionChange}
       >
-        <Column
-          header="#"
-          headerStyle={{ width: "5%" }}
-          body={(_data, options) => options.rowIndex + 1}
-        />
         {columns.map((column) => (
           <Column
             key={column.field}
@@ -108,12 +111,13 @@ const Table: FC<TableProps<any>> = ({
         {onRowEditComplete && (
           <Column
             rowEditor={true}
-            headerStyle={{ width: "15%", minWidth: "6rem" }}
+            headerStyle={{ width: "5%", minWidth: "6rem" }}
           />
         )}
         {actionBodyTemplate && (
           <Column
             body={actionBodyTemplate}
+            headerStyle={{ width: "15%", minWidth: "6rem" }}
             header={actionHeader || "Acciones"}
             exportable={false}
             style={{ minWidth: "12rem" }}

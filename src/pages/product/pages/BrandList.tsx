@@ -18,6 +18,7 @@ import { showToast } from "../../../utils/toastUtils";
 import { Status } from "../../../utils/types/StatusType";
 import useBrandList from "../hooks/useBrandList";
 import BrandForm from "./BrandForm";
+import LoadingSpinner from "../../../components/LoadingSpinner/LoadingSpinner";
 
 const BrandList = () => {
   const { listBrand, loadingListBrand } = useBrandList();
@@ -76,15 +77,14 @@ const BrandList = () => {
   const tableHeaderTemplate = () => {
     return (
       <div className="flex justify-between items-center m-2 px-5">
-        <h1 className="text-2xl font-bold">Lista de marcas</h1>
-
+        <h1 className="text-2xl font-bold">{`Lista de marcas (${listBrand.length})`}</h1>
         <Button
           icon="pi pi-plus"
           severity="success"
           tooltip="Nueva marca"
           tooltipOptions={{ position: "left" }}
           onClick={() => setVisibleForm(true)}
-          rounded
+          raised
         />
       </div>
     );
@@ -116,7 +116,7 @@ const BrandList = () => {
           tooltip="eliminar marca"
           tooltipOptions={{ position: "left" }}
           icon="pi pi-trash"
-          rounded
+          raised
           severity="danger"
           aria-label="Cancel"
           onClick={() => handleDeleteBrand(rowData._id)}
@@ -184,32 +184,29 @@ const BrandList = () => {
 
   const { filters, renderFilterInput } = useTableGlobalFilter(columns);
 
+  if (loadingListBrand) {
+    return <LoadingSpinner />;
+  }
   return (
     <Card className="size-full" header={tableHeaderTemplate}>
-      {loadingListBrand ? (
-        "cargando..."
-      ) : (
-        <div>
-          <Table
-            columns={columns}
-            data={listBrand}
-            emptyMessage="Sin marcas."
-            size="small"
-            actionBodyTemplate={actionBodyTemplate}
-            dataFilters={filters}
-            tableHeader={renderFilterInput}
-            editMode="row"
-            onRowEditComplete={onRowEditComplete}
-          />
-          <Dialog
-            header="Nueva Marca"
-            visible={visibleForm}
-            onHide={() => setVisibleForm(false)}
-          >
-            <BrandForm setVisibleForm={setVisibleForm} />
-          </Dialog>
-        </div>
-      )}
+      <Table
+        columns={columns}
+        data={listBrand}
+        emptyMessage="Sin marcas."
+        size="small"
+        actionBodyTemplate={actionBodyTemplate}
+        dataFilters={filters}
+        tableHeader={renderFilterInput}
+        editMode="row"
+        onRowEditComplete={onRowEditComplete}
+      />
+      <Dialog
+        header="Nueva Marca"
+        visible={visibleForm}
+        onHide={() => setVisibleForm(false)}
+      >
+        <BrandForm setVisibleForm={setVisibleForm} />
+      </Dialog>
     </Card>
   );
 };

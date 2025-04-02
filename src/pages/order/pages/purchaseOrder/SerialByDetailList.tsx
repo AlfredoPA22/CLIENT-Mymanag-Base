@@ -16,6 +16,7 @@ import { showToast } from "../../../../utils/toastUtils";
 import { getStatus } from "../../utils/getStatus";
 import { DELETE_SERIAL_TO_PURCHASE_ORDER_DETAIL } from "../../../../graphql/mutations/PurchaseOrderDetail";
 import useTableGlobalFilter from "../../../../hooks/useTableGlobalFilter";
+import LoadingSpinner from "../../../../components/LoadingSpinner/LoadingSpinner";
 
 interface SerialByDetailListProps {
   purchaseOrderDetailId: string;
@@ -83,7 +84,7 @@ const SerialByDetailList: FC<SerialByDetailListProps> = ({
         <Button
           tooltip="eliminar serial"
           icon="pi pi-trash"
-          rounded
+          raised
           severity="danger"
           aria-label="Cancel"
           onClick={() => handleDeleteSerial(rowData._id)}
@@ -132,23 +133,24 @@ const SerialByDetailList: FC<SerialByDetailListProps> = ({
     }
   }, [error]);
 
+  if (loadingListSerialByPurchaseOrder) {
+    return <LoadingSpinner />;
+  }
+
   return (
-    <Card className="size-full" title="Seriales asignados">
-      {loadingListSerialByPurchaseOrder ? (
-        "cargando..."
-      ) : (
-        <div>
-          <Table
-            columns={columns}
-            data={listProductSerialByPurchaseOrder}
-            emptyMessage="Producto sin seriales asignados."
-            size="small"
-            actionBodyTemplate={actionBodyTemplate}
-            dataFilters={filters}
-            tableHeader={renderFilterInput}
-          />
-        </div>
-      )}
+    <Card
+      className="size-full"
+      title={`Seriales asignados (${listProductSerialByPurchaseOrder.length})`}
+    >
+      <Table
+        columns={columns}
+        data={listProductSerialByPurchaseOrder}
+        emptyMessage="Producto sin seriales asignados."
+        size="small"
+        actionBodyTemplate={actionBodyTemplate}
+        dataFilters={filters}
+        tableHeader={renderFilterInput}
+      />
     </Card>
   );
 };

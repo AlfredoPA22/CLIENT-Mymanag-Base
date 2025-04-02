@@ -24,6 +24,7 @@ import { DataTableColumn } from "../../../../utils/interfaces/Table";
 import { showToast } from "../../../../utils/toastUtils";
 import SerialToDetail from "./SerialToDetail";
 import { stockType } from "../../../../utils/enums/stockType.enum";
+import LoadingSpinner from "../../../../components/LoadingSpinner/LoadingSpinner";
 
 interface SaleOrderDetailListProps {
   saleOrderId: string;
@@ -114,7 +115,7 @@ const SaleOrderDetailList: FC<SaleOrderDetailListProps> = ({ saleOrderId }) => {
           <Button
             tooltip="Agregar Seriales"
             icon="pi pi-cart-plus"
-            rounded
+            raised
             severity="success"
             aria-label="Cancel"
             onClick={() => {
@@ -127,7 +128,7 @@ const SaleOrderDetailList: FC<SaleOrderDetailListProps> = ({ saleOrderId }) => {
         <Button
           tooltip="eliminar detalle"
           icon="pi pi-trash"
-          rounded
+          raised
           severity="danger"
           aria-label="Cancel"
           onClick={() => handleDeleteProduct(rowData._id)}
@@ -178,13 +179,15 @@ const SaleOrderDetailList: FC<SaleOrderDetailListProps> = ({ saleOrderId }) => {
       field: "product.name",
       header: "Producto",
       sortable: true,
+      style: { width: "20%" },
     },
     {
       field: "sale_price",
       header: "Precio de venta",
       sortable: true,
+      style: { width: "15%" },
       body: (rowData: ISaleOrderDetail) => (
-        <LabelInput label={`${rowData.sale_price} ${currencySymbol}`} />
+        <LabelInput className="justify-center" label={`${rowData.sale_price} ${currencySymbol}`} />
       ),
       fieldEditor: (options: ColumnEditorOptions) =>
         numberEditor(options, true),
@@ -193,14 +196,14 @@ const SaleOrderDetailList: FC<SaleOrderDetailListProps> = ({ saleOrderId }) => {
       field: "quantity",
       header: "Cantidad",
       sortable: true,
-      style: { textAlign: "center" },
+      style: { textAlign: "center", width: "10%" },
       fieldEditor: (options: ColumnEditorOptions) => numberEditor(options),
     },
     {
       field: "subtotal",
       header: "Subtotal",
       sortable: true,
-      style: { textAlign: "center" },
+      style: { textAlign: "center", width: "15%" },
       body: (rowData: ISaleOrderDetail) => (
         <LabelInput
           className="justify-center"
@@ -212,7 +215,7 @@ const SaleOrderDetailList: FC<SaleOrderDetailListProps> = ({ saleOrderId }) => {
       field: "serials",
       header: "Seriales Añadidos",
       sortable: true,
-      style: { textAlign: "center" },
+      style: { textAlign: "center", width: "10%" },
       body: (rowData: ISaleOrderDetail) => {
         if (rowData.product.stock_type === stockType.SERIALIZADO) {
           return <span>{rowData.serials}</span>;
@@ -234,38 +237,39 @@ const SaleOrderDetailList: FC<SaleOrderDetailListProps> = ({ saleOrderId }) => {
     }
   }, [error]);
 
+  if (loadingListSaleOrderDetail) {
+    return <LoadingSpinner />;
+  }
+
   return (
-    <Card className="size-full" title="Productos de la venta">
-      {loadingListSaleOrderDetail ? (
-        "cargando..."
-      ) : (
-        <div>
-          <Table
-            columns={columns}
-            data={listSaleOrderDetail}
-            emptyMessage="Venta sin productos."
-            size="small"
-            actionBodyTemplate={actionBodyTemplate}
-            dataFilters={filters}
-            tableHeader={renderFilterInput}
-            editMode="row"
-            onRowEditComplete={onRowEditComplete}
+    <Card
+      className="size-full"
+      title={`Productos de la venta (${listSaleOrderDetail.length})`}
+    >
+      <Table
+        columns={columns}
+        data={listSaleOrderDetail}
+        emptyMessage="Venta sin productos."
+        size="small"
+        actionBodyTemplate={actionBodyTemplate}
+        dataFilters={filters}
+        tableHeader={renderFilterInput}
+        editMode="row"
+        onRowEditComplete={onRowEditComplete}
+      />
+      <Dialog
+        className="md:w-[700px] w-[350px]"
+        header="Agregar serial"
+        visible={visibleForm}
+        onHide={() => setVisibleForm(false)}
+      >
+        {currentSaleOrderDetail && (
+          <SerialToDetail
+            saleOrderId={saleOrderId}
+            saleOrderDetailId={currentSaleOrderDetail?._id}
           />
-          <Dialog
-            className="md:w-[700px] w-[350px]"
-            header="Agregar serial"
-            visible={visibleForm}
-            onHide={() => setVisibleForm(false)}
-          >
-            {currentSaleOrderDetail && (
-              <SerialToDetail
-                saleOrderId={saleOrderId}
-                saleOrderDetailId={currentSaleOrderDetail?._id}
-              />
-            )}
-          </Dialog>
-        </div>
-      )}
+        )}
+      </Dialog>
     </Card>
   );
 };

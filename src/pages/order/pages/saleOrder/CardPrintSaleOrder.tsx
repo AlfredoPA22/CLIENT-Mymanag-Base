@@ -369,7 +369,7 @@ const CardPrintSaleOrderDetail: FC<CardPrintSaleOrderDetailProps> = ({
       <div className="flex mt-5 justify-end">
         <Button
           label="IMPRIMIR VENTA"
-          rounded
+          raised
           severity="warning"
           aria-label="Cancel"
           onClick={() => handleGeneratePDF()}

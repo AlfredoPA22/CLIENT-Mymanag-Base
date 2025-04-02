@@ -19,6 +19,7 @@ import { DataTableColumn } from "../../../utils/interfaces/Table";
 import { showToast } from "../../../utils/toastUtils";
 import useProviderList from "../hooks/useProviderList";
 import ProviderForm from "./ProviderForm";
+import LoadingSpinner from "../../../components/LoadingSpinner/LoadingSpinner";
 
 const ProviderList = () => {
   const { listProvider, loadingListProvider } = useProviderList();
@@ -43,7 +44,7 @@ const ProviderList = () => {
   const tableHeaderTemplate = () => {
     return (
       <div className="flex justify-between items-center m-2 px-5">
-        <h1 className="text-2xl font-bold">Lista de proveedores</h1>
+        <h1 className="text-2xl font-bold">{`Lista de proveedores (${listProvider.length})`}</h1>
 
         <Button
           icon="pi pi-plus"
@@ -51,7 +52,7 @@ const ProviderList = () => {
           tooltip="Nuevo proveedor"
           tooltipOptions={{ position: "left" }}
           onClick={() => setVisibleForm(true)}
-          rounded
+          raised
         />
       </div>
     );
@@ -83,7 +84,7 @@ const ProviderList = () => {
           tooltip="Eliminar proveedor"
           tooltipOptions={{ position: "left" }}
           icon="pi pi-trash"
-          rounded
+          raised
           severity="danger"
           aria-label="Cancel"
           onClick={() => handleDeleteProvider(rowData._id)}
@@ -152,43 +153,38 @@ const ProviderList = () => {
 
   const { filters, renderFilterInput } = useTableGlobalFilter(columns);
 
-  return (
-    <Card
-      className="size-full"
-      header={tableHeaderTemplate}
-    >
-      {loadingListProvider ? (
-        "cargando..."
-      ) : (
-        <div>
-          <Table
-            columns={columns}
-            data={listProvider}
-            emptyMessage="Sin proveedores."
-            size="small"
-            actionBodyTemplate={actionBodyTemplate}
-            dataFilters={filters}
-            tableHeader={renderFilterInput}
-            editMode="row"
-            onRowEditComplete={onRowEditComplete}
-          />
-          <Dialog
-            header="Nuevo Proveedor"
-            visible={visibleForm}
-            onHide={() => setVisibleForm(false)}
-          >
-            <ProviderForm setVisibleForm={setVisibleForm} />
-          </Dialog>
+  if (loadingListProvider) {
+    return <LoadingSpinner />;
+  }
 
-          {/* <Dialog
+  return (
+    <Card className="size-full" header={tableHeaderTemplate}>
+      <Table
+        columns={columns}
+        data={listProvider}
+        emptyMessage="Sin proveedores."
+        size="small"
+        actionBodyTemplate={actionBodyTemplate}
+        dataFilters={filters}
+        tableHeader={renderFilterInput}
+        editMode="row"
+        onRowEditComplete={onRowEditComplete}
+      />
+      <Dialog
+        header="Nuevo Proveedor"
+        visible={visibleForm}
+        onHide={() => setVisibleForm(false)}
+      >
+        <ProviderForm setVisibleForm={setVisibleForm} />
+      </Dialog>
+
+      {/* <Dialog
             className="md:w-[50vw] w-[90vw]"
             visible={visibleList}
             onHide={() => setVisibleList(false)}
           >
             {currentProvider && <ClientSaleOrderList client={currentProvider} />}
           </Dialog> */}
-        </div>
-      )}
     </Card>
   );
 };
