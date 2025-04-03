@@ -126,6 +126,7 @@ const BrandDetail: FC<BrandDetailProps> = ({ brand }) => {
           data={listProductWithParams}
           emptyMessage="Sin productos."
           size="small"
+          tableHeader={renderFilterInput}
           dataFilters={filters}
           editMode="row"
         />

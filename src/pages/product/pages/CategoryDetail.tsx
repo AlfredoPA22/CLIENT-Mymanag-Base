@@ -130,6 +130,7 @@ const CategoryDetail: FC<CategoryDetailProps> = ({ category }) => {
           emptyMessage="Sin productos."
           size="small"
           dataFilters={filters}
+          tableHeader={renderFilterInput}
           editMode="row"
         />
       </Card>

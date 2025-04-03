@@ -13,10 +13,6 @@ interface ProductCardProps {
 }
 
 const ProductCard: FC<ProductCardProps> = ({ productData }) => {
-  const header = (urlImage: string) => (
-    <img className="w-[300px] h-[300px]" alt="Card" src={urlImage} />
-  );
-
   const statusBodyTemplate = (rowData: IProduct) => {
     const status = getStatus(rowData.status);
     if (status) {

@@ -1,23 +1,22 @@
 import { useMutation, useQuery } from "@apollo/client";
 import { Button } from "primereact/button";
-import { Card } from "primereact/card";
 import { Tag } from "primereact/tag";
 import { FC, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import LabelInput from "../../../../components/labelInput/LabelInput";
+import LoadingSpinner from "../../../../components/LoadingSpinner/LoadingSpinner";
+import { APPROVE_PURCHASE_ORDER } from "../../../../graphql/mutations/PurchaseOrder";
+import { LIST_PRODUCT } from "../../../../graphql/queries/Product";
 import {
   FIND_PURCHASE_ORDER,
   LIST_PURCHASE_ORDER,
 } from "../../../../graphql/queries/PurchaseOrder";
+import { currencySymbol } from "../../../../utils/constants/currencyConstants";
+import { orderStatus } from "../../../../utils/enums/orderStatus.enum";
 import { ToastSeverity } from "../../../../utils/enums/toast.enum";
 import { showToast } from "../../../../utils/toastUtils";
 import { getDate } from "../../utils/getDate";
 import { getStatus } from "../../utils/getStatus";
-import { APPROVE_PURCHASE_ORDER } from "../../../../graphql/mutations/PurchaseOrder";
-import { LIST_PRODUCT } from "../../../../graphql/queries/Product";
-import { useNavigate } from "react-router-dom";
-import { orderStatus } from "../../../../utils/enums/orderStatus.enum";
-import { currencySymbol } from "../../../../utils/constants/currencyConstants";
-import LoadingSpinner from "../../../../components/LoadingSpinner/LoadingSpinner";
 
 interface PurchaseOrderDetailProps {
   purchaseOrderId: string;
