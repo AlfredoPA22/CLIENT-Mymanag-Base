@@ -2,7 +2,6 @@ import { useApolloClient, useMutation } from "@apollo/client";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { Button } from "primereact/button";
-import { Card } from "primereact/card";
 import { confirmDialog } from "primereact/confirmdialog";
 import { Tag } from "primereact/tag";
 import { useState } from "react";
