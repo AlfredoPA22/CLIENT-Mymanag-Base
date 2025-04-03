@@ -2,7 +2,6 @@ import { Menubar } from "primereact/menubar";
 import { MenuItem } from "primereact/menuitem";
 import { useEffect } from "react";
 import {
-  MdCategory,
   MdOutlineInventory,
   MdProductionQuantityLimits,
 } from "react-icons/md";
