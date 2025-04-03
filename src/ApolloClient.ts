@@ -10,8 +10,6 @@ import { resetNavbar } from "./redux/slices/navbarSlice";
 import { resetPurchaseOrder } from "./redux/slices/purchaseOrderSlice";
 import { resetSaleOrder } from "./redux/slices/saleOrderSlice";
 import store from "./redux/store";
-import { showToast } from "./utils/toastUtils";
-import { ToastSeverity } from "./utils/enums/toast.enum";
 
 const logout = async () => {
   store.dispatch(resetAuth());
