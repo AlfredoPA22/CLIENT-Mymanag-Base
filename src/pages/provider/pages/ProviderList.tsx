@@ -1,6 +1,5 @@
 import { useMutation } from "@apollo/client";
 import { Button } from "primereact/button";
-import { Card } from "primereact/card";
 import { ColumnEditorOptions } from "primereact/column";
 import { DataTableRowEditCompleteEvent } from "primereact/datatable";
 import { Dialog } from "primereact/dialog";
