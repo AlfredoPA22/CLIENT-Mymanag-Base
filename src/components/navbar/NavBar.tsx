@@ -34,27 +34,19 @@ const Navbar = () => {
       },
     },
     {
-      label: "Categorias",
-      icon: <MdCategory className="mr-2" />,
+      label: "Inventario",
+      icon: <MdProductionQuantityLimits className="mr-2" />,
       command: () => {
-        navigate("/product/category");
+        navigate("/product");
         dispatch(setCurrentModule(1));
       },
     },
     {
-      label: "Marcas",
-      icon: <MdCategory className="mr-2" />,
+      label: "Compras",
+      icon: <MdOutlineInventory className="mr-2" />,
       command: () => {
-        navigate("/product/brand");
+        navigate("/order/purchaseOrder");
         dispatch(setCurrentModule(2));
-      },
-    },
-    {
-      label: "Productos",
-      icon: <MdProductionQuantityLimits className="mr-2" />,
-      command: () => {
-        navigate("/product");
-        dispatch(setCurrentModule(3));
       },
     },
     {
@@ -62,23 +54,7 @@ const Navbar = () => {
       icon: "pi pi-inbox",
       command: () => {
         navigate("/client");
-        dispatch(setCurrentModule(4));
-      },
-    },
-    {
-      label: "Proveedores",
-      icon: "pi pi-inbox",
-      command: () => {
-        navigate("/provider");
-        dispatch(setCurrentModule(5));
-      },
-    },
-    {
-      label: "compras",
-      icon: <MdOutlineInventory className="mr-2" />,
-      command: () => {
-        navigate("/order/purchaseOrder");
-        dispatch(setCurrentModule(6));
+        dispatch(setCurrentModule(3));
       },
     },
     {
@@ -86,7 +62,7 @@ const Navbar = () => {
       icon: <MdOutlineInventory className="mr-2" />,
       command: () => {
         navigate("/order/saleOrder");
-        dispatch(setCurrentModule(7));
+        dispatch(setCurrentModule(4));
       },
     },
     {
@@ -94,7 +70,7 @@ const Navbar = () => {
       icon: "pi pi-cog",
       command: () => {
         navigate("/admin");
-        dispatch(setCurrentModule(8));
+        dispatch(setCurrentModule(5));
       },
     },
     {

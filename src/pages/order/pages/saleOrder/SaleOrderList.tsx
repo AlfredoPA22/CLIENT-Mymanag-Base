@@ -25,6 +25,7 @@ import useSaleOrderList from "../../hooks/useSaleOrderList";
 import { generatePDF } from "../../utils/generateSaleOrderPDF";
 import { getDate } from "../../utils/getDate";
 import { getStatus } from "../../utils/getStatus";
+import { DataTableSelectionSingleChangeEvent } from "primereact/datatable";
 
 const SaleOrderList = () => {
   const { listSaleOrder, loadingListSaleOrder } = useSaleOrderList();
@@ -151,7 +152,7 @@ const SaleOrderList = () => {
             <Button
               tooltip="Completar venta"
               tooltipOptions={{ position: "left" }}
-              icon="pi pi-align-justify"
+              icon="pi pi-pencil"
               raised
               severity="info"
               aria-label="Cancel"
@@ -175,7 +176,7 @@ const SaleOrderList = () => {
             <Button
               tooltip="Completar venta"
               tooltipOptions={{ position: "left" }}
-              icon="pi pi-align-justify"
+              icon="pi pi-pencil"
               raised
               severity="info"
               aria-label="Cancel"
@@ -197,15 +198,6 @@ const SaleOrderList = () => {
       return (
         <div className="flex justify-center gap-2">
           <Button
-            tooltip="Ver detalle de venta"
-            tooltipOptions={{ position: "left" }}
-            icon="pi pi-eye"
-            raised
-            severity="info"
-            aria-label="Cancel"
-            onClick={() => navigate(`/order/viewSaleOrder/${rowData._id}`)}
-          />
-          <Button
             tooltip="Imprimir venta"
             tooltipOptions={{ position: "left" }}
             icon="pi pi-download"
@@ -226,6 +218,12 @@ const SaleOrderList = () => {
         </div>
       );
     }
+  };
+
+  const handleSelectionChange = (
+    e: DataTableSelectionSingleChangeEvent<ISaleOrder[]>
+  ) => {
+    navigate(`/order/viewSaleOrder/${e.value._id}`);
   };
 
   const [columns] = useState<DataTableColumn<ISaleOrder>[]>([
@@ -283,6 +281,7 @@ const SaleOrderList = () => {
         actionBodyTemplate={actionBodyTemplate}
         dataFilters={filters}
         tableHeader={renderFilterInput}
+        onSelectionChange={handleSelectionChange}
       />
     </Card>
   );

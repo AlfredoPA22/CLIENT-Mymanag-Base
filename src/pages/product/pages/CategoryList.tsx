@@ -206,7 +206,8 @@ const CategoryList = () => {
   }
 
   return (
-    <Card className="size-full" header={tableHeaderTemplate}>
+    <div className="size-full">
+      {tableHeaderTemplate()}
       <Table
         columns={columns}
         data={listCategory}
@@ -229,14 +230,12 @@ const CategoryList = () => {
       <Dialog
         className="md:w-[90vw] w-[90vw]"
         visible={visibleDetail}
-        header={
-          currentCategory && `Detalle de categoria`
-        }
+        header={currentCategory && `Detalle de categoria`}
         onHide={() => setVisibleDetail(false)}
       >
         {currentCategory && <CategoryDetail category={currentCategory} />}
       </Dialog>
-    </Card>
+    </div>
   );
 };
 

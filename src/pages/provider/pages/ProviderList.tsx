@@ -158,7 +158,9 @@ const ProviderList = () => {
   }
 
   return (
-    <Card className="size-full" header={tableHeaderTemplate}>
+    <div className="size-full">
+      {tableHeaderTemplate()}
+      
       <Table
         columns={columns}
         data={listProvider}
@@ -185,7 +187,7 @@ const ProviderList = () => {
           >
             {currentProvider && <ClientSaleOrderList client={currentProvider} />}
           </Dialog> */}
-    </Card>
+    </div>
   );
 };
 

@@ -29,6 +29,7 @@ import usePurchaseOrderList from "../../hooks/usePurchaseOrderList";
 import { getDate } from "../../utils/getDate";
 import { getStatus } from "../../utils/getStatus";
 import LoadingSpinner from "../../../../components/LoadingSpinner/LoadingSpinner";
+import { DataTableSelectionSingleChangeEvent } from "primereact/datatable";
 
 const PurchaseOrderList = () => {
   const { listPurchaseOrder, loadingListPurchaseOrder } =
@@ -209,7 +210,7 @@ const PurchaseOrderList = () => {
             <Button
               tooltip="Completar compra"
               tooltipOptions={{ position: "left" }}
-              icon="pi pi-align-justify"
+              icon="pi pi-pencil"
               raised
               severity="info"
               aria-label="Cancel"
@@ -235,7 +236,7 @@ const PurchaseOrderList = () => {
             <Button
               tooltip="Completar compra"
               tooltipOptions={{ position: "left" }}
-              icon="pi pi-align-justify"
+              icon="pi pi-pencil"
               raised
               severity="info"
               aria-label="Cancel"
@@ -243,6 +244,7 @@ const PurchaseOrderList = () => {
                 navigate(`/order/editPurchaseOrder/${rowData._id}`)
               }
             />
+
             <Button
               tooltip="Imprimir compra"
               tooltipOptions={{ position: "left" }}
@@ -259,15 +261,6 @@ const PurchaseOrderList = () => {
       return (
         <div className="flex justify-center gap-2">
           <Button
-            tooltip="Ver detalle de compra"
-            tooltipOptions={{ position: "left" }}
-            icon="pi pi-eye"
-            raised
-            severity="info"
-            aria-label="Cancel"
-            onClick={() => navigate(`/order/viewPurchaseOrder/${rowData._id}`)}
-          />
-          <Button
             tooltip="Imprimir compra"
             tooltipOptions={{ position: "left" }}
             icon="pi pi-download"
@@ -276,6 +269,7 @@ const PurchaseOrderList = () => {
             aria-label="Cancel"
             onClick={() => handleGeneratePDF(rowData._id)}
           />
+
           <Button
             tooltip="Eliminar compra"
             tooltipOptions={{ position: "left" }}
@@ -288,6 +282,12 @@ const PurchaseOrderList = () => {
         </div>
       );
     }
+  };
+
+  const handleSelectionChange = (
+    e: DataTableSelectionSingleChangeEvent<IPurchaseOrder[]>
+  ) => {
+    navigate(`/order/viewPurchaseOrder/${e.value._id}`);
   };
 
   const [columns] = useState<DataTableColumn<IPurchaseOrder>[]>([
@@ -335,7 +335,9 @@ const PurchaseOrderList = () => {
   }
 
   return (
-    <Card className="size-full" header={tableHeaderTemplate}>
+    <div className="size-full">
+      {tableHeaderTemplate()}
+      
       <Table
         columns={columns}
         data={listPurchaseOrder}
@@ -344,8 +346,9 @@ const PurchaseOrderList = () => {
         actionBodyTemplate={actionBodyTemplate}
         dataFilters={filters}
         tableHeader={renderFilterInput}
+        onSelectionChange={handleSelectionChange}
       />
-    </Card>
+    </div>
   );
 };
 

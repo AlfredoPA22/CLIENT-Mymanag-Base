@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 
 import { LOGIN } from "../../../graphql/mutations/User";
 
-import { RootState } from "../../../redux/store";
+import store, { RootState } from "../../../redux/store";
 import { DecodedToken, ILoginInput } from "../../../utils/interfaces/User";
 import {
   resetAuth,
@@ -69,9 +69,37 @@ const useAuth = () => {
     navigate("/login");
   };
 
+  const isTokenExpired = () => {
+    const token = store.getState().authSlice.token;
+    if (token) {
+      const decoded: DecodedToken = jwtDecode(token);
+      const currentTimestamp = Math.floor(Date.now() / 1000);
+      return decoded?.exp && decoded.exp <= currentTimestamp;
+    }
+    return false;
+  };
+
   const checkAuthentication = async () => {
-    if (!token) {
+    try {
+      if (!token) {
+        dispatch(setIsAuthenticated(false));
+      } else {
+        const isExpired = isTokenExpired();
+        dispatch(setIsAuthenticated(isExpired ? false : true));
+        if (isExpired && isAuthenticated) {
+          showToast({
+            detail: "Token expirado",
+            severity: ToastSeverity.Error,
+          });
+          await logout();
+        }
+      }
+    } catch (error: any) {
       dispatch(setIsAuthenticated(false));
+      showToast({
+        detail: error.message,
+        severity: ToastSeverity.Error,
+      });
     }
   };
 

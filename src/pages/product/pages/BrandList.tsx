@@ -201,7 +201,8 @@ const BrandList = () => {
     return <LoadingSpinner />;
   }
   return (
-    <Card className="size-full" header={tableHeaderTemplate}>
+    <div className="size-full">
+      {tableHeaderTemplate()}
       <Table
         columns={columns}
         data={listBrand}
@@ -229,7 +230,7 @@ const BrandList = () => {
       >
         {currentBrand && <BrandDetail brand={currentBrand} />}
       </Dialog>
-    </Card>
+    </div>
   );
 };
 

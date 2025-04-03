@@ -259,7 +259,10 @@ const ProductList = () => {
   }
 
   return (
-    <Card className="size-full" header={tableHeaderTemplate}>
+    <div className="size-full">
+      {
+        tableHeaderTemplate()
+      }
       <Table
         columns={columns}
         data={listProduct}
@@ -291,7 +294,7 @@ const ProductList = () => {
       >
         {currentProduct && <ProductSerialList product={currentProduct} />}
       </Dialog>
-    </Card>
+    </div>
   );
 };
 
