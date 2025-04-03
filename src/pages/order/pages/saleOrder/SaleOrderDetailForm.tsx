@@ -77,7 +77,7 @@ const SaleOrderDetailForm: FC<SaleOrderDetailFormProps> = ({ saleOrderId }) => {
   });
 
   return (
-    <Card className="flex flex-col m-2 h-full">
+    <Card className="size-full mb-2">
       <form
         onSubmit={handleSubmit}
         className="flex justify-center items-center"

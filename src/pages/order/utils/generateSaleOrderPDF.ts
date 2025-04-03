@@ -15,7 +15,7 @@ export const generatePDF = (data: ISaleOrderToPDF) => {
   doc.setFontSize(12);
   doc.text(`Código: ${data.saleOrder.code}`, 14, 30);
   doc.text(
-    `Cliente: ${data.saleOrder.client.firstName} ${data.saleOrder.client.lastName}`,
+    `Cliente: ${data.saleOrder.client.fullName}`,
     14,
     35
   );

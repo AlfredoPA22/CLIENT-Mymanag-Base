@@ -4,12 +4,18 @@ import { Calendar } from "primereact/calendar";
 import { Tag } from "primereact/tag";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { ActionMeta, SingleValue } from "react-select";
 import LabelInput from "../../../../components/labelInput/LabelInput";
+import SelectInput from "../../../../components/SelectInput/SelectInput";
+import { CREATE_PROVIDER } from "../../../../graphql/mutations/Provider";
 import {
   APPROVE_PURCHASE_ORDER,
   CREATE_PURCHASE_ORDER,
 } from "../../../../graphql/mutations/PurchaseOrder";
 import { GENERATE_CODE } from "../../../../graphql/queries/CodeGenerator";
+import { LIST_PRODUCT } from "../../../../graphql/queries/Product";
+import { LIST_PROVIDER } from "../../../../graphql/queries/Provider";
 import { LIST_PURCHASE_ORDER } from "../../../../graphql/queries/PurchaseOrder";
 import { useFormikForm } from "../../../../hooks/useFormikForm";
 import {
@@ -18,24 +24,19 @@ import {
   setPurchaseOrderInitialized,
 } from "../../../../redux/slices/purchaseOrderSlice";
 import { RootState } from "../../../../redux/store";
+import { currencySymbol } from "../../../../utils/constants/currencyConstants";
 import { codeType } from "../../../../utils/enums/codeType.enum";
 import { ToastSeverity } from "../../../../utils/enums/toast.enum";
 import { IPurchaseOrderInput } from "../../../../utils/interfaces/PurchaseOrder";
+import { IReactSelect } from "../../../../utils/interfaces/Select";
 import { showToast } from "../../../../utils/toastUtils";
+import useProviderList from "../../../provider/hooks/useProviderList";
 import { getStatus } from "../../utils/getStatus";
 import { schemaFormPurchaseOrder } from "../../validations/FormPurchaseOrderValidation";
-import { useNavigate } from "react-router-dom";
-import { LIST_PRODUCT } from "../../../../graphql/queries/Product";
-import { currencySymbol } from "../../../../utils/constants/currencyConstants";
-import useProviderList from "../../../provider/hooks/useProviderList";
-import { DropdownProps } from "primereact/dropdown";
-import DropdownInput from "../../../../components/dropdownInput/DropdownInput";
-import { AutoCompleteChangeEvent } from "primereact/autocomplete";
 
 const PurchaseOrderForm = () => {
   const {
     data: { generateCode: codeOrder } = "",
-    loading: loadingCode,
     error: errorCodeOrder,
     refetch: refetchCodeOrder,
   } = useQuery(GENERATE_CODE, {
@@ -43,9 +44,11 @@ const PurchaseOrderForm = () => {
     fetchPolicy: "network-only",
   });
 
-  const { listProvider } = useProviderList();
+  const { listProviderSelect } = useProviderList();
 
-  const [selectedProvider, setSelectedProvider] = useState(null);
+  const [selectedProvider, setSelectedProvider] = useState<IReactSelect | null>(
+    null
+  );
 
   const navigate = useNavigate();
 
@@ -55,6 +58,10 @@ const PurchaseOrderForm = () => {
 
   const [approvePurchaseOrder] = useMutation(APPROVE_PURCHASE_ORDER, {
     refetchQueries: [{ query: LIST_PURCHASE_ORDER }, { query: LIST_PRODUCT }],
+  });
+
+  const [createProvider] = useMutation(CREATE_PROVIDER, {
+    refetchQueries: [{ query: LIST_PROVIDER }],
   });
 
   const { purchaseOrderInitialized, purchaseOrderData } = useSelector(
@@ -97,13 +104,6 @@ const PurchaseOrderForm = () => {
     resetForm();
   };
 
-  const handleProviderChange = async (e: AutoCompleteChangeEvent) => {
-    const { value } = e.target;
-    setSelectedProvider(value ? value : "");
-    e.target.value = value ? value._id : "";
-    setFieldValue(e.target.name, e.target.value);
-  };
-
   const setApprovePurchaseOrder = async () => {
     try {
       const { data } = await approvePurchaseOrder({
@@ -122,26 +122,40 @@ const PurchaseOrderForm = () => {
     }
   };
 
-  const providerOptionTemplate = (option: { name: string; code: string }) => {
-    return (
-      <span className="whitespace-normal">
-        {`${option.name} (${option.code})`}
-      </span>
-    );
+  const handleProviderChange = async (
+    event: SingleValue<IReactSelect>,
+    action: ActionMeta<IReactSelect>
+  ) => {
+    setSelectedProvider(event);
+    setFieldValue(action.name || "", event ? event.value : "");
   };
 
-  const selectedProviderTemplate = (
-    option: { id: string; name: string; code: string },
-    props: DropdownProps
-  ) => {
-    if (option) {
-      return (
-        <span className="block truncate max-sm:w-3/4 md:w-3/4 lg:w-auto xl:w-auto">
-          {`${option.name} (${option.code})`}
-        </span>
-      );
+  const onCreateProvider = async (inputValue: string) => {
+    try {
+      const { data } = await createProvider({
+        variables: {
+          name: inputValue,
+          address: "",
+          phoneNumber: "",
+        },
+      });
+
+      if (data) {
+        showToast({
+          detail: "Proveedor creado",
+          severity: ToastSeverity.Success,
+        });
+
+        setSelectedProvider({
+          value: data.createProvider._id,
+          label: data.createProvider.name,
+        });
+
+        setFieldValue("provider", data.createProvider._id);
+      }
+    } catch (error: any) {
+      showToast({ detail: error.message, severity: ToastSeverity.Error });
     }
-    return <span>{props.placeholder}</span>;
   };
 
   const {
@@ -163,37 +177,45 @@ const PurchaseOrderForm = () => {
   return (
     <form
       onSubmit={handleSubmit}
-      className="flex md:flex-row flex-col justify-between items-center gap-10"
+      className="p-5 shadow-lg rounded-lg border border-gray-200 bg-white mb-2"
     >
-      <section className="grid grid-cols-1 md:flex justify-center items-end md:gap-10 gap-5 order-2 md:order-1">
-        <div>
-          <LabelInput name="date" label="Fecha de compra" />
-          <Calendar
-            name="date"
-            value={values.date}
-            onChange={handleChange}
-            showIcon
-            disabled={purchaseOrderInitialized}
-          />
-        </div>
-        <DropdownInput
-          className="md:w-[300px]"
-          label="Proveedor"
-          name="provider"
-          optionLabel="name"
-          placeholder="Seleccionar proveedor"
-          filter={true}
-          showClear={true}
-          mandatory
-          itemTemplate={providerOptionTemplate}
-          valueTemplate={selectedProviderTemplate}
-          options={listProvider}
-          value={selectedProvider}
-          error={errors.provider ? errors.provider : ""}
-          onChange={handleProviderChange}
-          disabled={purchaseOrderInitialized}
-        />
+      <div className="flex flex-col items-center text-center gap-2 mb-5">
+        <h2 className="text-2xl font-bold text-gray-800">
+          Nueva Orden de Compra
+        </h2>
+        <p className="text-gray-500 text-sm">
+          Completa los detalles para registrar la compra
+        </p>
+      </div>
 
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+        {/* Información del proveedor y fecha */}
+        <section className="flex flex-col gap-3 border-r md:border-r-gray-300 md:pr-6">
+          <div className="flex flex-col">
+            <LabelInput name="date" label="Fecha de compra" />
+            <Calendar
+              name="date"
+              value={values.date}
+              onChange={handleChange}
+              showIcon
+              disabled={purchaseOrderInitialized}
+            />
+          </div>
+          <div className="flex flex-col">
+            <SelectInput
+              label="Proveedor"
+              name="provider"
+              placeholder="Seleccionar proveedor"
+              mandatory
+              options={listProviderSelect}
+              error={errors.provider ? errors.provider : ""}
+              onChange={handleProviderChange}
+              onCreateOption={onCreateProvider}
+              value={selectedProvider}
+              disabled={purchaseOrderInitialized}
+            />
+          </div>
+        </section>
         <div className="flex justify-center">
           {!purchaseOrderInitialized ? (
             <Button
@@ -204,33 +226,23 @@ const PurchaseOrderForm = () => {
               disabled={!isValid || isSubmitting}
             />
           ) : (
-            <Button
-              type="button"
-              severity="warning"
-              label="Reiniciar"
-              onClick={handleResetPurchaseOrder}
-            />
+            <section className="flex flex-col items-center justify-center">
+              <LabelInput name="total" label="Total de compra" />
+              <span className="text-2xl font-semibold text-green-600">
+                {`${purchaseOrderData?.total} ${currencySymbol}`}
+              </span>
+            </section>
           )}
         </div>
-      </section>
-      {purchaseOrderInitialized && (
-        <section className="flex flex-col justify-center items-center gap-2 order-3 md:order-2">
-          <LabelInput name="date" label="Total de compra" />
-          <Tag
-            value={`${purchaseOrderData?.total} ${currencySymbol}`}
-            severity={"info"}
-            className="text-xl"
-          />
-        </section>
-      )}
-      <section className="flex justify-start items-start order-1 md:order-3">
-        {loadingCode ? (
-          "cargando"
-        ) : (
-          <div className="flex flex-col gap-2 items-center justify-center">
-            <span className="text-2xl font-bold">{codeOrder}</span>{" "}
-            {purchaseOrderData?.status && purchaseOrderInitialized && (
-              <>
+
+        {purchaseOrderInitialized && (
+          <section className="flex flex-col gap-5 rounded-md">
+            <div className="flex flex-col items-center gap-2 bg-gray-100 p-4 rounded-md">
+              <span className="text-gray-600 text-sm">Código de Orden</span>
+              <span className="text-xl font-bold text-gray-800">
+                {codeOrder}
+              </span>
+              {purchaseOrderData?.status && (
                 <Tag
                   severity={
                     getStatus(purchaseOrderData?.status)?.severity as
@@ -242,20 +254,30 @@ const PurchaseOrderForm = () => {
                 >
                   {getStatus(purchaseOrderData?.status)?.label}
                 </Tag>
-                <Button
-                  icon="pi pi-check-circle"
-                  type="button"
-                  severity="success"
-                  label="Aprobar compra"
-                  onClick={setApprovePurchaseOrder}
-                />
-              </>
-            )}
-          </div>
+              )}
+            </div>
+            
+            <div className="flex flex-row justify-center gap-4">
+              <Button
+                type="button"
+                severity="warning"
+                label="Reiniciar"
+                onClick={handleResetPurchaseOrder}
+                className="w-auto"
+              />
+              <Button
+                icon="pi pi-check-circle"
+                type="button"
+                severity="success"
+                label="Aprobar Compra"
+                onClick={setApprovePurchaseOrder}
+                className="w-auto"
+              />
+            </div>
+          </section>
         )}
-      </section>
+      </div>
     </form>
   );
 };
-
 export default PurchaseOrderForm;

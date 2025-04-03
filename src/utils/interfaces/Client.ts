@@ -1,13 +1,15 @@
 export interface IClient {
   _id: string;
   code: string;
-  firstName: string;
-  lastName: string;
+  fullName: string;
+  email: string;
+  address: string;
   phoneNumber: string;
 }
 
 export interface IClientInput {
-  firstName: string;
-  lastName: string;
+  fullName: string;
   phoneNumber?: string;
+  email?: string;
+  address?: string;
 }

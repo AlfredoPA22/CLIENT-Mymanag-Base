@@ -22,8 +22,7 @@ export const CREATE_SALE_ORDER_DETAIL = gql`
         client {
           _id
           code
-          firstName
-          lastName
+          fullName
           phoneNumber
         }
         date

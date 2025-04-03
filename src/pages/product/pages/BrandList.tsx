@@ -2,11 +2,15 @@ import { useMutation } from "@apollo/client";
 import { Button } from "primereact/button";
 import { Card } from "primereact/card";
 import { ColumnEditorOptions } from "primereact/column";
-import { DataTableRowEditCompleteEvent } from "primereact/datatable";
+import {
+  DataTableRowEditCompleteEvent,
+  DataTableSelectionSingleChangeEvent,
+} from "primereact/datatable";
 import { Dialog } from "primereact/dialog";
 import { Tag } from "primereact/tag";
 import { useState } from "react";
 import Table from "../../../components/datatable/Table";
+import LoadingSpinner from "../../../components/LoadingSpinner/LoadingSpinner";
 import { textEditor } from "../../../components/textEditor/textEditor";
 import { DELETE_BRAND, UPDATE_BRAND } from "../../../graphql/mutations/Brand";
 import { LIST_BRAND } from "../../../graphql/queries/Brand";
@@ -17,12 +21,14 @@ import { DataTableColumn } from "../../../utils/interfaces/Table";
 import { showToast } from "../../../utils/toastUtils";
 import { Status } from "../../../utils/types/StatusType";
 import useBrandList from "../hooks/useBrandList";
+import BrandDetail from "./BrandDetail";
 import BrandForm from "./BrandForm";
-import LoadingSpinner from "../../../components/LoadingSpinner/LoadingSpinner";
 
 const BrandList = () => {
   const { listBrand, loadingListBrand } = useBrandList();
   const [visibleForm, setVisibleForm] = useState<boolean>(false);
+  const [visibleDetail, setVisibleDetail] = useState<boolean>(false);
+  const [currentBrand, setCurrentBrand] = useState<IBrand>();
 
   const [deleteBrand] = useMutation(DELETE_BRAND, {
     refetchQueries: [
@@ -125,6 +131,13 @@ const BrandList = () => {
     );
   };
 
+  const handleSelectionChange = (
+    e: DataTableSelectionSingleChangeEvent<IBrand[]>
+  ) => {
+    setCurrentBrand(e.value);
+    setVisibleDetail(true);
+  };
+
   const onRowEditComplete = async (e: DataTableRowEditCompleteEvent) => {
     try {
       if (e.newData.name === "") {
@@ -199,6 +212,7 @@ const BrandList = () => {
         tableHeader={renderFilterInput}
         editMode="row"
         onRowEditComplete={onRowEditComplete}
+        onSelectionChange={handleSelectionChange}
       />
       <Dialog
         header="Nueva Marca"
@@ -206,6 +220,14 @@ const BrandList = () => {
         onHide={() => setVisibleForm(false)}
       >
         <BrandForm setVisibleForm={setVisibleForm} />
+      </Dialog>
+      <Dialog
+        className="md:w-[90vw] w-[90vw]"
+        visible={visibleDetail}
+        header={currentBrand && `Detalle de marca`}
+        onHide={() => setVisibleDetail(false)}
+      >
+        {currentBrand && <BrandDetail brand={currentBrand} />}
       </Dialog>
     </Card>
   );

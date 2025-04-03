@@ -90,7 +90,7 @@ const HeaderHome: FC = () => {
         </div>
 
         <span className="flex justify-center items-center text-xl">
-          {generalData.best_product.name}
+          {generalData.best_product ? generalData.best_product.name : "Ninguno"}
         </span>
 
         <span className="flex justify-center items-center text-xl">

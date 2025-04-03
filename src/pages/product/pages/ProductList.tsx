@@ -4,10 +4,17 @@ import useProductList from "../hooks/useProductList";
 import { useMutation } from "@apollo/client";
 import { Button } from "primereact/button";
 import { Card } from "primereact/card";
+import { ColumnEditorOptions } from "primereact/column";
+import { DataTableRowEditCompleteEvent, DataTableSelectionSingleChangeEvent } from "primereact/datatable";
 import { Dialog } from "primereact/dialog";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import defaultProduct from "../../../assets/defaultProduct.jpg";
 import Table from "../../../components/datatable/Table";
 import LabelInput from "../../../components/labelInput/LabelInput";
+import LoadingSpinner from "../../../components/LoadingSpinner/LoadingSpinner";
+import { numberEditor } from "../../../components/numberEditor/numberEditor";
+import { textEditor } from "../../../components/textEditor/textEditor";
 import {
   DELETE_PRODUCT,
   UPDATE_PRODUCT,
@@ -15,6 +22,7 @@ import {
 import { LIST_PRODUCT } from "../../../graphql/queries/Product";
 import useTableGlobalFilter from "../../../hooks/useTableGlobalFilter";
 import { currencySymbol } from "../../../utils/constants/currencyConstants";
+import { stockType } from "../../../utils/enums/stockType.enum";
 import { ToastSeverity } from "../../../utils/enums/toast.enum";
 import { IProduct } from "../../../utils/interfaces/Product";
 import { DataTableColumn } from "../../../utils/interfaces/Table";
@@ -22,20 +30,14 @@ import { showToast } from "../../../utils/toastUtils";
 import { getStatus } from "../../order/utils/getStatus";
 import ProductForm from "./ProductForm";
 import ProductSerialList from "./ProductSerialList";
-import { DataTableRowEditCompleteEvent } from "primereact/datatable";
-import { ColumnEditorOptions } from "primereact/column";
-import { textEditor } from "../../../components/textEditor/textEditor";
-import { numberEditor } from "../../../components/numberEditor/numberEditor";
-import { stockType } from "../../../utils/enums/stockType.enum";
-import { Link } from "react-router-dom";
-import defaultProduct from "../../../assets/defaultProduct.jpg";
-import LoadingSpinner from "../../../components/LoadingSpinner/LoadingSpinner";
 
 const ProductList = () => {
   const { listProduct, loadingListProduct } = useProductList();
   const [visibleForm, setVisibleForm] = useState<boolean>(false);
   const [visibleList, setVisibleList] = useState<boolean>(false);
   const [currentProduct, setCurrentProduct] = useState<IProduct>();
+
+  const navigate= useNavigate();
 
   const [deleteProduct] = useMutation(DELETE_PRODUCT, {
     refetchQueries: [
@@ -169,20 +171,18 @@ const ProductList = () => {
     }
   };
 
+   const handleSelectionChange = (
+      e: DataTableSelectionSingleChangeEvent<IProduct[]>
+    ) => {
+      navigate(`/product/detail/${e.value._id}`)
+    };
+
   const [columns] = useState<DataTableColumn<IProduct>[]>([
     {
       field: "code",
       header: "Codigo",
       sortable: true,
       style: { width: "10%" },
-      body: (rowData: IProduct) => (
-        <Link
-          className="underline hover:text-blue-300"
-          to={`/product/Detail/${rowData._id}`}
-        >
-          {rowData.code}
-        </Link>
-      ),
     },
     {
       field: "image",
@@ -270,6 +270,7 @@ const ProductList = () => {
         tableHeader={renderFilterInput}
         editMode="row"
         onRowEditComplete={onRowEditComplete}
+        onSelectionChange={handleSelectionChange}
       />
       <Dialog
         className="md:w-[50vw] w-[90vw]"

@@ -1,17 +1,21 @@
 import { useMutation, useQuery } from "@apollo/client";
-import { AutoCompleteChangeEvent } from "primereact/autocomplete";
 import { Button } from "primereact/button";
 import { Calendar } from "primereact/calendar";
 import { Tag } from "primereact/tag";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import DropdownInput from "../../../../components/dropdownInput/DropdownInput";
+import { useNavigate } from "react-router-dom";
+import { ActionMeta, SingleValue } from "react-select";
 import LabelInput from "../../../../components/labelInput/LabelInput";
+import SelectInput from "../../../../components/SelectInput/SelectInput";
+import { CREATE_CLIENT } from "../../../../graphql/mutations/Client";
 import {
   APPROVE_SALE_ORDER,
   CREATE_SALE_ORDER,
 } from "../../../../graphql/mutations/SaleOrder";
+import { LIST_CLIENT } from "../../../../graphql/queries/Client";
 import { GENERATE_CODE } from "../../../../graphql/queries/CodeGenerator";
+import { LIST_PRODUCT } from "../../../../graphql/queries/Product";
 import { LIST_SALE_ORDER } from "../../../../graphql/queries/SaleOrder";
 import { useFormikForm } from "../../../../hooks/useFormikForm";
 import {
@@ -20,22 +24,19 @@ import {
   setSaleOrderInitialized,
 } from "../../../../redux/slices/saleOrderSlice";
 import { RootState } from "../../../../redux/store";
+import { currencySymbol } from "../../../../utils/constants/currencyConstants";
 import { codeType } from "../../../../utils/enums/codeType.enum";
 import { ToastSeverity } from "../../../../utils/enums/toast.enum";
 import { ISaleOrderInput } from "../../../../utils/interfaces/SaleOrder";
+import { IReactSelect } from "../../../../utils/interfaces/Select";
 import { showToast } from "../../../../utils/toastUtils";
 import useClientList from "../../../client/hooks/useClientList";
 import { getStatus } from "../../utils/getStatus";
 import { schemaFormSaleOrder } from "../../validations/FormSaleOrderValidation";
-import { useNavigate } from "react-router-dom";
-import { LIST_PRODUCT } from "../../../../graphql/queries/Product";
-import { currencySymbol } from "../../../../utils/constants/currencyConstants";
-import { DropdownProps } from "primereact/dropdown";
 
 const SaleOrderForm = () => {
   const {
     data: { generateCode: codeOrder } = "",
-    loading: loadingCode,
     error: errorCodeOrder,
     refetch: refetchCodeOrder,
   } = useQuery(GENERATE_CODE, {
@@ -43,9 +44,11 @@ const SaleOrderForm = () => {
     fetchPolicy: "network-only",
   });
 
-  const { listClient } = useClientList();
+  const { listClientSelect } = useClientList();
 
-  const [selectedClient, setSelectedClient] = useState(null);
+  const [selectedClient, setSelectedClient] = useState<IReactSelect | null>(
+    null
+  );
 
   const navigate = useNavigate();
 
@@ -55,6 +58,10 @@ const SaleOrderForm = () => {
 
   const [approveSaleOrder] = useMutation(APPROVE_SALE_ORDER, {
     refetchQueries: [{ query: LIST_SALE_ORDER }, { query: LIST_PRODUCT }],
+  });
+
+  const [createClient] = useMutation(CREATE_CLIENT, {
+    refetchQueries: [{ query: LIST_CLIENT }],
   });
 
   const { saleOrderInitialized, saleOrderData } = useSelector(
@@ -97,13 +104,6 @@ const SaleOrderForm = () => {
     resetForm();
   };
 
-  const handleClientChange = async (e: AutoCompleteChangeEvent) => {
-    const { value } = e.target;
-    setSelectedClient(value ? value : "");
-    e.target.value = value ? value._id : "";
-    setFieldValue(e.target.name, e.target.value);
-  };
-
   const setApproveSaleOrder = async () => {
     try {
       const { data } = await approveSaleOrder({
@@ -122,32 +122,42 @@ const SaleOrderForm = () => {
     }
   };
 
-  const clientOptionTemplate = (option: {
-    firstName: string;
-    lastName: string;
-    code: string;
-  }) => {
-    return (
-      <span className="whitespace-normal">
-        {`${option.firstName} ${option.lastName} (${option.code})`}
-      </span>
-    );
-  };
-
-  const selectedClientTemplate = (
-    option: { id: string; firstName: string; lastName: string; code: string },
-    props: DropdownProps
+  const handleClientChange = async (
+    event: SingleValue<IReactSelect>,
+    action: ActionMeta<IReactSelect>
   ) => {
-    if (option) {
-      return (
-        <span className="block truncate max-sm:w-3/4 md:w-3/4 lg:w-auto xl:w-auto">
-          {`${option.firstName} ${option.lastName} (${option.code})`}
-        </span>
-      );
-    }
-    return <span>{props.placeholder}</span>;
+    setSelectedClient(event);
+    setFieldValue(action.name || "", event ? event.value : "");
   };
 
+  const onCreateClient = async (inputValue: string) => {
+    try {
+      const { data } = await createClient({
+        variables: {
+          fullName: inputValue,
+          email: "",
+          address: "",
+          phoneNumber: "",
+        },
+      });
+
+      if (data) {
+        showToast({
+          detail: "Cliente creado",
+          severity: ToastSeverity.Success,
+        });
+
+        setSelectedClient({
+          value: data.createClient._id,
+          label: data.createClient.fullName,
+        });
+
+        setFieldValue("client", data.createClient._id);
+      }
+    } catch (error: any) {
+      showToast({ detail: error.message, severity: ToastSeverity.Error });
+    }
+  };
   const {
     handleChange,
     handleSubmit,
@@ -167,37 +177,45 @@ const SaleOrderForm = () => {
   return (
     <form
       onSubmit={handleSubmit}
-      className="flex md:flex-row flex-col justify-between items-center gap-10"
+      className="p-5 shadow-lg rounded-lg border border-gray-200 bg-white mb-2"
     >
-      <section className="grid grid-cols-1 md:flex justify-center items-end md:gap-10 gap-5 order-2 md:order-1">
-        <div>
-          <LabelInput name="date" label="Fecha de venta" />
-          <Calendar
-            name="date"
-            value={values.date}
-            onChange={handleChange}
-            showIcon
-            disabled={saleOrderInitialized}
-          />
-        </div>
-        <DropdownInput
-          className="md:w-[300px]"
-          label="Cliente"
-          name="client"
-          optionLabel="firstName"
-          placeholder="Seleccionar cliente"
-          filter={true}
-          showClear={true}
-          mandatory
-          itemTemplate={clientOptionTemplate}
-          valueTemplate={selectedClientTemplate}
-          options={listClient}
-          value={selectedClient}
-          error={errors.client ? errors.client : ""}
-          onChange={handleClientChange}
-          disabled={saleOrderInitialized}
-        />
+      <div className="flex flex-col items-center text-center gap-2 mb-5">
+        <h2 className="text-2xl font-bold text-gray-800">
+          Nueva Orden de Venta
+        </h2>
+        <p className="text-gray-500 text-sm">
+          Completa los detalles para registrar la venta
+        </p>
+      </div>
 
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+        {/* Información del proveedor y fecha */}
+        <section className="flex flex-col gap-3 border-r md:border-r-gray-300 md:pr-6">
+          <div className="flex flex-col">
+            <LabelInput name="date" label="Fecha de venta" />
+            <Calendar
+              name="date"
+              value={values.date}
+              onChange={handleChange}
+              showIcon
+              disabled={saleOrderInitialized}
+            />
+          </div>
+          <div className="flex flex-col">
+            <SelectInput
+              label="Cliente"
+              name="client"
+              placeholder="Seleccionar cliente"
+              mandatory
+              options={listClientSelect}
+              error={errors.client ? errors.client : ""}
+              onChange={handleClientChange}
+              onCreateOption={onCreateClient}
+              value={selectedClient}
+              disabled={saleOrderInitialized}
+            />
+          </div>
+        </section>
         <div className="flex justify-center">
           {!saleOrderInitialized ? (
             <Button
@@ -208,33 +226,23 @@ const SaleOrderForm = () => {
               disabled={!isValid || isSubmitting}
             />
           ) : (
-            <Button
-              type="button"
-              severity="warning"
-              label="Reiniciar"
-              onClick={handleResetSaleOrder}
-            />
+            <section className="flex flex-col items-center justify-center">
+              <LabelInput name="total" label="Total de venta" />
+              <span className="text-2xl font-semibold text-green-600">
+                {`${saleOrderData?.total} ${currencySymbol}`}
+              </span>
+            </section>
           )}
         </div>
-      </section>
-      {saleOrderInitialized && (
-        <section className="flex flex-col justify-center items-center gap-2 order-3 md:order-2">
-          <LabelInput name="date" label="Total de venta: " />
-          <Tag
-            value={`${saleOrderData?.total} ${currencySymbol}`}
-            severity={"info"}
-            className="text-xl"
-          />
-        </section>
-      )}
-      <section className="flex justify-start items-start order-1 md:order-3">
-        {loadingCode ? (
-          "cargando"
-        ) : (
-          <div className="flex flex-col gap-2 items-center justify-center">
-            <span className="text-2xl font-bold">{codeOrder}</span>{" "}
-            {saleOrderData?.status && saleOrderInitialized && (
-              <>
+
+        {saleOrderInitialized && (
+          <section className="flex flex-col gap-5 rounded-md">
+            <div className="flex flex-col items-center gap-2 bg-gray-100 p-4 rounded-md">
+              <span className="text-gray-600 text-sm">Código de Orden</span>
+              <span className="text-xl font-bold text-gray-800">
+                {codeOrder}
+              </span>
+              {saleOrderData?.status && (
                 <Tag
                   severity={
                     getStatus(saleOrderData?.status)?.severity as
@@ -246,18 +254,29 @@ const SaleOrderForm = () => {
                 >
                   {getStatus(saleOrderData?.status)?.label}
                 </Tag>
-                <Button
-                  icon="pi pi-check-circle"
-                  type="button"
-                  severity="success"
-                  label="Aprobar venta"
-                  onClick={setApproveSaleOrder}
-                />
-              </>
-            )}
-          </div>
+              )}
+            </div>
+
+            <div className="flex flex-row justify-center gap-4">
+              <Button
+                type="button"
+                severity="warning"
+                label="Reiniciar"
+                onClick={handleResetSaleOrder}
+                className="w-auto"
+              />
+              <Button
+                icon="pi pi-check-circle"
+                type="button"
+                severity="success"
+                label="Aprobar Venta"
+                onClick={setApproveSaleOrder}
+                className="w-auto"
+              />
+            </div>
+          </section>
         )}
-      </section>
+      </div>
     </form>
   );
 };

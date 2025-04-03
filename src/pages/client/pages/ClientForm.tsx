@@ -17,8 +17,9 @@ const ClientForm: FC<ClientFormProps> = ({ setVisibleForm }) => {
     refetchQueries: [{ query: LIST_CLIENT }],
   });
   const initialValues: IClientInput = {
-    firstName: "",
-    lastName: "",
+    fullName: "",
+    email: "",
+    address: "",
     phoneNumber: "",
   };
   const onSubmit = async () => {
@@ -46,23 +47,13 @@ const ClientForm: FC<ClientFormProps> = ({ setVisibleForm }) => {
     <form onSubmit={handleSubmit} className="grid gap-4">
       <section className="grid md:grid-cols-2 grid-cols-1 w-[300px] md:w-[600px] gap-4">
         <FieldTextInput
-          label="Nombre"
+          label="Nombre completo"
           type="text"
-          name="firstName"
-          placeholder="Nombre"
+          name="fullName"
+          placeholder="Nombre completo"
           mandatory
-          value={values.firstName}
-          error={errors.firstName ? errors.firstName : ""}
-          onChange={handleChange}
-        />
-        <FieldTextInput
-          label="Apellidos"
-          type="text"
-          name="lastName"
-          placeholder="Apellidos"
-          mandatory
-          value={values.lastName}
-          error={errors.lastName ? errors.lastName : ""}
+          value={values.fullName}
+          error={errors.fullName ? errors.fullName : ""}
           onChange={handleChange}
         />
         <FieldTextInput
@@ -72,6 +63,24 @@ const ClientForm: FC<ClientFormProps> = ({ setVisibleForm }) => {
           placeholder="Telefono"
           value={values.phoneNumber}
           error={errors.phoneNumber ? errors.phoneNumber : ""}
+          onChange={handleChange}
+        />
+        <FieldTextInput
+          label="Correo"
+          type="text"
+          name="email"
+          placeholder="Correo"
+          value={values.email}
+          error={errors.email ? errors.email : ""}
+          onChange={handleChange}
+        />
+        <FieldTextInput
+          label="Direccion"
+          type="text"
+          name="address"
+          placeholder="Direccion"
+          value={values.address}
+          error={errors.address ? errors.address : ""}
           onChange={handleChange}
         />
       </section>

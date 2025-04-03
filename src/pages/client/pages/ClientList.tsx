@@ -110,17 +110,18 @@ const ClientList = () => {
 
   const onRowEditComplete = async (e: DataTableRowEditCompleteEvent) => {
     try {
-      if (e.newData.firstName === "" || e.newData.lastName === "") {
+      if (e.newData.fullName === "") {
         showToast({
-          detail: "El nombre y el apellido son obligatorios",
+          detail: "El nombre es obligatorio",
           severity: ToastSeverity.Error,
         });
       } else {
         const { data } = await updateClient({
           variables: {
             clientId: e.newData._id,
-            firstName: e.newData.firstName,
-            lastName: e.newData.lastName,
+            fullName: e.newData.fullName,
+            email: e.newData.email,
+            address: e.newData.address,
             phoneNumber: e.newData.phoneNumber,
           },
         });
@@ -145,15 +146,9 @@ const ClientList = () => {
       style: { width: "15%" },
     },
     {
-      field: "firstName",
+      field: "fullName",
       header: "Nombre",
       sortable: true,
-      style: { width: "30%" },
-      fieldEditor: (options: ColumnEditorOptions) => textEditor(options),
-    },
-    {
-      field: "lastName",
-      header: "Apellidos",
       style: { width: "30%" },
       fieldEditor: (options: ColumnEditorOptions) => textEditor(options),
     },
@@ -164,47 +159,58 @@ const ClientList = () => {
       style: { width: "15%", textAlign: "center" },
       fieldEditor: (options: ColumnEditorOptions) => textEditor(options),
     },
+    {
+      field: "email",
+      header: "Correo",
+      style: { width: "30%" },
+      fieldEditor: (options: ColumnEditorOptions) => textEditor(options),
+    },
+    {
+      field: "address",
+      header: "Direccion",
+      style: { width: "30%" },
+      fieldEditor: (options: ColumnEditorOptions) => textEditor(options),
+    },
   ]);
 
   const { filters, renderFilterInput } = useTableGlobalFilter(columns);
 
-  if(loadingListClient){
-    return <LoadingSpinner/>
+  if (loadingListClient) {
+    return <LoadingSpinner />;
   }
 
   return (
     <Card className="size-full" header={tableHeaderTemplate}>
-      
-          <Table
-            columns={columns}
-            data={listClient}
-            emptyMessage="Sin clientes."
-            size="small"
-            actionBodyTemplate={actionBodyTemplate}
-            dataFilters={filters}
-            tableHeader={renderFilterInput}
-            editMode="row"
-            onRowEditComplete={onRowEditComplete}
-          />
-          <Dialog
-            header="Nuevo Cliente"
-            visible={visibleForm}
-            onHide={() => setVisibleForm(false)}
-          >
-            <ClientForm setVisibleForm={setVisibleForm} />
-          </Dialog>
+      <Table
+        columns={columns}
+        data={listClient}
+        emptyMessage="Sin clientes."
+        size="small"
+        actionBodyTemplate={actionBodyTemplate}
+        dataFilters={filters}
+        tableHeader={renderFilterInput}
+        editMode="row"
+        onRowEditComplete={onRowEditComplete}
+      />
+      <Dialog
+        header="Nuevo Cliente"
+        visible={visibleForm}
+        onHide={() => setVisibleForm(false)}
+      >
+        <ClientForm setVisibleForm={setVisibleForm} />
+      </Dialog>
 
-          <Dialog
-            className="md:w-[50vw] w-[90vw]"
-            header={
-              currentClient &&
-              `Lista de ventas del cliente ${currentClient.firstName} ${currentClient.lastName} (${currentClient.code})`
-            }
-            visible={visibleList}
-            onHide={() => setVisibleList(false)}
-          >
-            {currentClient && <ClientSaleOrderList client={currentClient} />}
-          </Dialog>
+      <Dialog
+        className="md:w-[50vw] w-[90vw]"
+        header={
+          currentClient &&
+          `Lista de ventas del cliente ${currentClient.fullName} (${currentClient.code})`
+        }
+        visible={visibleList}
+        onHide={() => setVisibleList(false)}
+      >
+        {currentClient && <ClientSaleOrderList client={currentClient} />}
+      </Dialog>
     </Card>
   );
 };

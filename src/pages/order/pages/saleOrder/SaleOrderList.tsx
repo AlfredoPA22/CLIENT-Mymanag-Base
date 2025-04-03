@@ -1,11 +1,13 @@
 import { useApolloClient, useMutation } from "@apollo/client";
 import { Button } from "primereact/button";
 import { Card } from "primereact/card";
+import { confirmDialog } from "primereact/confirmdialog";
 import { Tag } from "primereact/tag";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Table from "../../../../components/datatable/Table";
 import LabelInput from "../../../../components/labelInput/LabelInput";
+import LoadingSpinner from "../../../../components/LoadingSpinner/LoadingSpinner";
 import { DELETE_SALE_ORDER } from "../../../../graphql/mutations/SaleOrder";
 import { LIST_PRODUCT } from "../../../../graphql/queries/Product";
 import {
@@ -23,8 +25,6 @@ import useSaleOrderList from "../../hooks/useSaleOrderList";
 import { generatePDF } from "../../utils/generateSaleOrderPDF";
 import { getDate } from "../../utils/getDate";
 import { getStatus } from "../../utils/getStatus";
-import { confirmDialog } from "primereact/confirmdialog";
-import LoadingSpinner from "../../../../components/LoadingSpinner/LoadingSpinner";
 
 const SaleOrderList = () => {
   const { listSaleOrder, loadingListSaleOrder } = useSaleOrderList();
@@ -72,8 +72,7 @@ const SaleOrderList = () => {
     if (rowData.client) {
       return (
         <label>
-          ({rowData.client.code}) {rowData.client.firstName}{" "}
-          {rowData.client.lastName}
+          ({rowData.client.code}) {rowData.client.fullName}
         </label>
       );
     }

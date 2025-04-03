@@ -8,6 +8,7 @@ import { IRole } from "../../../../utils/interfaces/Role";
 import { DataTableColumn } from "../../../../utils/interfaces/Table";
 import useRoleList from "../../hooks/useRoleList";
 import RoleForm from "./RoleForm";
+import LoadingSpinner from "../../../../components/LoadingSpinner/LoadingSpinner";
 
 const RoleList = () => {
   const { listRole, loadingListRole } = useRoleList();
@@ -67,7 +68,7 @@ const RoleList = () => {
   const tableHeaderTemplate = () => {
     return (
       <div className="flex justify-between items-center m-2 px-5">
-        <h1 className="text-2xl font-bold">Lista de roles</h1>
+        <h1 className="text-2xl font-bold">{`Lista de roles (${listRole.length})`}</h1>
 
         <Button
           icon="pi pi-plus"
@@ -174,32 +175,30 @@ const RoleList = () => {
 
   const { filters, renderFilterInput } = useTableGlobalFilter(columns);
 
+  if (loadingListRole) {
+    return <LoadingSpinner />;
+  }
+
   return (
     <Card className="size-full" header={tableHeaderTemplate}>
-      {loadingListRole ? (
-        "cargando..."
-      ) : (
-        <div>
-          <Table
-            columns={columns}
-            data={listRole}
-            emptyMessage="Sin roles."
-            size="small"
-            // actionBodyTemplate={actionBodyTemplate}
-            dataFilters={filters}
-            tableHeader={renderFilterInput}
-            editMode="row"
-            // onRowEditComplete={onRowEditComplete}
-          />
-          <Dialog
-            header="Nuevo Rol"
-            visible={visibleForm}
-            onHide={() => setVisibleForm(false)}
-          >
-            <RoleForm setVisibleForm={setVisibleForm} />
-          </Dialog>
-        </div>
-      )}
+      <Table
+        columns={columns}
+        data={listRole}
+        emptyMessage="Sin roles."
+        size="small"
+        // actionBodyTemplate={actionBodyTemplate}
+        dataFilters={filters}
+        tableHeader={renderFilterInput}
+        editMode="row"
+        // onRowEditComplete={onRowEditComplete}
+      />
+      <Dialog
+        header="Nuevo Rol"
+        visible={visibleForm}
+        onHide={() => setVisibleForm(false)}
+      >
+        <RoleForm setVisibleForm={setVisibleForm} />
+      </Dialog>
     </Card>
   );
 };

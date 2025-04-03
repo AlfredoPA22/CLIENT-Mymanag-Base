@@ -4,6 +4,7 @@ export const CREATE_CATEGORY = gql`
   mutation createCategory($name: String!, $description: String) {
     createCategory(categoryInput: { name: $name, description: $description }) {
       _id
+      name
     }
   }
 `;

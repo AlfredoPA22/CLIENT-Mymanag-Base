@@ -2,21 +2,24 @@ import { gql } from "@apollo/client";
 
 export const CREATE_CLIENT = gql`
   mutation Mutation(
-    $firstName: String!
-    $lastName: String!
+    $fullName: String!
+    $email: String
+    $address: String
     $phoneNumber: String
   ) {
     createClient(
       clientInput: {
-        firstName: $firstName
-        lastName: $lastName
+        fullName: $fullName
+        email: $email
+        address: $address
         phoneNumber: $phoneNumber
       }
     ) {
       _id
       code
-      firstName
-      lastName
+      fullName
+      email
+      address
       phoneNumber
     }
   }
@@ -32,17 +35,19 @@ export const DELETE_CLIENT = gql`
 
 export const UPDATE_CLIENT = gql`
   mutation UpdateClient(
-    $firstName: String!
-    $lastName: String!
+    $fullName: String!
+    $email: String!
+    $address: String!
     $phoneNumber: String!
     $clientId: String!
   ) {
     updateClient(
       clientId: $clientId
       updateClientInput: {
-        firstName: $firstName
-        lastName: $lastName
+        fullName: $fullName
+        email: $email
         phoneNumber: $phoneNumber
+        address: $address
       }
     ) {
       _id

@@ -124,3 +124,28 @@ export const FIND_PRODUCT = gql`
     }
   }
 `;
+
+export const LIST_PRODUCT_WITH_PARAMS = gql`
+  query ListProductWithParams($brandId: String, $categoryId: String) {
+    listProductWithParams(brandId: $brandId, categoryId: $categoryId) {
+      _id
+      brand {
+        name
+        _id
+      }
+      category {
+        name
+        _id
+      }
+      code
+      description
+      image
+      last_cost_price
+      name
+      sale_price
+      status
+      stock
+      stock_type
+    }
+  }
+`;

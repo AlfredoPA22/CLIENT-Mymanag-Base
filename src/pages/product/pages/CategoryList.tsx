@@ -1,31 +1,37 @@
+import { useMutation } from "@apollo/client";
 import { Button } from "primereact/button";
 import { Card } from "primereact/card";
+import { ColumnEditorOptions } from "primereact/column";
+import {
+  DataTableRowEditCompleteEvent,
+  DataTableSelectionSingleChangeEvent,
+} from "primereact/datatable";
 import { Dialog } from "primereact/dialog";
 import { Tag } from "primereact/tag";
 import { useState } from "react";
 import Table from "../../../components/datatable/Table";
-import { ICategory } from "../../../utils/interfaces/Category";
-import { DataTableColumn } from "../../../utils/interfaces/Table";
-import { Status } from "../../../utils/types/StatusType";
-import useCategoryList from "../hooks/useCategoryList";
-import CategoryForm from "./CategoryForm";
-import { useMutation } from "@apollo/client";
+import LoadingSpinner from "../../../components/LoadingSpinner/LoadingSpinner";
+import { textEditor } from "../../../components/textEditor/textEditor";
 import {
   DELETE_CATEGORY,
   UPDATE_CATEGORY,
 } from "../../../graphql/mutations/Category";
 import { LIST_CATEGORY } from "../../../graphql/queries/Category";
-import { showToast } from "../../../utils/toastUtils";
-import { ToastSeverity } from "../../../utils/enums/toast.enum";
 import useTableGlobalFilter from "../../../hooks/useTableGlobalFilter";
-import { ColumnEditorOptions } from "primereact/column";
-import { textEditor } from "../../../components/textEditor/textEditor";
-import { DataTableRowEditCompleteEvent } from "primereact/datatable";
-import LoadingSpinner from "../../../components/LoadingSpinner/LoadingSpinner";
+import { ToastSeverity } from "../../../utils/enums/toast.enum";
+import { ICategory } from "../../../utils/interfaces/Category";
+import { DataTableColumn } from "../../../utils/interfaces/Table";
+import { showToast } from "../../../utils/toastUtils";
+import { Status } from "../../../utils/types/StatusType";
+import useCategoryList from "../hooks/useCategoryList";
+import CategoryDetail from "./CategoryDetail";
+import CategoryForm from "./CategoryForm";
 
 const CategoryList = () => {
   const { listCategory, loadingListCategory } = useCategoryList();
   const [visibleForm, setVisibleForm] = useState<boolean>(false);
+  const [visibleDetail, setVisibleDetail] = useState<boolean>(false);
+  const [currentCategory, setCurrentCategory] = useState<ICategory>();
 
   const [deleteCategory] = useMutation(DELETE_CATEGORY, {
     refetchQueries: [
@@ -157,6 +163,13 @@ const CategoryList = () => {
     }
   };
 
+  const handleSelectionChange = (
+    e: DataTableSelectionSingleChangeEvent<ICategory[]>
+  ) => {
+    setCurrentCategory(e.value);
+    setVisibleDetail(true);
+  };
+
   const [columns] = useState<DataTableColumn<ICategory>[]>([
     {
       field: "name",
@@ -204,6 +217,7 @@ const CategoryList = () => {
         tableHeader={renderFilterInput}
         editMode="row"
         onRowEditComplete={onRowEditComplete}
+        onSelectionChange={handleSelectionChange}
       />
       <Dialog
         header="Nueva Categoria"
@@ -211,6 +225,16 @@ const CategoryList = () => {
         onHide={() => setVisibleForm(false)}
       >
         <CategoryForm setVisibleForm={setVisibleForm} />
+      </Dialog>
+      <Dialog
+        className="md:w-[90vw] w-[90vw]"
+        visible={visibleDetail}
+        header={
+          currentCategory && `Detalle de categoria`
+        }
+        onHide={() => setVisibleDetail(false)}
+      >
+        {currentCategory && <CategoryDetail category={currentCategory} />}
       </Dialog>
     </Card>
   );

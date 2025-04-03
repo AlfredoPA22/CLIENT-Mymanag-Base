@@ -2,17 +2,24 @@ import { useMutation } from "@apollo/client";
 import { AutoCompleteChangeEvent } from "primereact/autocomplete";
 import { Button } from "primereact/button";
 import { FC, useState } from "react";
+import { ActionMeta, SingleValue } from "react-select";
 import DropdownInput from "../../../components/dropdownInput/DropdownInput";
 import FieldSimpleFileUpload from "../../../components/fileuploadInput/FileUploadInput";
+import SelectInput from "../../../components/SelectInput/SelectInput";
 import FieldTextareaInput from "../../../components/textAreaInput/FieldTextareaInput";
 import FieldTextInput from "../../../components/textInput/FieldTextInput";
+import { CREATE_BRAND } from "../../../graphql/mutations/Brand";
+import { CREATE_CATEGORY } from "../../../graphql/mutations/Category";
 import { CREATE_PRODUCT } from "../../../graphql/mutations/Product";
 import { LIST_BRAND } from "../../../graphql/queries/Brand";
 import { LIST_CATEGORY } from "../../../graphql/queries/Category";
 import { LIST_PRODUCT } from "../../../graphql/queries/Product";
 import { useFormikForm } from "../../../hooks/useFormikForm";
 import { stockType } from "../../../utils/enums/stockType.enum";
+import { ToastSeverity } from "../../../utils/enums/toast.enum";
 import { IProductInput } from "../../../utils/interfaces/Product";
+import { IReactSelect } from "../../../utils/interfaces/Select";
+import { showToast } from "../../../utils/toastUtils";
 import { uploadImage } from "../../../utils/uploadImage";
 import useBrandList from "../hooks/useBrandList";
 import useCategoryList from "../hooks/useCategoryList";
@@ -32,12 +39,24 @@ const ProductForm: FC<ProductFormProps> = ({ setVisibleForm }) => {
     ],
   });
 
-  const [selectedStockType, setSelectedStockType] = useState(stockType.SERIALIZADO);
-  const [selectedCategory, setSelectedCategory] = useState(null);
-  const [selectedBrand, setSelectedBrand] = useState(null);
+  const [createCategory] = useMutation(CREATE_CATEGORY, {
+    refetchQueries: [{ query: LIST_CATEGORY }],
+  });
+
+  const [createBrand] = useMutation(CREATE_BRAND, {
+    refetchQueries: [{ query: LIST_BRAND }],
+  });
+
+  const [selectedStockType, setSelectedStockType] = useState(
+    stockType.SERIALIZADO
+  );
+  const [selectedCategory, setSelectedCategory] = useState<IReactSelect | null>(
+    null
+  );
+  const [selectedBrand, setSelectedBrand] = useState<IReactSelect | null>(null);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
-  const { listCategory } = useCategoryList();
-  const { listBrand } = useBrandList();
+  const { listCategorySelect } = useCategoryList();
+  const { listBrandSelect } = useBrandList();
 
   const initialValues: IProductInput = {
     name: "",
@@ -63,23 +82,79 @@ const ProductForm: FC<ProductFormProps> = ({ setVisibleForm }) => {
   const handleStockTypeChange = async (e: AutoCompleteChangeEvent) => {
     const { value } = e.target;
     setSelectedStockType(value ? value : "");
-    console.log(value)
+    console.log(value);
     e.target.value = value ? value : "";
     setFieldValue(e.target.name, e.target.value);
   };
 
-  const handleCategoryChange = async (e: AutoCompleteChangeEvent) => {
-    const { value } = e.target;
-    setSelectedCategory(value ? value : "");
-    e.target.value = value ? value._id : "";
-    setFieldValue(e.target.name, e.target.value);
+  const handleCategoryChange = async (
+    event: SingleValue<IReactSelect>,
+    action: ActionMeta<IReactSelect>
+  ) => {
+    setSelectedCategory(event);
+    setFieldValue(action.name || "", event ? event.value : "");
   };
 
-  const handleBrandChange = async (e: AutoCompleteChangeEvent) => {
-    const { value } = e.target;
-    setSelectedBrand(value ? value : "");
-    e.target.value = value ? value._id : "";
-    setFieldValue(e.target.name, e.target.value);
+  const onCreateCategory = async (inputValue: string) => {
+    try {
+      const { data } = await createCategory({
+        variables: {
+          name: inputValue,
+          description: "",
+        },
+      });
+
+      if (data) {
+        showToast({
+          detail: "Categoria creada",
+          severity: ToastSeverity.Success,
+        });
+
+        setSelectedCategory({
+          value: data.createCategory._id,
+          label: data.createCategory.name,
+        });
+
+        setFieldValue("category", data.createCategory._id);
+      }
+    } catch (error: any) {
+      showToast({ detail: error.message, severity: ToastSeverity.Error });
+    }
+  };
+
+  const handleBrandChange = async (
+    event: SingleValue<IReactSelect>,
+    action: ActionMeta<IReactSelect>
+  ) => {
+    setSelectedBrand(event);
+    setFieldValue(action.name || "", event ? event.value : "");
+  };
+
+  const onCreateBrand = async (inputValue: string) => {
+    try {
+      const { data } = await createBrand({
+        variables: {
+          name: inputValue,
+          description: "",
+        },
+      });
+
+      if (data) {
+        showToast({
+          detail: "Marca creada",
+          severity: ToastSeverity.Success,
+        });
+
+        setSelectedBrand({
+          value: data.createBrand._id,
+          label: data.createBrand.name,
+        });
+
+        setFieldValue("brand", data.createBrand._id);
+      }
+    } catch (error: any) {
+      showToast({ detail: error.message, severity: ToastSeverity.Error });
+    }
   };
 
   const onFileSelect = (e: { files: File[] }) => {
@@ -120,7 +195,6 @@ const ProductForm: FC<ProductFormProps> = ({ setVisibleForm }) => {
           error={errors.code ? errors.code : ""}
           onChange={handleChange}
         />
-
         <FieldTextInput
           label="Nombre"
           type="text"
@@ -131,7 +205,6 @@ const ProductForm: FC<ProductFormProps> = ({ setVisibleForm }) => {
           error={errors.name ? errors.name : ""}
           onChange={handleChange}
         />
-
         <DropdownInput
           label="Tipo de stock"
           name="stock_type"
@@ -144,34 +217,6 @@ const ProductForm: FC<ProductFormProps> = ({ setVisibleForm }) => {
           onChange={handleStockTypeChange}
         />
 
-        <DropdownInput
-          label="Categoria"
-          name="category"
-          optionLabel="name"
-          placeholder="Seleccionar categoria"
-          filter={true}
-          showClear={true}
-          mandatory
-          options={listCategory}
-          value={selectedCategory}
-          error={errors.category ? errors.category : ""}
-          onChange={handleCategoryChange}
-        />
-
-        <DropdownInput
-          label="Marca"
-          name="brand"
-          optionLabel="name"
-          placeholder="Seleccionar marca"
-          filter={true}
-          showClear={true}
-          mandatory
-          options={listBrand}
-          value={selectedBrand}
-          error={errors.brand ? errors.brand : ""}
-          onChange={handleBrandChange}
-        />
-
         <FieldTextInput
           label="Precio de venta"
           type="number"
@@ -181,6 +226,30 @@ const ProductForm: FC<ProductFormProps> = ({ setVisibleForm }) => {
           value={values.sale_price}
           error={errors.sale_price ? errors.sale_price : ""}
           onChange={handleChange}
+        />
+
+        <SelectInput
+          label="Categoria"
+          name="category"
+          placeholder="Seleccionar categoria"
+          mandatory
+          options={listCategorySelect}
+          error={errors.category ? errors.category : ""}
+          onChange={handleCategoryChange}
+          onCreateOption={onCreateCategory}
+          value={selectedCategory}
+        />
+
+        <SelectInput
+          label="Marca"
+          name="brand"
+          placeholder="Seleccionar marca"
+          mandatory
+          options={listBrandSelect}
+          error={errors.brand ? errors.brand : ""}
+          onChange={handleBrandChange}
+          onCreateOption={onCreateBrand}
+          value={selectedBrand}
         />
 
         <FieldTextareaInput

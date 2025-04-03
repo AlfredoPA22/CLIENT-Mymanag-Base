@@ -1,4 +1,3 @@
-import { Card } from "primereact/card";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { resetSaleOrder } from "../../../../redux/slices/saleOrderSlice";
@@ -21,10 +20,7 @@ const CreateSaleOrder = () => {
   }, []);
 
   return (
-    <Card
-      className="size-full"
-      title="Nueva venta"
-    >
+    <div className="size-full">
       <SaleOrderForm />
       {saleOrderInitialized && saleOrderData?._id && (
         <>
@@ -32,7 +28,7 @@ const CreateSaleOrder = () => {
           <SaleOrderDetailList saleOrderId={saleOrderData?._id} />
         </>
       )}
-    </Card>
+    </div>
   );
 };
 

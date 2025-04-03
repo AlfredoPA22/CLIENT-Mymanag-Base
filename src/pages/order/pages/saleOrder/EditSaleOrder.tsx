@@ -1,4 +1,3 @@
-import { Card } from "primereact/card";
 import { useParams } from "react-router-dom";
 import SaleOrderDetail from "./SaleOrderDetail";
 import SaleOrderDetailForm from "./SaleOrderDetailForm";
@@ -8,11 +7,11 @@ const EditSaleOrder = () => {
   const { id } = useParams();
   const saleOrderId: string = id || "";
   return (
-    <Card className="size-full" title="Editar venta">
+    <div className="size-full">
       <SaleOrderDetail saleOrderId={saleOrderId} />
       <SaleOrderDetailForm saleOrderId={saleOrderId} />
       <SaleOrderDetailList saleOrderId={saleOrderId} />
-    </Card>
+    </div>
   );
 };
 

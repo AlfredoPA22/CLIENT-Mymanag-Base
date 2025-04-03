@@ -1,7 +1,9 @@
 import { useQuery } from "@apollo/client";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { LIST_PROVIDER } from "../../../graphql/queries/Provider";
 import { ToastSeverity } from "../../../utils/enums/toast.enum";
+import { IProvider } from "../../../utils/interfaces/Provider";
+import { IReactSelect } from "../../../utils/interfaces/Select";
 import { showToast } from "../../../utils/toastUtils";
 
 const useProviderList = () => {
@@ -11,6 +13,22 @@ const useProviderList = () => {
     error,
   } = useQuery(LIST_PROVIDER, { fetchPolicy: "network-only" });
 
+  const [listProviderSelect, setListProviderSelect] = useState<IReactSelect[]>(
+    []
+  );
+
+  useEffect(() => {
+    if (listProvider) {
+      const listModified: IReactSelect[] = listProvider.map(
+        (elem: IProvider) => ({
+          value: elem._id,
+          label: elem.name,
+        })
+      );
+      setListProviderSelect(listModified);
+    }
+  }, [listProvider]);
+
   useEffect(() => {
     if (error) {
       showToast({
@@ -19,7 +37,7 @@ const useProviderList = () => {
       });
     }
   }, [error]);
-  return { listProvider, loadingListProvider };
+  return { listProviderSelect, listProvider, loadingListProvider };
 };
 
 export default useProviderList;

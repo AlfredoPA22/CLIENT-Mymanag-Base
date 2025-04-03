@@ -10,6 +10,7 @@ import { IUser } from "../../../../utils/interfaces/User";
 import { Status } from "../../../../utils/types/StatusType";
 import useUserList from "../../hooks/useUserList";
 import UserForm from "./FormUser";
+import LoadingSpinner from "../../../../components/LoadingSpinner/LoadingSpinner";
 
 const UserList = () => {
   const { listUser, loadingListUser } = useUserList();
@@ -52,7 +53,7 @@ const UserList = () => {
   const tableHeaderTemplate = () => {
     return (
       <div className="flex justify-between items-center m-2 px-5">
-        <h1 className="text-2xl font-bold">Lista de usuarios</h1>
+        <h1 className="text-2xl font-bold">{`Lista de usuarios (${listUser.length})`}</h1>
 
         <Button
           icon="pi pi-plus"
@@ -95,12 +96,12 @@ const UserList = () => {
 
   const { filters, renderFilterInput } = useTableGlobalFilter(columns);
 
+  if(loadingListUser){
+    return <LoadingSpinner/>
+  }
   return (
     <Card className="size-full" header={tableHeaderTemplate}>
-      {loadingListUser ? (
-        "cargando..."
-      ) : (
-        <div>
+      
           <Table
             columns={columns}
             data={listUser}
@@ -117,8 +118,6 @@ const UserList = () => {
           >
             <UserForm setVisibleForm={setVisibleForm} />
           </Dialog>
-        </div>
-      )}
     </Card>
   );
 };

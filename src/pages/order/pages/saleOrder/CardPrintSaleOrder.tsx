@@ -296,7 +296,7 @@ const CardPrintSaleOrderDetail: FC<CardPrintSaleOrderDetailProps> = ({
               <div>
                 <LabelInput name="client" label="Cliente" />
                 <Tag
-                  value={`${dataPrintSaleOrder?.client.firstName} ${dataPrintSaleOrder?.client.lastName}`}
+                  value={`${dataPrintSaleOrder?.client.fullName}`}
                   severity={"info"}
                   className="text-xl"
                 />

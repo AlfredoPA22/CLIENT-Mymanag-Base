@@ -5,8 +5,9 @@ export const LIST_CLIENT = gql`
     listClient {
       _id
       code
-      firstName
-      lastName
+      fullName
+      email
+      address
       phoneNumber
     }
   }

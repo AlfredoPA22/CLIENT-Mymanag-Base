@@ -4,6 +4,7 @@ export const CREATE_BRAND = gql`
   mutation createBrand($name: String!, $description: String) {
     createBrand(brandInput: { name: $name, description: $description }) {
       _id
+      name
     }
   }
 `;

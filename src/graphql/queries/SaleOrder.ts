@@ -8,8 +8,7 @@ export const LIST_SALE_ORDER = gql`
       client {
         _id
         code
-        firstName
-        lastName
+        fullName
         phoneNumber
       }
       date
@@ -27,8 +26,7 @@ export const FIND_SALE_ORDER = gql`
       client {
         _id
         code
-        firstName
-        lastName
+        fullName
         phoneNumber
       }
       date
@@ -47,8 +45,7 @@ export const FIND_SALE_ORDER_TO_PDF = gql`
         client {
           _id
           code
-          firstName
-          lastName
+          fullName
           phoneNumber
         }
         date
