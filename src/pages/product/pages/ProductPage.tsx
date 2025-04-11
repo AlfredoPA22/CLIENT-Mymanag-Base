@@ -2,6 +2,7 @@ import { TabPanel, TabView } from "primereact/tabview";
 import ProductList from "./ProductList";
 import BrandList from "./BrandList";
 import CategoryList from "./CategoryList";
+import WarehouseList from "./WarehouseList";
 
 const ProductPage = () => {
   return (
@@ -14,6 +15,9 @@ const ProductPage = () => {
       </TabPanel>
       <TabPanel header="Categorias">
         <CategoryList />
+      </TabPanel>
+      <TabPanel header="Almacenes">
+        <WarehouseList />
       </TabPanel>
     </TabView>
   );

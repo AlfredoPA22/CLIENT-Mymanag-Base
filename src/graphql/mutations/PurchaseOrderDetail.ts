@@ -6,6 +6,7 @@ export const CREATE_PURCHASE_ORDER_DETAIL = gql`
     $purchase_order: String!
     $purchase_price: Float!
     $quantity: Int!
+    $warehouse: String
   ) {
     createPurchaseOrderDetail(
       purchaseOrderDetailInput: {
@@ -13,6 +14,7 @@ export const CREATE_PURCHASE_ORDER_DETAIL = gql`
         purchase_order: $purchase_order
         purchase_price: $purchase_price
         quantity: $quantity
+        warehouse: $warehouse
       }
     ) {
       _id
@@ -28,11 +30,16 @@ export const CREATE_PURCHASE_ORDER_DETAIL = gql`
 `;
 
 export const ADD_SERIAL_TO_PURCHASE_ORDER_DETAIL = gql`
-  mutation Mutation($purchase_order_detail: String!, $serial: String!) {
+  mutation Mutation(
+    $purchase_order_detail: String!
+    $serial: String!
+    $warehouse: String!
+  ) {
     addSerialToPurchaseOrderDetail(
       addSerialToPurchaseOrderDetailInput: {
         purchase_order_detail: $purchase_order_detail
         serial: $serial
+        warehouse: $warehouse
       }
     ) {
       _id

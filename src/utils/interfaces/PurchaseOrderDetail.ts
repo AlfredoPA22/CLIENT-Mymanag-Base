@@ -13,15 +13,17 @@ export interface IPurchaseOrderDetail {
 }
 
 export interface IPurchaseOrderDetailInput {
-  purchase_order?: string;
-  product?: string;
-  purchase_price?: string;
-  quantity?: string;
+  purchase_order: string;
+  product: string;
+  purchase_price: string;
+  quantity: string;
+  warehouse?: string;
 }
 
 export interface IAddSerialToPurchaseOrderDetailInput {
-  purchase_order_detail?: string;
-  serial?: string;
+  purchase_order_detail: string;
+  serial: string;
+  warehouse: string;
 }
 
 export interface IPurchaseOrderDetailToPDF {

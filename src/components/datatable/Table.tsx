@@ -71,6 +71,7 @@ const Table: FC<TableProps<any>> = ({
   return (
     <>
       <DataTable
+      className="border-sm"
         role="dataTable"
         showGridlines
         value={data}

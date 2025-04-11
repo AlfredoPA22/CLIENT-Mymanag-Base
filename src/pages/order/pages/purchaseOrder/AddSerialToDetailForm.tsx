@@ -1,6 +1,6 @@
 import { useMutation } from "@apollo/client";
 import { Button } from "primereact/button";
-import { FC } from "react";
+import { FC, useRef, useState } from "react";
 import FieldTextInput from "../../../../components/textInput/FieldTextInput";
 import { ADD_SERIAL_TO_PURCHASE_ORDER_DETAIL } from "../../../../graphql/mutations/PurchaseOrderDetail";
 import {
@@ -10,6 +10,14 @@ import {
 import { useFormikForm } from "../../../../hooks/useFormikForm";
 import { IAddSerialToPurchaseOrderDetailInput } from "../../../../utils/interfaces/PurchaseOrderDetail";
 import { schemaFormAddSerialToPurchaseOrderDetail } from "../../validations/FormAddSerialToPurchaseOrderDetailValidation";
+import SelectInput from "../../../../components/SelectInput/SelectInput";
+import useWarehouseList from "../../../product/hooks/useWarehouseList";
+import { ActionMeta, SingleValue } from "react-select";
+import { IReactSelect } from "../../../../utils/interfaces/Select";
+import { CREATE_WAREHOUSE } from "../../../../graphql/mutations/Warehouse";
+import { LIST_WAREHOUSE } from "../../../../graphql/queries/Warehouse";
+import { showToast } from "../../../../utils/toastUtils";
+import { ToastSeverity } from "../../../../utils/enums/toast.enum";
 
 interface AddSerialToDetailFormProps {
   purchaseOrderId: string;
@@ -20,6 +28,13 @@ const AddSerialToDetailForm: FC<AddSerialToDetailFormProps> = ({
   purchaseOrderId,
   purchaseOrderDetailId,
 }) => {
+  const { listWarehouseSelect } = useWarehouseList();
+
+  const serialInputRef = useRef<HTMLInputElement>(null);
+
+  const [selectedWarehouse, setSelectedWarehouse] =
+    useState<IReactSelect | null>(null);
+
   const [addSerialToPurchaseOrderDetail] = useMutation(
     ADD_SERIAL_TO_PURCHASE_ORDER_DETAIL,
     {
@@ -39,25 +54,66 @@ const AddSerialToDetailForm: FC<AddSerialToDetailFormProps> = ({
       ],
     }
   );
+  const [createWarehouse] = useMutation(CREATE_WAREHOUSE, {
+    refetchQueries: [{ query: LIST_WAREHOUSE }],
+  });
+
   const initialValues: IAddSerialToPurchaseOrderDetailInput = {
     serial: "",
+    warehouse: "",
     purchase_order_detail: purchaseOrderDetailId,
   };
 
   const onSubmit = async () => {
     await addSerialToPurchaseOrderDetail({ variables: values });
-    resetForm();
+    setFieldValue("serial", "");
+    serialInputRef.current?.focus();
+  };
+
+  const handleWarehouseChange = async (
+    event: SingleValue<IReactSelect>,
+    action: ActionMeta<IReactSelect>
+  ) => {
+    setSelectedWarehouse(event);
+    setFieldValue(action.name || "", event ? event.value : "");
+  };
+
+  const onCreateWarehouse = async (inputValue: string) => {
+    try {
+      const { data } = await createWarehouse({
+        variables: {
+          name: inputValue,
+          description: "",
+        },
+      });
+
+      if (data) {
+        showToast({
+          detail: "Almacén creado",
+          severity: ToastSeverity.Success,
+        });
+
+        setSelectedWarehouse({
+          value: data.createWarehouse._id,
+          label: data.createWarehouse.name,
+        });
+
+        setFieldValue("warehouse", data.createWarehouse._id);
+      }
+    } catch (error: any) {
+      showToast({ detail: error.message, severity: ToastSeverity.Error });
+    }
   };
 
   const {
     handleChange,
     handleSubmit,
-    resetForm,
     values,
     errors,
     dirty,
     isValid,
     isSubmitting,
+    setFieldValue,
   } = useFormikForm({
     initialValues: initialValues,
     msgSuccess: "Serial Agregado",
@@ -67,22 +123,36 @@ const AddSerialToDetailForm: FC<AddSerialToDetailFormProps> = ({
   return (
     <form
       onSubmit={handleSubmit}
-      className="flex flex-col md:flex-row gap-4 justify-center"
+      className="flex flex-col md:grid md:grid-cols-5 gap-2"
     >
-      <section className="grid justify-center items-start gap-2">
+      <div className="col-span-2">
+        <SelectInput
+          label="Almacén"
+          name="warehouse"
+          placeholder="Seleccionar almacén"
+          mandatory
+          options={listWarehouseSelect}
+          error={errors.warehouse ? errors.warehouse : ""}
+          onChange={handleWarehouseChange}
+          onCreateOption={onCreateWarehouse}
+          value={selectedWarehouse}
+        />
+      </div>
+      <div className="col-span-2">
         <FieldTextInput
-          className="flex justify-center items-center"
-          label=""
+          label="Serial"
           type="text"
           name="serial"
-          placeholder="Ingresa el codigo del serial"
+          mandatory
+          placeholder="Ingresa el serial"
+          inputRef={serialInputRef}
           value={values.serial}
           error={errors.serial ? errors.serial : ""}
           onChange={handleChange}
         />
-      </section>
+      </div>
 
-      <section className="flex justify-center items-start">
+      <section className="flex justify-center items-center">
         <Button
           className="h-[50px]"
           type="submit"

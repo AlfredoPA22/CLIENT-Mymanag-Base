@@ -23,7 +23,7 @@ const ProductCard: FC<ProductCardProps> = ({ productData }) => {
   };
 
   return (
-    <Card className="w-full md:w-3/4 lg:w-2/3 xl:w-1/2 mx-auto shadow-lg rounded-xl p-5">
+    <Card className="w-full  mx-auto shadow-lg rounded-xl p-5">
       {/* Imagen y Nombre */}
       <div className="flex flex-col md:flex-row items-center gap-4">
         <Image

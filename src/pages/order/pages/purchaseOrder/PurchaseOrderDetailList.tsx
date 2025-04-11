@@ -262,7 +262,7 @@ const PurchaseOrderDetailList: FC<PurchaseOrderDetailListProps> = ({
         onRowEditComplete={onRowEditComplete}
       />
       <Dialog
-        className="md:w-[700px] w-[350px]"
+        className="md:w-[1000px] w-[350px]"
         header="Agregar serial"
         visible={visibleForm}
         onHide={() => setVisibleForm(false)}

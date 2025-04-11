@@ -2,6 +2,7 @@ import { Card } from "primereact/card";
 import { FC } from "react";
 import SearchProductForm from "../product/pages/SearchProductForm";
 import HeaderHome from "./HeaderHome";
+import SearchSection from "./SearchSection";
 
 const Home: FC = () => {
   // const [chartData, setChartData] = useState({});
@@ -152,11 +153,7 @@ const Home: FC = () => {
   return (
     <div className="flex flex-col w-full gap-5">
       <HeaderHome />
-      <Card
-        title="Buscar productos"
-      >
-        <SearchProductForm />
-      </Card>
+      <SearchSection />
     </div>
     // <div className="flex sm:flex-row flex-col justify-center items-center mt-10 gap-5">
     //   <section>

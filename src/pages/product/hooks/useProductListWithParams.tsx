@@ -10,11 +10,13 @@ import { showToast } from "../../../utils/toastUtils";
 interface ProductListWithParamsProps {
   categoryId: string;
   brandId: string;
+  warehouseId: string;
 }
 
 const useProductListWithParams = ({
   brandId,
   categoryId,
+  warehouseId,
 }: ProductListWithParamsProps) => {
   const {
     data: { listProductWithParams: listProductWithParams } = [],
@@ -24,6 +26,7 @@ const useProductListWithParams = ({
     variables: {
       brandId,
       categoryId,
+      warehouseId,
     },
     fetchPolicy: "network-only",
   });

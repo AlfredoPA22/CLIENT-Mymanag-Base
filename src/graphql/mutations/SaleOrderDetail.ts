@@ -6,6 +6,7 @@ export const CREATE_SALE_ORDER_DETAIL = gql`
     $sale_order: String!
     $sale_price: Float!
     $quantity: Int!
+    $warehouse: String
   ) {
     createSaleOrderDetail(
       saleOrderDetailInput: {
@@ -13,6 +14,7 @@ export const CREATE_SALE_ORDER_DETAIL = gql`
         sale_order: $sale_order
         sale_price: $sale_price
         quantity: $quantity
+        warehouse: $warehouse
       }
     ) {
       _id
@@ -79,4 +81,3 @@ export const UPDATE_SALE_ORDER_DETAIL = gql`
     }
   }
 `;
-

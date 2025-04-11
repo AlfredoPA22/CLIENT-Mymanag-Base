@@ -111,14 +111,20 @@ const SerialByDetailList: FC<SerialByDetailListProps> = ({
       field: "serial",
       header: "Serial",
       sortable: true,
-      style: { width: "60%" },
+      style: { width: "50%" },
+    },
+    {
+      field: "warehouse.name",
+      header: "Almacén",
+      sortable: true,
+      style: { width: "35%" },
     },
     {
       field: "status",
       header: "Estado",
       sortable: true,
       body: statusBodyTemplate,
-      style: { width: "20%" },
+      style: { width: "15%" },
     },
   ]);
 

@@ -27,6 +27,10 @@ query Query($purchaseOrderDetailId: String!) {
     _id
     serial
     status
+    warehouse{
+      _id
+      name
+    }
   }
 }
 `;

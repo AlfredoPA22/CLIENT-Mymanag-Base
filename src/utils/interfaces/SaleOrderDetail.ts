@@ -13,10 +13,11 @@ export interface ISaleOrderDetail {
 }
 
 export interface ISaleOrderDetailInput {
-  sale_order?: string;
-  product?: string;
-  sale_price?: string;
-  quantity?: string;
+  sale_order: string;
+  product: string;
+  sale_price: string;
+  quantity: string;
+  warehouse?: string;
 }
 
 export interface IAddSerialToSaleOrderDetailInput {

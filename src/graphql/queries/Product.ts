@@ -55,6 +55,10 @@ export const LIST_PRODUCT_SERIAL_BY_PRODUCT = gql`
           status
         }
       }
+      warehouse {
+        _id
+        name
+      }
       sale_order_detail {
         _id
         sale_order {
@@ -64,6 +68,30 @@ export const LIST_PRODUCT_SERIAL_BY_PRODUCT = gql`
         }
       }
       serial
+      status
+    }
+  }
+`;
+
+export const LIST_PRODUCT_INVENTORY_BY_PRODUCT = gql`
+  query ListProductInventoryByProduct($productId: String!) {
+    listProductInventoryByProduct(productId: $productId) {
+      _id
+      purchase_order_detail {
+        _id
+        purchase_order {
+          _id
+          code
+          status
+        }
+      }
+      warehouse {
+        _id
+        name
+      }
+      quantity
+      reserved
+      sold
       status
     }
   }
@@ -126,8 +154,16 @@ export const FIND_PRODUCT = gql`
 `;
 
 export const LIST_PRODUCT_WITH_PARAMS = gql`
-  query ListProductWithParams($brandId: String, $categoryId: String) {
-    listProductWithParams(brandId: $brandId, categoryId: $categoryId) {
+  query ListProductWithParams(
+    $brandId: String
+    $categoryId: String
+    $warehouseId: String
+  ) {
+    listProductWithParams(
+      brandId: $brandId
+      categoryId: $categoryId
+      warehouseId: $warehouseId
+    ) {
       _id
       brand {
         name

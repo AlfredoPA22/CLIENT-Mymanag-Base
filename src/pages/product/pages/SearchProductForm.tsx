@@ -48,29 +48,31 @@ const SearchProductForm = () => {
   });
 
   return (
-    <div className="flex flex-col gap-2">
-      <form onSubmit={handleSubmit} className="grid gap-4 justify-center">
-        <section className="grid w-[300px] gap-4">
-          <FieldTextInput
-            role="input-name"
-            label="Buscar por serial"
-            type="text"
-            name="serial"
-            placeholder="Ingresar serial"
-            value={values.serial}
-            error={errors.serial ? errors.serial : ""}
-            onChange={handleChange}
-          />
-        </section>
+    <div className="flex flex-col p-5 rounded-lg gap-5">
+      <form
+        onSubmit={handleSubmit}
+        className={`flex flex-col md:flex-row gap-4 justify-center ${
+          errors.serial ? "items-center" : "items-end"
+        }`}
+      >
+        <FieldTextInput
+        className="sm:w-[400px]"
+          role="input-name"
+          label="Buscar producto"
+          type="text"
+          name="serial"
+          placeholder="Ingresar codigo, nombre o serial"
+          value={values.serial}
+          error={errors.serial ? errors.serial : ""}
+          onChange={handleChange}
+        />
 
-        <section className="flex justify-center">
-          <Button
-            type="submit"
-            severity="success"
-            label="Buscar"
-            disabled={!dirty || !isValid || isSubmitting}
-          />
-        </section>
+        <Button
+          type="submit"
+          severity="success"
+          label="Buscar"
+          disabled={!dirty || !isValid || isSubmitting}
+        />
       </form>
 
       {productFound && <ProductCard productData={productFound} />}

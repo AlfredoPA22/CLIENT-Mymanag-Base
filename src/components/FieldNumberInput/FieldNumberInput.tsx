@@ -30,7 +30,7 @@ const FieldNumberInput: FC<FieldNumberInputProps> = ({
   ...props
 }) => {
   return (
-    <section className={`flex flex-col ${className}`}>
+    <section className={`flex flex-col p-inputtext-sm ${className}`}>
       <LabelInput name={name} label={label} mandatory={mandatory} />
       <InputNumber
         className={error ? 'p-invalid' : ''}

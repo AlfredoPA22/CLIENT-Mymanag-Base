@@ -5,7 +5,10 @@ import { useMutation } from "@apollo/client";
 import { Button } from "primereact/button";
 import { Card } from "primereact/card";
 import { ColumnEditorOptions } from "primereact/column";
-import { DataTableRowEditCompleteEvent, DataTableSelectionSingleChangeEvent } from "primereact/datatable";
+import {
+  DataTableRowEditCompleteEvent,
+  DataTableSelectionSingleChangeEvent,
+} from "primereact/datatable";
 import { Dialog } from "primereact/dialog";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -30,14 +33,17 @@ import { showToast } from "../../../utils/toastUtils";
 import { getStatus } from "../../order/utils/getStatus";
 import ProductForm from "./ProductForm";
 import ProductSerialList from "./ProductSerialList";
+import ProductInventoryList from "./ProductInventoryList";
 
 const ProductList = () => {
   const { listProduct, loadingListProduct } = useProductList();
   const [visibleForm, setVisibleForm] = useState<boolean>(false);
-  const [visibleList, setVisibleList] = useState<boolean>(false);
+  const [visibleListSerial, setVisibleListSerial] = useState<boolean>(false);
+  const [visibleListInventory, setVisibleListInventory] =
+    useState<boolean>(false);
   const [currentProduct, setCurrentProduct] = useState<IProduct>();
 
-  const navigate= useNavigate();
+  const navigate = useNavigate();
 
   const [deleteProduct] = useMutation(DELETE_PRODUCT, {
     refetchQueries: [
@@ -71,7 +77,7 @@ const ProductList = () => {
           raised
           onClick={() => {
             setCurrentProduct(rowData);
-            setVisibleList(true);
+            setVisibleListSerial(true);
           }}
           severity="info"
         >
@@ -79,7 +85,18 @@ const ProductList = () => {
         </Button>
       );
     } else {
-      return <span>{rowData.stock}</span>;
+      return (
+        <Button
+          raised
+          onClick={() => {
+            setCurrentProduct(rowData);
+            setVisibleListInventory(true);
+          }}
+          severity="info"
+        >
+          {rowData.stock}
+        </Button>
+      );
     }
   };
 
@@ -171,11 +188,11 @@ const ProductList = () => {
     }
   };
 
-   const handleSelectionChange = (
-      e: DataTableSelectionSingleChangeEvent<IProduct[]>
-    ) => {
-      navigate(`/product/detail/${e.value._id}`)
-    };
+  const handleSelectionChange = (
+    e: DataTableSelectionSingleChangeEvent<IProduct[]>
+  ) => {
+    navigate(`/product/detail/${e.value._id}`);
+  };
 
   const [columns] = useState<DataTableColumn<IProduct>[]>([
     {
@@ -260,9 +277,7 @@ const ProductList = () => {
 
   return (
     <div className="size-full">
-      {
-        tableHeaderTemplate()
-      }
+      {tableHeaderTemplate()}
       <Table
         columns={columns}
         data={listProduct}
@@ -285,14 +300,25 @@ const ProductList = () => {
       </Dialog>
       <Dialog
         className="md:w-[50vw] w-[90vw]"
-        visible={visibleList}
+        visible={visibleListSerial}
         header={
           currentProduct &&
           `Lista de seriales del producto (${currentProduct.code}) ${currentProduct.name}`
         }
-        onHide={() => setVisibleList(false)}
+        onHide={() => setVisibleListSerial(false)}
       >
         {currentProduct && <ProductSerialList product={currentProduct} />}
+      </Dialog>
+      <Dialog
+        className="md:w-[50vw] w-[90vw]"
+        visible={visibleListInventory}
+        header={
+          currentProduct &&
+          `Inventario del producto (${currentProduct.code}) ${currentProduct.name}`
+        }
+        onHide={() => setVisibleListInventory(false)}
+      >
+        {currentProduct && <ProductInventoryList product={currentProduct} />}
       </Dialog>
     </div>
   );

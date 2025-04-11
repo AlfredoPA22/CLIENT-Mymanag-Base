@@ -1,6 +1,6 @@
-import { InputText, InputTextProps } from 'primereact/inputtext';
-import { FC } from 'react';
-import LabelInput from '../labelInput/LabelInput';
+import { InputText, InputTextProps } from "primereact/inputtext";
+import { FC, Ref } from "react";
+import LabelInput from "../labelInput/LabelInput";
 
 interface FieldTextInputProps extends InputTextProps {
   className?: string;
@@ -8,6 +8,7 @@ interface FieldTextInputProps extends InputTextProps {
   error?: string;
   role?: string;
   mandatory?: boolean;
+  inputRef?: Ref<HTMLInputElement>;
 }
 
 const FieldTextInput: FC<FieldTextInputProps> = ({
@@ -22,13 +23,14 @@ const FieldTextInput: FC<FieldTextInputProps> = ({
   label,
   mandatory = false,
   onChange,
+  inputRef,
   ...props
 }) => {
   return (
-    <section className={`flex flex-col ${className}`}>
+    <section className={`flex flex-col p-inputtext-sm ${className}`}>
       <LabelInput name={name} label={label} mandatory={mandatory} />
       <InputText
-        className={error ? 'p-invalid' : ''}
+        className={error ? "p-invalid" : ""}
         role={role}
         type={type}
         name={name}
@@ -36,9 +38,10 @@ const FieldTextInput: FC<FieldTextInputProps> = ({
         value={value}
         disabled={disabled}
         onChange={onChange}
+        ref={inputRef}
         {...props}
       />
-      <small className='p-error'>{error}</small>
+      <small className="p-error">{error}</small>
     </section>
   );
 };
