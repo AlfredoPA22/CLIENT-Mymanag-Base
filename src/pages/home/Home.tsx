@@ -1,6 +1,4 @@
-import { Card } from "primereact/card";
 import { FC } from "react";
-import SearchProductForm from "../product/pages/SearchProductForm";
 import HeaderHome from "./HeaderHome";
 import SearchSection from "./SearchSection";
 

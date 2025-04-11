@@ -1,12 +1,10 @@
 import { useQuery } from "@apollo/client";
 import { useEffect, useState } from "react";
-import { showToast } from "../../../utils/toastUtils";
-import { ToastSeverity } from "../../../utils/enums/toast.enum";
-import { LIST_BRAND } from "../../../graphql/queries/Brand";
-import { IReactSelect } from "../../../utils/interfaces/Select";
-import { IBrand } from "../../../utils/interfaces/Brand";
 import { LIST_WAREHOUSE } from "../../../graphql/queries/Warehouse";
+import { ToastSeverity } from "../../../utils/enums/toast.enum";
+import { IReactSelect } from "../../../utils/interfaces/Select";
 import { IWarehouse } from "../../../utils/interfaces/Warehouse";
+import { showToast } from "../../../utils/toastUtils";
 
 const useWarehouseList = () => {
   const {

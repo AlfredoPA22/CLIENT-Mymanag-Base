@@ -19,7 +19,11 @@ interface CategoryDetailProps {
 
 const CategoryDetail: FC<CategoryDetailProps> = ({ category }) => {
   const { listProductWithParams, loadingListProductWithParams } =
-    useProductListWithParams({ brandId: "", categoryId: category._id });
+    useProductListWithParams({
+      brandId: "",
+      categoryId: category._id,
+      warehouseId: "",
+    });
 
   const statusBodyTemplate = (rowData: IProduct) => {
     const status = getStatus(rowData.status);
