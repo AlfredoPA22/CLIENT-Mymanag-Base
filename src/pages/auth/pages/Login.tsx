@@ -2,10 +2,10 @@ import { Button } from "primereact/button";
 import { Card } from "primereact/card";
 
 import { useFormikForm } from "../../../hooks/useFormikForm";
-
 import useAuth from "../hooks/useAuth";
 import { schemaLogin } from "../utils/validations/LoginValidation";
 
+import logo from "../../../assets/LOGO.png";
 import PasswordInput from "../../../components/PasswordInput/PasswordInput";
 import FieldTextInput from "../../../components/textInput/FieldTextInput";
 import { ILoginInput } from "../../../utils/interfaces/User";
@@ -38,21 +38,32 @@ const Login = () => {
 
   const headerTemplate = () => {
     return (
-      <div className="flex justify-center raised-t-lg bg-primary p-5 text-3xl text-white">
-        <span>Inicio de sesión</span>
+      <div className="flex justify-center p-4">
+        <img
+          src={logo}
+          alt="logo"
+          className="w-[70px] h-[70px] rounded-full shadow-md"
+        />
       </div>
     );
   };
 
   return (
-    <Card className="size-full overflow-auto px-3 max-md:px-0 max-sm:px-0 flex h-screen items-center justify-center bg-slate-300">
-      <Card className="raised-t-xl shadow-2xl" header={headerTemplate}>
+    <div className="h-screen flex items-center justify-center bg-gradient-to-br from-sky-50 via-blue-100 to-blue-200">
+      <Card
+        className="w-full sm:w-[400px] rounded-3xl border border-blue-200 shadow-xl bg-white"
+        header={headerTemplate}
+      >
+        <h2 className="text-center text-2xl font-semibold text-gray-700 mb-6">
+          Bienvenido
+        </h2>
+
         <form
-          className="flex w-[260px] flex-col items-center justify-center gap-3 py-5 sm:w-[400px] sm:px-20 md:mx-10"
+          className="flex flex-col gap-5 items-center justify-center"
           onSubmit={handleSubmit}
         >
           <FieldTextInput
-            className="w-full gap-2"
+            className="w-full p-3 bg-white border border-gray-300 text-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-300"
             role="input-userName"
             label="Usuario"
             type="text"
@@ -64,7 +75,7 @@ const Login = () => {
             onChange={handleChange}
           />
           <PasswordInput
-            className="w-full gap-2"
+            className="w-full p-3 bg-white border border-gray-300 text-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-300"
             role="input-password"
             label="Contraseña"
             type="password"
@@ -76,17 +87,17 @@ const Login = () => {
             onChange={handleChange}
           />
           <Button
-            className="mx-auto bg-primary"
+            className="w-full py-3 bg-blue-500 border-none text-white rounded-xl hover:bg-blue-600 transition-all"
             role="submit-login"
             type="submit"
             label="Ingresar"
-            icon="pi pi-user"
+            icon="pi pi-sign-in"
             severity="info"
             disabled={!dirty || !isValid || isSubmitting}
           />
         </form>
       </Card>
-    </Card>
+    </div>
   );
 };
 

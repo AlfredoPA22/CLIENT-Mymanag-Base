@@ -5,6 +5,7 @@ import { Card } from "primereact/card";
 import { FC, useState } from "react";
 import { useDispatch } from "react-redux";
 import DropdownInput from "../../../../components/dropdownInput/DropdownInput";
+import LoadingSpinner from "../../../../components/LoadingSpinner/LoadingSpinner";
 import FieldTextInput from "../../../../components/textInput/FieldTextInput";
 import { CREATE_SALE_ORDER_DETAIL } from "../../../../graphql/mutations/SaleOrderDetail";
 import { LIST_SALE_ORDER_DETAIL } from "../../../../graphql/queries/SaleOrderDetail";
@@ -17,7 +18,6 @@ import { IWarehouse } from "../../../../utils/interfaces/Warehouse";
 import useProductList from "../../../product/hooks/useProductList";
 import useWarehouseList from "../../../product/hooks/useWarehouseList";
 import { schemaFormSaleOrderDetail } from "../../validations/FormSaleOrderDetailValidation";
-import LoadingSpinner from "../../../../components/LoadingSpinner/LoadingSpinner";
 
 interface SaleOrderDetailFormProps {
   saleOrderId: string;
@@ -99,7 +99,7 @@ const SaleOrderDetailForm: FC<SaleOrderDetailFormProps> = ({ saleOrderId }) => {
   }
   
   return (
-    <Card className="size-full mb-2">
+    <Card className="mb-2">
       <form
         onSubmit={handleSubmit}
         className="flex justify-center items-center"

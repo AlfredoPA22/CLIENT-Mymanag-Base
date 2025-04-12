@@ -1,30 +1,30 @@
 import { useApolloClient, useMutation, useQuery } from "@apollo/client";
 import { Button } from "primereact/button";
 import { Card } from "primereact/card";
+import { ColumnEditorOptions } from "primereact/column";
+import { DataTableRowEditCompleteEvent } from "primereact/datatable";
 import { Dialog } from "primereact/dialog";
 import { FC, useEffect, useState } from "react";
+import { useDispatch } from "react-redux";
 import Table from "../../../../components/datatable/Table";
-import { LIST_PURCHASE_ORDER_DETAIL } from "../../../../graphql/queries/PurchaseOrderDetail";
-import { ToastSeverity } from "../../../../utils/enums/toast.enum";
-import { IPurchaseOrderDetail } from "../../../../utils/interfaces/PurchaseOrderDetail";
-import { DataTableColumn } from "../../../../utils/interfaces/Table";
-import { showToast } from "../../../../utils/toastUtils";
-import SerialToDetail from "./SerialToDetail";
+import LabelInput from "../../../../components/labelInput/LabelInput";
+import LoadingSpinner from "../../../../components/LoadingSpinner/LoadingSpinner";
+import { numberEditor } from "../../../../components/numberEditor/numberEditor";
 import {
   DELETE_PRODUCT_TO_PURCHASE_ORDER_DETAIL,
   UPDATE_PURCHASE_ORDER_DETAIL,
 } from "../../../../graphql/mutations/PurchaseOrderDetail";
 import { FIND_PURCHASE_ORDER } from "../../../../graphql/queries/PurchaseOrder";
-import { useDispatch } from "react-redux";
-import { setPurchaseOrder } from "../../../../redux/slices/purchaseOrderSlice";
-import LabelInput from "../../../../components/labelInput/LabelInput";
-import { currencySymbol } from "../../../../utils/constants/currencyConstants";
+import { LIST_PURCHASE_ORDER_DETAIL } from "../../../../graphql/queries/PurchaseOrderDetail";
 import useTableGlobalFilter from "../../../../hooks/useTableGlobalFilter";
-import { DataTableRowEditCompleteEvent } from "primereact/datatable";
-import { ColumnEditorOptions } from "primereact/column";
-import { numberEditor } from "../../../../components/numberEditor/numberEditor";
+import { setPurchaseOrder } from "../../../../redux/slices/purchaseOrderSlice";
+import { currencySymbol } from "../../../../utils/constants/currencyConstants";
 import { stockType } from "../../../../utils/enums/stockType.enum";
-import LoadingSpinner from "../../../../components/LoadingSpinner/LoadingSpinner";
+import { ToastSeverity } from "../../../../utils/enums/toast.enum";
+import { IPurchaseOrderDetail } from "../../../../utils/interfaces/PurchaseOrderDetail";
+import { DataTableColumn } from "../../../../utils/interfaces/Table";
+import { showToast } from "../../../../utils/toastUtils";
+import SerialToDetail from "./SerialToDetail";
 
 interface PurchaseOrderDetailListProps {
   purchaseOrderId: string;
@@ -249,7 +249,7 @@ const PurchaseOrderDetailList: FC<PurchaseOrderDetailListProps> = ({
   }
   
   return (
-    <Card className="size-full" title={`Productos de la compra (${listPurchaseOrderDetail.length})`}>
+    <Card title={`Productos de la compra (${listPurchaseOrderDetail.length})`}>
       <Table
         columns={columns}
         data={listPurchaseOrderDetail}

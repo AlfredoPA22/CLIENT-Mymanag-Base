@@ -175,7 +175,7 @@ const ClientList = () => {
   }
 
   return (
-    <Card className="size-full" header={tableHeaderTemplate}>
+    <Card className="py-2" header={tableHeaderTemplate}>
       <Table
         columns={columns}
         data={listClient}

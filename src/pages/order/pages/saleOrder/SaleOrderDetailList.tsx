@@ -8,6 +8,7 @@ import { FC, useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import Table from "../../../../components/datatable/Table";
 import LabelInput from "../../../../components/labelInput/LabelInput";
+import LoadingSpinner from "../../../../components/LoadingSpinner/LoadingSpinner";
 import { numberEditor } from "../../../../components/numberEditor/numberEditor";
 import {
   DELETE_PRODUCT_TO_SALE_ORDER_DETAIL,
@@ -18,13 +19,12 @@ import { LIST_SALE_ORDER_DETAIL } from "../../../../graphql/queries/SaleOrderDet
 import useTableGlobalFilter from "../../../../hooks/useTableGlobalFilter";
 import { setSaleOrder } from "../../../../redux/slices/saleOrderSlice";
 import { currencySymbol } from "../../../../utils/constants/currencyConstants";
+import { stockType } from "../../../../utils/enums/stockType.enum";
 import { ToastSeverity } from "../../../../utils/enums/toast.enum";
 import { ISaleOrderDetail } from "../../../../utils/interfaces/SaleOrderDetail";
 import { DataTableColumn } from "../../../../utils/interfaces/Table";
 import { showToast } from "../../../../utils/toastUtils";
 import SerialToDetail from "./SerialToDetail";
-import { stockType } from "../../../../utils/enums/stockType.enum";
-import LoadingSpinner from "../../../../components/LoadingSpinner/LoadingSpinner";
 
 interface SaleOrderDetailListProps {
   saleOrderId: string;
@@ -243,7 +243,6 @@ const SaleOrderDetailList: FC<SaleOrderDetailListProps> = ({ saleOrderId }) => {
 
   return (
     <Card
-      className="size-full"
       title={`Productos de la venta (${listSaleOrderDetail.length})`}
     >
       <Table

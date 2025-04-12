@@ -3,27 +3,27 @@ import { AutoCompleteChangeEvent } from "primereact/autocomplete";
 import { Button } from "primereact/button";
 import { Card } from "primereact/card";
 import { FC, useState } from "react";
+import { useDispatch } from "react-redux";
+import { ActionMeta, SingleValue } from "react-select";
 import DropdownInput from "../../../../components/dropdownInput/DropdownInput";
+import LoadingSpinner from "../../../../components/LoadingSpinner/LoadingSpinner";
+import SelectInput from "../../../../components/SelectInput/SelectInput";
 import FieldTextInput from "../../../../components/textInput/FieldTextInput";
 import { CREATE_PURCHASE_ORDER_DETAIL } from "../../../../graphql/mutations/PurchaseOrderDetail";
-import { LIST_PURCHASE_ORDER_DETAIL } from "../../../../graphql/queries/PurchaseOrderDetail";
-import { useFormikForm } from "../../../../hooks/useFormikForm";
-import { IPurchaseOrderDetailInput } from "../../../../utils/interfaces/PurchaseOrderDetail";
-import useProductList from "../../../product/hooks/useProductList";
-import { schemaFormPurchaseOrderDetail } from "../../validations/FormPurchaseOrderDetailValidation";
-import { useDispatch } from "react-redux";
-import { setPurchaseOrder } from "../../../../redux/slices/purchaseOrderSlice";
-import LoadingSpinner from "../../../../components/LoadingSpinner/LoadingSpinner";
-import { IProduct } from "../../../../utils/interfaces/Product";
-import { stockType } from "../../../../utils/enums/stockType.enum";
-import SelectInput from "../../../../components/SelectInput/SelectInput";
-import useWarehouseList from "../../../product/hooks/useWarehouseList";
 import { CREATE_WAREHOUSE } from "../../../../graphql/mutations/Warehouse";
+import { LIST_PURCHASE_ORDER_DETAIL } from "../../../../graphql/queries/PurchaseOrderDetail";
 import { LIST_WAREHOUSE } from "../../../../graphql/queries/Warehouse";
-import { ActionMeta, SingleValue } from "react-select";
+import { useFormikForm } from "../../../../hooks/useFormikForm";
+import { setPurchaseOrder } from "../../../../redux/slices/purchaseOrderSlice";
+import { stockType } from "../../../../utils/enums/stockType.enum";
+import { ToastSeverity } from "../../../../utils/enums/toast.enum";
+import { IProduct } from "../../../../utils/interfaces/Product";
+import { IPurchaseOrderDetailInput } from "../../../../utils/interfaces/PurchaseOrderDetail";
 import { IReactSelect } from "../../../../utils/interfaces/Select";
 import { showToast } from "../../../../utils/toastUtils";
-import { ToastSeverity } from "../../../../utils/enums/toast.enum";
+import useProductList from "../../../product/hooks/useProductList";
+import useWarehouseList from "../../../product/hooks/useWarehouseList";
+import { schemaFormPurchaseOrderDetail } from "../../validations/FormPurchaseOrderDetailValidation";
 
 interface PurchaseOrderDetailFormProps {
   purchaseOrderId: string;
@@ -139,7 +139,7 @@ const PurchaseOrderDetailForm: FC<PurchaseOrderDetailFormProps> = ({
   }
 
   return (
-    <Card className="size-full mb-2">
+    <Card className="mb-2">
       <form
         onSubmit={handleSubmit}
         className="flex justify-center items-center"

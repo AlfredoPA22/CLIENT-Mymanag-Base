@@ -2,6 +2,7 @@ import { useApolloClient, useMutation } from "@apollo/client";
 import { Button } from "primereact/button";
 import { Card } from "primereact/card";
 import { confirmDialog } from "primereact/confirmdialog";
+import { DataTableSelectionSingleChangeEvent } from "primereact/datatable";
 import { Tag } from "primereact/tag";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -25,7 +26,6 @@ import useSaleOrderList from "../../hooks/useSaleOrderList";
 import { generatePDF } from "../../utils/generateSaleOrderPDF";
 import { getDate } from "../../utils/getDate";
 import { getStatus } from "../../utils/getStatus";
-import { DataTableSelectionSingleChangeEvent } from "primereact/datatable";
 
 const SaleOrderList = () => {
   const { listSaleOrder, loadingListSaleOrder } = useSaleOrderList();
@@ -272,7 +272,7 @@ const SaleOrderList = () => {
   }
 
   return (
-    <Card className="size-full" header={tableHeaderTemplate}>
+    <Card className="py-2" header={tableHeaderTemplate}>
       <Table
         columns={columns}
         data={listSaleOrder}
