@@ -1,8 +1,8 @@
 import { FC } from "react";
+import { Link } from "react-router-dom";
 import LoadingSpinner from "../../components/LoadingSpinner/LoadingSpinner";
 import { currencySymbol } from "../../utils/constants/currencyConstants";
 import useGeneralData from "./hooks/useGeneralData";
-import { Link } from "react-router-dom";
 
 const HeaderHome: FC = () => {
   const { generalData, loadingGeneralData } = useGeneralData();
@@ -12,90 +12,64 @@ const HeaderHome: FC = () => {
   }
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-2">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
       <Link
         to={`/order/saleOrder`}
-        className="raised-3xl font-bold bg-white p-5 shadow-xl"
+        className="raised-3xl font-bold bg-white p-4 shadow-xl rounded-lg text-center"
       >
-        <div className="flex items-center justify-between">
-          <label>Cantidad de ventas</label>
-          <i className="pi pi-chart-line text-3xl" />
-        </div>
-
-        <span className="flex justify-center items-center text-3xl">
-          {generalData.total_sales_number}
-        </span>
+        <div className="text-lg mb-2">Cantidad de ventas</div>
+        <div className="text-3xl font-semibold">{generalData.total_sales_number}</div>
+        <i className="pi pi-chart-line text-2xl mt-2" />
       </Link>
 
       <Link
         to={`/order/saleOrder`}
-        className="raised-3xl bg-[#14B8A6] text-white font-bold p-5 shadow-xl"
+        className="raised-3xl bg-[#14B8A6] text-white font-bold p-4 shadow-xl rounded-lg text-center"
       >
-        <div className="flex items-center justify-between">
-          <label>Total de ventas</label>
-          <i className="pi pi-dollar text-3xl" />
-        </div>
-
-        <span className="flex justify-center items-center text-3xl">
+        <div className="text-lg mb-2">Total de ventas</div>
+        <div className="text-3xl font-semibold">
           {generalData.total_sales_value} {currencySymbol}
-        </span>
+        </div>
+        <i className="pi pi-dollar text-2xl mt-2" />
       </Link>
 
       <Link
         to={`/product`}
-        className="raised-3xl bg-[#919293] text-white font-bold p-5 shadow-xl"
+        className="raised-3xl bg-[#919293] text-white font-bold p-4 shadow-xl rounded-lg text-center"
       >
-        <div className="flex items-center justify-between">
-          <label>Productos</label>
-          <i className="pi pi-box text-3xl" />
-        </div>
-
-        <span className="flex justify-center items-center text-3xl">
-          {generalData.total_products_number}
-        </span>
+        <div className="text-lg mb-2">Productos</div>
+        <div className="text-3xl font-semibold">{generalData.total_products_number}</div>
+        <i className="pi pi-box text-2xl mt-2" />
       </Link>
+
       <Link
         to={`/product`}
-        className="raised-3xl bg-[#606162] text-white font-bold p-5 shadow-xl"
+        className="raised-3xl bg-[#606162] text-white font-bold p-4 shadow-xl rounded-lg text-center"
       >
-        <div className="flex items-center justify-between">
-          <label>Stock de productos</label>
-          <i className="pi pi-box text-3xl" />
-        </div>
-
-        <span className="flex justify-center items-center text-3xl">
-          {generalData.stock} pz
-        </span>
+        <div className="text-lg mb-2">Stock de productos</div>
+        <div className="text-3xl font-semibold">{generalData.stock} pz</div>
+        <i className="pi pi-box text-2xl mt-2" />
       </Link>
+
       <Link
         to={`/product`}
-        className="raised-3xl bg-[#596cbd] text-white font-bold p-5 shadow-xl"
+        className="raised-3xl bg-[#596cbd] text-white font-bold p-4 shadow-xl rounded-lg text-center"
       >
-        <div className="flex items-center justify-between">
-          <label>Productos fuera de stock</label>
-          <i className="pi pi-exclamation-triangle text-3xl" />
-        </div>
-
-        <span className="flex justify-center items-center text-3xl">
-          {generalData.total_products_out}
-        </span>
+        <div className="text-lg mb-2">Productos fuera de stock</div>
+        <div className="text-3xl font-semibold">{generalData.total_products_out}</div>
+        <i className="pi pi-exclamation-triangle text-2xl mt-2" />
       </Link>
+
       <Link
         to={`/product`}
-        className="raised-3xl bg-[#FFAB40] text-white font-bold p-5 shadow-xl"
+        className="raised-3xl bg-[#FFAB40] text-white font-bold p-4 shadow-xl rounded-lg text-center"
       >
-        <div className="flex items-center justify-between">
-          <label>Producto mas vendido</label>
-          <i className="pi pi-star text-3xl" />
-        </div>
-
-        <span className="flex justify-center items-center text-xl">
+        <div className="text-lg mb-2">Producto más vendido</div>
+        <div className="text-xl font-semibold">
           {generalData.best_product ? generalData.best_product.name : "Ninguno"}
-        </span>
-
-        <span className="flex justify-center items-center text-xl">
-          Ventas: {generalData.best_product_sales_number}
-        </span>
+        </div>
+        <div className="text-xl">Ventas: {generalData.best_product_sales_number}</div>
+        <i className="pi pi-star text-2xl mt-2" />
       </Link>
     </div>
   );

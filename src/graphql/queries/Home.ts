@@ -19,3 +19,12 @@ export const GENERAL_DATA = gql`
     }
   }
 `;
+
+export const REPORT_SALE_ORDER_BY_CLIENT = gql`
+  query ReportSaleOrderByClient {
+    reportSaleOrderByClient {
+      client
+      total
+    }
+  }
+`;

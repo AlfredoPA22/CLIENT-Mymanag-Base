@@ -1,20 +1,38 @@
+import { useMutation } from "@apollo/client";
 import { Button } from "primereact/button";
 import { Card } from "primereact/card";
+import { DataTableSelectionSingleChangeEvent } from "primereact/datatable";
 import { Dialog } from "primereact/dialog";
+import { InputSwitch } from "primereact/inputswitch";
 import { Tag } from "primereact/tag";
 import { useState } from "react";
 import Table from "../../../../components/datatable/Table";
+import LoadingSpinner from "../../../../components/LoadingSpinner/LoadingSpinner";
+import { CHANGE_USER_STATUS } from "../../../../graphql/mutations/User";
+import { LIST_USER } from "../../../../graphql/queries/User";
 import useTableGlobalFilter from "../../../../hooks/useTableGlobalFilter";
+import { ToastSeverity } from "../../../../utils/enums/toast.enum";
 import { DataTableColumn } from "../../../../utils/interfaces/Table";
 import { IUser } from "../../../../utils/interfaces/User";
+import { showToast } from "../../../../utils/toastUtils";
 import { Status } from "../../../../utils/types/StatusType";
 import useUserList from "../../hooks/useUserList";
 import UserForm from "./FormUser";
-import LoadingSpinner from "../../../../components/LoadingSpinner/LoadingSpinner";
+import UserDetail from "./UserDetail";
 
 const UserList = () => {
   const { listUser, loadingListUser } = useUserList();
   const [visibleForm, setVisibleForm] = useState<boolean>(false);
+  const [visibleDetail, setVisibleDetail] = useState<boolean>(false);
+  const [currentUser, setCurrentUser] = useState<IUser>();
+
+  const [switchUserState] = useMutation(CHANGE_USER_STATUS, {
+    refetchQueries: [
+      {
+        query: LIST_USER,
+      },
+    ],
+  });
 
   const getStatus = (rowData: IUser): Status | null => {
     switch (rowData.is_active) {
@@ -67,6 +85,48 @@ const UserList = () => {
     );
   };
 
+  const handleChangeUserStatus = async (userId: string) => {
+    try {
+      const { data } = await switchUserState({
+        variables: {
+          userId,
+        },
+      });
+
+      if (data.switchUserState.is_active) {
+        showToast({
+          detail: "Usuario activado.",
+          severity: ToastSeverity.Success,
+        });
+      } else {
+        showToast({
+          detail: "Usuario desactivado.",
+          severity: ToastSeverity.Warn,
+        });
+      }
+    } catch (error: any) {
+      showToast({ detail: error.message, severity: ToastSeverity.Error });
+    }
+  };
+
+  const actionBodyTemplate = (rowData: IUser) => {
+    return (
+      <div className="flex justify-center gap-2">
+        <InputSwitch
+          checked={rowData.is_active}
+          onChange={() => handleChangeUserStatus(rowData._id)}
+        />
+      </div>
+    );
+  };
+
+  const handleSelectionChange = (
+    e: DataTableSelectionSingleChangeEvent<IUser[]>
+  ) => {
+    setCurrentUser(e.value);
+    setVisibleDetail(true);
+  };
+
   const [columns] = useState<DataTableColumn<IUser>[]>([
     {
       field: "user_name",
@@ -96,28 +156,37 @@ const UserList = () => {
 
   const { filters, renderFilterInput } = useTableGlobalFilter(columns);
 
-  if(loadingListUser){
-    return <LoadingSpinner/>
+  if (loadingListUser) {
+    return <LoadingSpinner />;
   }
   return (
     <Card className="size-full" header={tableHeaderTemplate}>
-      
-          <Table
-            columns={columns}
-            data={listUser}
-            emptyMessage="Sin usuarios."
-            size="small"
-            dataFilters={filters}
-            tableHeader={renderFilterInput}
-            editMode="row"
-          />
-          <Dialog
-            header="Nuevo Usuario"
-            visible={visibleForm}
-            onHide={() => setVisibleForm(false)}
-          >
-            <UserForm setVisibleForm={setVisibleForm} />
-          </Dialog>
+      <Table
+        columns={columns}
+        data={listUser}
+        emptyMessage="Sin usuarios."
+        editMode="row"
+        size="small"
+        dataFilters={filters}
+        actionBodyTemplate={actionBodyTemplate}
+        tableHeader={renderFilterInput}
+        onSelectionChange={handleSelectionChange}
+      />
+      <Dialog
+        header="Nuevo Usuario"
+        visible={visibleForm}
+        onHide={() => setVisibleForm(false)}
+      >
+        <UserForm setVisibleForm={setVisibleForm} />
+      </Dialog>
+      <Dialog
+        className="md:w-[90vw] w-[90vw]"
+        visible={visibleDetail}
+        header={currentUser && `Detalle de usuario`}
+        onHide={() => setVisibleDetail(false)}
+      >
+        {currentUser && <UserDetail user={currentUser} />}
+      </Dialog>
     </Card>
   );
 };

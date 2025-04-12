@@ -1,5 +1,6 @@
 import { useApolloClient } from "@apollo/client";
 import { Button } from "primereact/button";
+import { Card } from "primereact/card";
 import { useState } from "react";
 import FieldTextInput from "../../../components/textInput/FieldTextInput";
 import { SEARCH_PRODUCT } from "../../../graphql/queries/Product";
@@ -48,35 +49,35 @@ const SearchProductForm = () => {
   });
 
   return (
-    <div className="flex flex-col p-5 rounded-lg gap-5">
-      <form
-        onSubmit={handleSubmit}
-        className={`flex flex-col md:flex-row gap-4 justify-center ${
-          errors.serial ? "items-center" : "items-end"
-        }`}
-      >
-        <FieldTextInput
-        className="sm:w-[400px]"
-          role="input-name"
-          label="Buscar producto"
-          type="text"
-          name="serial"
-          placeholder="Ingresar codigo, nombre o serial"
-          value={values.serial}
-          error={errors.serial ? errors.serial : ""}
-          onChange={handleChange}
-        />
+    <Card className="flex flex-col p-5 rounded-lg gap-5">
+  <form
+    onSubmit={handleSubmit}
+    className={`flex flex-col sm:flex-row gap-4 justify-center ${
+      errors.serial ? "items-center" : "items-end"
+    }`}
+  >
+    <FieldTextInput
+      className="w-full sm:w-[400px]" // Aseguramos que ocupe el 100% del ancho en pantallas pequeñas
+      role="input-name"
+      label="Buscar producto"
+      type="text"
+      name="serial"
+      placeholder="Ingresar código, nombre o serial"
+      value={values.serial}
+      error={errors.serial ? errors.serial : ""}
+      onChange={handleChange}
+    />
 
-        <Button
-          type="submit"
-          severity="success"
-          label="Buscar"
-          disabled={!dirty || !isValid || isSubmitting}
-        />
-      </form>
+    <Button
+      type="submit"
+      severity="success"
+      label="Buscar"
+      disabled={!dirty || !isValid || isSubmitting}
+    />
+  </form>
 
-      {productFound && <ProductCard productData={productFound} />}
-    </div>
+  {productFound && <ProductCard productData={productFound} />}
+</Card>
   );
 };
 

@@ -5,6 +5,7 @@ import { DataTableRowEditCompleteEvent } from "primereact/datatable";
 import { Dialog } from "primereact/dialog";
 import { useState } from "react";
 import Table from "../../../components/datatable/Table";
+import LoadingSpinner from "../../../components/LoadingSpinner/LoadingSpinner";
 import { textEditor } from "../../../components/textEditor/textEditor";
 import {
   DELETE_PROVIDER,
@@ -18,7 +19,6 @@ import { DataTableColumn } from "../../../utils/interfaces/Table";
 import { showToast } from "../../../utils/toastUtils";
 import useProviderList from "../hooks/useProviderList";
 import ProviderForm from "./ProviderForm";
-import LoadingSpinner from "../../../components/LoadingSpinner/LoadingSpinner";
 
 const ProviderList = () => {
   const { listProvider, loadingListProvider } = useProviderList();
@@ -178,14 +178,6 @@ const ProviderList = () => {
       >
         <ProviderForm setVisibleForm={setVisibleForm} />
       </Dialog>
-
-      {/* <Dialog
-            className="md:w-[50vw] w-[90vw]"
-            visible={visibleList}
-            onHide={() => setVisibleList(false)}
-          >
-            {currentProvider && <ClientSaleOrderList client={currentProvider} />}
-          </Dialog> */}
     </div>
   );
 };

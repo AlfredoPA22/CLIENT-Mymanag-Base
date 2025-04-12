@@ -15,3 +15,13 @@ export const CREATE_USER = gql`
     }
   }
 `;
+
+export const CHANGE_USER_STATUS = gql`
+  mutation SwitchUserState($userId: String!) {
+    switchUserState(userId: $userId) {
+      _id
+      user_name
+      is_active
+    }
+  }
+`;

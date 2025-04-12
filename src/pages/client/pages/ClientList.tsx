@@ -1,9 +1,13 @@
 import { useMutation } from "@apollo/client";
 import { Button } from "primereact/button";
 import { Card } from "primereact/card";
+import { ColumnEditorOptions } from "primereact/column";
+import { DataTableRowEditCompleteEvent, DataTableSelectionSingleChangeEvent } from "primereact/datatable";
 import { Dialog } from "primereact/dialog";
 import { useState } from "react";
 import Table from "../../../components/datatable/Table";
+import LoadingSpinner from "../../../components/LoadingSpinner/LoadingSpinner";
+import { textEditor } from "../../../components/textEditor/textEditor";
 import {
   DELETE_CLIENT,
   UPDATE_CLIENT,
@@ -15,17 +19,13 @@ import { IClient } from "../../../utils/interfaces/Client";
 import { DataTableColumn } from "../../../utils/interfaces/Table";
 import { showToast } from "../../../utils/toastUtils";
 import useClientList from "../hooks/useClientList";
+import ClientDetail from "./ClientDetail";
 import ClientForm from "./ClientForm";
-import ClientSaleOrderList from "./ClientSaleOrderList";
-import { DataTableRowEditCompleteEvent } from "primereact/datatable";
-import { ColumnEditorOptions } from "primereact/column";
-import { textEditor } from "../../../components/textEditor/textEditor";
-import LoadingSpinner from "../../../components/LoadingSpinner/LoadingSpinner";
 
 const ClientList = () => {
   const { listClient, loadingListClient } = useClientList();
   const [visibleForm, setVisibleForm] = useState<boolean>(false);
-  const [visibleList, setVisibleList] = useState<boolean>(false);
+  const [visibleDetail, setVisibleDetail] = useState<boolean>(false);
   const [currentClient, setCurrentClient] = useState<IClient>();
 
   const [deleteClient] = useMutation(DELETE_CLIENT, {
@@ -92,18 +92,6 @@ const ClientList = () => {
           aria-label="Cancel"
           onClick={() => handleDeleteClient(rowData._id)}
         />
-        <Button
-          tooltip="Ver ventas"
-          tooltipOptions={{ position: "left" }}
-          icon="pi pi-list"
-          raised
-          severity="info"
-          aria-label="Cancel"
-          onClick={() => {
-            setCurrentClient(rowData);
-            setVisibleList(true);
-          }}
-        />
       </div>
     );
   };
@@ -138,6 +126,13 @@ const ClientList = () => {
     }
   };
 
+  const handleSelectionChange = (
+      e: DataTableSelectionSingleChangeEvent<IClient[]>
+    ) => {
+      setCurrentClient(e.value);
+      setVisibleDetail(true);
+    };
+
   const [columns] = useState<DataTableColumn<IClient>[]>([
     {
       field: "code",
@@ -149,7 +144,7 @@ const ClientList = () => {
       field: "fullName",
       header: "Nombre",
       sortable: true,
-      style: { width: "30%" },
+      style: { width: "20%" },
       fieldEditor: (options: ColumnEditorOptions) => textEditor(options),
     },
     {
@@ -162,13 +157,13 @@ const ClientList = () => {
     {
       field: "email",
       header: "Correo",
-      style: { width: "30%" },
+      style: { width: "10%" },
       fieldEditor: (options: ColumnEditorOptions) => textEditor(options),
     },
     {
       field: "address",
       header: "Direccion",
-      style: { width: "30%" },
+      style: { width: "40%" },
       fieldEditor: (options: ColumnEditorOptions) => textEditor(options),
     },
   ]);
@@ -191,6 +186,7 @@ const ClientList = () => {
         tableHeader={renderFilterInput}
         editMode="row"
         onRowEditComplete={onRowEditComplete}
+        onSelectionChange={handleSelectionChange}
       />
       <Dialog
         header="Nuevo Cliente"
@@ -201,15 +197,12 @@ const ClientList = () => {
       </Dialog>
 
       <Dialog
-        className="md:w-[50vw] w-[90vw]"
-        header={
-          currentClient &&
-          `Lista de ventas del cliente ${currentClient.fullName} (${currentClient.code})`
-        }
-        visible={visibleList}
-        onHide={() => setVisibleList(false)}
+        className="md:w-[90vw] w-[90vw]"
+        visible={visibleDetail}
+        header={currentClient && `Detalle de cliente`}
+        onHide={() => setVisibleDetail(false)}
       >
-        {currentClient && <ClientSaleOrderList client={currentClient} />}
+        {currentClient && <ClientDetail client={currentClient} />}
       </Dialog>
     </Card>
   );
