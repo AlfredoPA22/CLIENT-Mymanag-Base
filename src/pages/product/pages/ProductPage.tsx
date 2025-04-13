@@ -7,7 +7,7 @@ import WarehouseList from "./WarehouseList";
 const ProductPage = () => {
   return (
     <TabView className="size-full">
-      <TabPanel header="Productos">
+      <TabPanel  header="Productos">
         <ProductList />
       </TabPanel>
       <TabPanel header="Marcas">

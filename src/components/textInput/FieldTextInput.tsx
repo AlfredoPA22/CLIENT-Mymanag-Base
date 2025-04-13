@@ -41,7 +41,7 @@ const FieldTextInput: FC<FieldTextInputProps> = ({
         ref={inputRef}
         {...props}
       />
-      <small className="p-error">{error}</small>
+      <small className="p-error text-xs block h-5">{error}</small>
     </section>
   );
 };

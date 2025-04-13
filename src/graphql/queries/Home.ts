@@ -28,3 +28,27 @@ export const REPORT_SALE_ORDER_BY_CLIENT = gql`
     }
   }
 `;
+
+export const REPORT_SALE_ORDER_BY_CATEGORY = gql`
+  query ReportSaleOrderByCategory {
+    reportSaleOrderByCategory {
+      category
+      total
+    }
+  }
+`;
+
+export const REPORT_SALE_ORDER_BY_MONTH = gql`
+  query ReportSaleOrderByMonth {
+    reportSaleOrderByMonth {
+      _id
+      client {
+        fullName
+      }
+      code
+      date
+      status
+      total
+    }
+  }
+`;

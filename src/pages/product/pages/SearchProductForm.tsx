@@ -49,17 +49,15 @@ const SearchProductForm = () => {
   });
 
   return (
-    <Card className="flex flex-col p-5 rounded-lg gap-5">
+    <Card title="Buscar productos" className="flex flex-col rounded-lg gap-5">
   <form
     onSubmit={handleSubmit}
-    className={`flex flex-col sm:flex-row gap-4 justify-center ${
-      errors.serial ? "items-center" : "items-end"
-    }`}
+    className={`flex flex-col sm:flex-row gap-4 justify-center items-center`}
   >
     <FieldTextInput
-      className="w-full sm:w-[400px]" // Aseguramos que ocupe el 100% del ancho en pantallas pequeñas
+      className="w-full" // Aseguramos que ocupe el 100% del ancho en pantallas pequeñas
       role="input-name"
-      label="Buscar producto"
+      label="Producto, serial"
       type="text"
       name="serial"
       placeholder="Ingresar código, nombre o serial"

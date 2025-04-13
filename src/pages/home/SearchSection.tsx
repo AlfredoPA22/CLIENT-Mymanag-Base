@@ -1,11 +1,11 @@
 import SearchProductForm from "../product/pages/SearchProductForm";
-import Dashboards from "./Dashboards";
+import ReportByClient from "./ReportByClient";
 
 const SearchSection = () => {
   return (
-    <div className="grid lg:grid-cols-2 gap-2 p-2">
+    <div className="grid lg:grid-cols-2 gap-2">
       <SearchProductForm />
-      <Dashboards />
+      <ReportByClient />
     </div>
   );
 };

@@ -55,7 +55,7 @@ const SelectInput: FC<SelectInputProps> = ({
         value={value}
         isDisabled={disabled}
       />
-      <small className="p-error">{error}</small>
+      <small className="p-error text-xs block h-5">{error}</small>
     </section>
   );
 };

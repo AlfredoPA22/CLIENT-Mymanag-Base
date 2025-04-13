@@ -49,21 +49,21 @@ const Login = () => {
   };
 
   return (
-    <div className="h-screen flex items-center justify-center bg-gradient-to-br from-sky-50 via-blue-100 to-blue-200">
+    <div className="h-screen flex items-center justify-center bg-[#1e293b]">
       <Card
-        className="w-full sm:w-[400px] rounded-3xl border border-blue-200 shadow-xl bg-white"
+        className="w-full sm:w-[400px] rounded-3xl border border-slate-600 shadow-xl bg-[#334155]"
         header={headerTemplate}
       >
-        <h2 className="text-center text-2xl font-semibold text-gray-700 mb-6">
+        <h2 className="text-center text-2xl font-semibold text-slate-200 mb-6">
           Bienvenido
         </h2>
-
+  
         <form
           className="flex flex-col gap-5 items-center justify-center"
           onSubmit={handleSubmit}
         >
           <FieldTextInput
-            className="w-full p-3 bg-white border border-gray-300 text-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-300"
+            className="w-full p-3 bg-[#475569] border border-slate-600 text-slate-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
             role="input-userName"
             label="Usuario"
             type="text"
@@ -75,7 +75,7 @@ const Login = () => {
             onChange={handleChange}
           />
           <PasswordInput
-            className="w-full p-3 bg-white border border-gray-300 text-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-300"
+            className="w-full p-3 bg-[#475569] border border-slate-600 text-slate-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
             role="input-password"
             label="Contraseña"
             type="password"
@@ -99,6 +99,7 @@ const Login = () => {
       </Card>
     </div>
   );
+  
 };
 
 export default Login;

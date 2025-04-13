@@ -39,7 +39,7 @@ const FieldTextareaInput: FC<FieldTextareaInputProps> = ({
         cols={cols}
         onChange={onChange}
       />
-      <small className='p-error'>{error}</small>
+      <small className="p-error text-xs block h-5">{error}</small>
     </section>
   );
 };

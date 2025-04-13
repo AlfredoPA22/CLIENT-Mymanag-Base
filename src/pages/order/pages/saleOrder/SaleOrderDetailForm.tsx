@@ -97,15 +97,22 @@ const SaleOrderDetailForm: FC<SaleOrderDetailFormProps> = ({ saleOrderId }) => {
   if (loadingListProduct) {
     return <LoadingSpinner />;
   }
-  
+
   return (
     <Card className="mb-2">
       <form
         onSubmit={handleSubmit}
         className="flex justify-center items-center"
       >
-        <div className="flex md:flex-row flex-col justify-center gap-5">
-          <section className="grid md:grid-cols-4 grid-cols-1 gap-5 justify-center items-start">
+        <div className="flex md:flex-row flex-col justify-center items-center gap-5">
+          <section
+            className={`grid ${
+              selectedProduct &&
+              selectedProduct.stock_type === stockType.INDIVIDUAL
+                ? "md:grid-cols-5"
+                : "md:grid-cols-4"
+            }  grid-cols-1 gap-5 justify-center items-start`}
+          >
             <DropdownInput
               className="md:col-span-2"
               label="Producto"
@@ -120,11 +127,9 @@ const SaleOrderDetailForm: FC<SaleOrderDetailFormProps> = ({ saleOrderId }) => {
               error={errors.product ? errors.product : ""}
               onChange={handleProductChange}
             />
-
             {selectedProduct &&
               selectedProduct.stock_type === stockType.INDIVIDUAL && (
                 <DropdownInput
-                  className="md:col-span-2"
                   label="Almacén"
                   name="warehouse"
                   optionLabel="name"
@@ -138,7 +143,6 @@ const SaleOrderDetailForm: FC<SaleOrderDetailFormProps> = ({ saleOrderId }) => {
                   onChange={handleWarehouseChange}
                 />
               )}
-
             <FieldTextInput
               className="md:col-span-1"
               label="Precio de venta"
@@ -150,7 +154,6 @@ const SaleOrderDetailForm: FC<SaleOrderDetailFormProps> = ({ saleOrderId }) => {
               error={errors.sale_price ? errors.sale_price : ""}
               onChange={handleChange}
             />
-
             <FieldTextInput
               className="md:col-span-1"
               label="Cantidad"

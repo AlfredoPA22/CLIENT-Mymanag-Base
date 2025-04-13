@@ -144,8 +144,15 @@ const PurchaseOrderDetailForm: FC<PurchaseOrderDetailFormProps> = ({
         onSubmit={handleSubmit}
         className="flex justify-center items-center"
       >
-        <div className="flex md:flex-row flex-col justify-center gap-5">
-          <section className="grid md:grid-cols-4 grid-cols-1 gap-5 justify-center items-start">
+        <div className="flex md:flex-row flex-col justify-center items-center gap-5">
+          <section
+            className={`grid ${
+              selectedProduct &&
+              selectedProduct.stock_type === stockType.INDIVIDUAL
+                ? "md:grid-cols-5"
+                : "md:grid-cols-4"
+            }  grid-cols-1 gap-5 justify-center items-start`}
+          >
             <DropdownInput
               className="md:col-span-2"
               label="Producto"

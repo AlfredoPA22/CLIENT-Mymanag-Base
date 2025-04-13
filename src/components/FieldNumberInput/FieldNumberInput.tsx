@@ -44,7 +44,7 @@ const FieldNumberInput: FC<FieldNumberInputProps> = ({
         minFractionDigits={minFranction}
         maxFractionDigits={maxFranction}
       />
-      <small className='p-error'>{error}</small>
+      <small className="p-error text-xs block h-5">{error}</small>
     </section>
   );
 };

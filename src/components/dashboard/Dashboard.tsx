@@ -27,7 +27,7 @@ const Dashboard = () => {
           <Navbar onToggleSidebar={() => setVisibleSidebar(true)} />
         </div>
 
-        <main className="p-2 bg-gray-100 flex-1 overflow-auto">
+        <main className="p-2 flex-1 overflow-auto">
           <Outlet />
         </main>
       </div>

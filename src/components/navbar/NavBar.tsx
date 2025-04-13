@@ -8,11 +8,11 @@ type Props = {
 
 const Navbar = ({ onToggleSidebar }: Props) => {
   return (
-    <div className="flex items-center justify-between p-4 shadow-md bg-white">
+    <div className="flex items-center justify-between p-4 shadow-md bg-[#1e293b]">
       {/* Botón de menú */}
       <button
         onClick={onToggleSidebar}
-        className="text-2xl text-gray-800 hover:text-blue-600"
+        className="text-2xl text-white hover:text-[#7aa6d3]"
       >
         <HiMenuAlt2 />
       </button>

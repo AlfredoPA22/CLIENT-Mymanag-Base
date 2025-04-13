@@ -1,12 +1,12 @@
 import { useQuery } from "@apollo/client";
 import {
-    BarElement,
-    CategoryScale,
-    Chart as ChartJS,
-    Legend,
-    LinearScale,
-    Title,
-    Tooltip,
+  BarElement,
+  CategoryScale,
+  Chart as ChartJS,
+  Legend,
+  LinearScale,
+  Title,
+  Tooltip,
 } from "chart.js";
 import { Card } from "primereact/card";
 import { useEffect } from "react";
@@ -35,7 +35,7 @@ const getRandomColor = () => {
   return `rgba(${r}, ${g}, ${b}, 0.6)`; // Color con opacidad
 };
 
-const Dashboards = () => {
+const ReportByClient = () => {
   const {
     data: { reportSaleOrderByClient: listReport } = [],
     loading: loadingSaleOrderByClient,
@@ -67,7 +67,7 @@ const Dashboards = () => {
     labels: clientNames,
     datasets: [
       {
-        label: "Ventas Totales por Cliente",
+        label: `Ventas por cliente (${currencySymbol})`,
         data: salesTotal,
         backgroundColor: backgroundColors, // Asignar los colores generados
         borderColor: backgroundColors.map((color: any) =>
@@ -80,22 +80,19 @@ const Dashboards = () => {
 
   const options = {
     responsive: true,
+    indexAxis: "y" as const, // 👈 Esto hace que las barras sean horizontales
     plugins: {
-      title: {
-        display: true,
-        text: "Ventas Totales por Cliente del presente año",
-      },
       legend: {
         position: "top" as const,
       },
     },
     scales: {
-      y: {
+      x: {
+        // 👈 ahora 'x' es el eje de los valores (antes era 'y')
         beginAtZero: true,
         ticks: {
-          // Formatear los valores con 'BS' al final
           callback: (value: any) => {
-            return `${value} ${currencySymbol}`; // Sufijo "BS" para los valores en el eje Y
+            return `${value} ${currencySymbol}`;
           },
         },
       },
@@ -103,10 +100,10 @@ const Dashboards = () => {
   };
 
   return (
-    <Card className="w-full">
+    <Card title="Mejores clientes" className="w-full">
       <Bar data={data} options={options} />
     </Card>
   );
 };
 
-export default Dashboards;
+export default ReportByClient;
