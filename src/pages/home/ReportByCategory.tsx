@@ -1,25 +1,16 @@
 import { useQuery } from "@apollo/client";
-import { Chart as ChartJS, ArcElement, Tooltip, Legend, Title } from "chart.js";
+import { ArcElement, Chart as ChartJS, Legend, Title, Tooltip } from "chart.js";
 import { Card } from "primereact/card";
+import { Chart } from "primereact/chart";
 import { useEffect } from "react";
-import { Pie } from "react-chartjs-2";
 import LoadingSpinner from "../../components/LoadingSpinner/LoadingSpinner";
 import { REPORT_SALE_ORDER_BY_CATEGORY } from "../../graphql/queries/Home";
 import { currencySymbol } from "../../utils/constants/currencyConstants";
 import { ToastSeverity } from "../../utils/enums/toast.enum";
 import { showToast } from "../../utils/toastUtils";
-import { Chart } from "primereact/chart";
 
 // Registrar PieChart
 ChartJS.register(ArcElement, Tooltip, Legend, Title);
-
-// Función para generar color aleatorio
-const getRandomColor = () => {
-  const r = Math.floor(Math.random() * 256);
-  const g = Math.floor(Math.random() * 256);
-  const b = Math.floor(Math.random() * 256);
-  return `rgba(${r}, ${g}, ${b}, 0.6)`;
-};
 
 const ReportByCategory = () => {
   const {
