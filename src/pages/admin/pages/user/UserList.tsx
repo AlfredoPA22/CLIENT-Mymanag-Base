@@ -1,6 +1,5 @@
 import { useMutation } from "@apollo/client";
 import { Button } from "primereact/button";
-import { Card } from "primereact/card";
 import { DataTableSelectionSingleChangeEvent } from "primereact/datatable";
 import { Dialog } from "primereact/dialog";
 import { InputSwitch } from "primereact/inputswitch";
@@ -160,7 +159,8 @@ const UserList = () => {
     return <LoadingSpinner />;
   }
   return (
-    <Card className="size-full" header={tableHeaderTemplate}>
+    <div className="size-full">
+      {tableHeaderTemplate()}
       <Table
         columns={columns}
         data={listUser}
@@ -187,7 +187,7 @@ const UserList = () => {
       >
         {currentUser && <UserDetail user={currentUser} />}
       </Dialog>
-    </Card>
+    </div>
   );
 };
 

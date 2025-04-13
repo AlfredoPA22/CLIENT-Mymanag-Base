@@ -1,14 +1,13 @@
 import { Button } from "primereact/button";
-import { Card } from "primereact/card";
 import { Dialog } from "primereact/dialog";
 import { useState } from "react";
 import Table from "../../../../components/datatable/Table";
+import LoadingSpinner from "../../../../components/LoadingSpinner/LoadingSpinner";
 import useTableGlobalFilter from "../../../../hooks/useTableGlobalFilter";
 import { IRole } from "../../../../utils/interfaces/Role";
 import { DataTableColumn } from "../../../../utils/interfaces/Table";
 import useRoleList from "../../hooks/useRoleList";
 import RoleForm from "./RoleForm";
-import LoadingSpinner from "../../../../components/LoadingSpinner/LoadingSpinner";
 
 const RoleList = () => {
   const { listRole, loadingListRole } = useRoleList();
@@ -180,7 +179,8 @@ const RoleList = () => {
   }
 
   return (
-    <Card className="size-full" header={tableHeaderTemplate}>
+    <div className="size-full">
+      {tableHeaderTemplate()}
       <Table
         columns={columns}
         data={listRole}
@@ -199,7 +199,7 @@ const RoleList = () => {
       >
         <RoleForm setVisibleForm={setVisibleForm} />
       </Dialog>
-    </Card>
+    </div>
   );
 };
 
