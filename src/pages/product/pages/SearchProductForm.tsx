@@ -1,6 +1,5 @@
 import { useApolloClient } from "@apollo/client";
 import { Button } from "primereact/button";
-import { Card } from "primereact/card";
 import { useState } from "react";
 import FieldTextInput from "../../../components/textInput/FieldTextInput";
 import { SEARCH_PRODUCT } from "../../../graphql/queries/Product";
