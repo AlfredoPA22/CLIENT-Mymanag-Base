@@ -76,23 +76,57 @@ const SidebarContent = ({
   handleNavigate: (to: string) => void;
   handleLogout: () => void;
 }) => {
+  const { permissions } = useAuth();
   const location = useLocation();
+  const hasPermission = (requiredPermissions: string[]) => {
+    if (requiredPermissions.length === 0) return true;
+    return requiredPermissions.some((permission) =>
+      permissions.includes(permission)
+    );
+  };
 
   const menuItems = [
-    { label: "Inicio", icon: <AiFillHome />, to: "/" },
+    {
+      label: "Inicio",
+      icon: <AiFillHome />,
+      to: "/",
+      permission: [],
+    },
     {
       label: "Inventario",
       icon: <MdProductionQuantityLimits />,
       to: "/product",
+      permission: [
+        "LIST_AND_CREATE_BRAND",
+        "LIST_AND_CREATE_CATEGORY",
+        "LIST_AND_CREATE_WAREHOUSE",
+        "LIST_AND_CREATE_PRODUCT",
+      ],
     },
     {
       label: "Compras",
       icon: <MdOutlineInventory />,
       to: "/order/purchaseOrder",
+      permission: ["LIST_AND_CREATE_PROVIDER", "LIST_AND_CREATE_PURCHASE"],
     },
-    { label: "Clientes", icon: <MdPeopleAlt />, to: "/client" },
-    { label: "Ventas", icon: <MdPointOfSale />, to: "/order/saleOrder" },
-    { label: "Admin", icon: <PiGearSix />, to: "/admin" },
+    {
+      label: "Clientes",
+      icon: <MdPeopleAlt />,
+      to: "/client",
+      permission: ["LIST_AND_CREATE_CLIENT"],
+    },
+    {
+      label: "Ventas",
+      icon: <MdPointOfSale />,
+      to: "/order/saleOrder",
+      permission: ["LIST_AND_CREATE_SALE"],
+    },
+    {
+      label: "Admin",
+      icon: <PiGearSix />,
+      to: "/admin",
+      permission: ["USER_AND_ROLE"],
+    },
   ];
 
   return (
@@ -106,34 +140,32 @@ const SidebarContent = ({
       </div>
 
       <nav className="flex flex-col gap-2 px-4 flex-grow">
-        {menuItems.map((item, index) => {
-          const isActive = location.pathname === item.to;
+        {menuItems
+          .filter((item) => hasPermission(item.permission))
+          .map((item, index) => {
+            const isActive = location.pathname === item.to;
 
-          return (
-            <button
-              key={index}
-              onClick={() => handleNavigate(item.to)}
-              className={`
-          flex items-center gap-3 py-3 px-4 rounded-lg text-sm font-semibold
-          transition-all duration-300
-          ${
-            isActive
-              ? "bg-[#f1f5f9] text-[#1e293b] shadow"
-              : "bg-[#334155] text-[#e2e8f0] hover:bg-[#475569]"
-          }
-        `}
-            >
-              <span
-                className={`text-xl ${
-                  isActive ? "text-[#1e293b]" : "text-[#e2e8f0]"
+            return (
+              <button
+                key={index}
+                onClick={() => handleNavigate(item.to)}
+                className={`flex items-center gap-3 py-3 px-4 rounded-lg text-sm font-semibold transition-all duration-300 ${
+                  isActive
+                    ? "bg-[#f1f5f9] text-[#1e293b] shadow"
+                    : "bg-[#334155] text-[#e2e8f0] hover:bg-[#475569]"
                 }`}
               >
-                {item.icon}
-              </span>
-              <span>{item.label}</span>
-            </button>
-          );
-        })}
+                <span
+                  className={`text-xl ${
+                    isActive ? "text-[#1e293b]" : "text-[#e2e8f0]"
+                  }`}
+                >
+                  {item.icon}
+                </span>
+                <span>{item.label}</span>
+              </button>
+            );
+          })}
 
         <button
           onClick={handleLogout}

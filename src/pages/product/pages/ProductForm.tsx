@@ -82,7 +82,6 @@ const ProductForm: FC<ProductFormProps> = ({ setVisibleForm }) => {
   const handleStockTypeChange = async (e: AutoCompleteChangeEvent) => {
     const { value } = e.target;
     setSelectedStockType(value ? value : "");
-    console.log(value);
     e.target.value = value ? value : "";
     setFieldValue(e.target.name, e.target.value);
   };

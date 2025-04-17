@@ -33,10 +33,12 @@ import { getStatus } from "../../order/utils/getStatus";
 import ProductForm from "./ProductForm";
 import ProductSerialList from "./ProductSerialList";
 import ProductInventoryList from "./ProductInventoryList";
+import SearchProductForm from "./SearchProductForm";
 
 const ProductList = () => {
   const { listProduct, loadingListProduct } = useProductList();
   const [visibleForm, setVisibleForm] = useState<boolean>(false);
+  const [visibleSearch, setVisibleSearch] = useState<boolean>(false);
   const [visibleListSerial, setVisibleListSerial] = useState<boolean>(false);
   const [visibleListInventory, setVisibleListInventory] =
     useState<boolean>(false);
@@ -104,14 +106,25 @@ const ProductList = () => {
       <div className="flex justify-between items-center m-2 px-5">
         <h1 className="text-2xl font-bold">{`Lista de productos (${listProduct.length})`}</h1>
 
-        <Button
-          icon="pi pi-plus"
-          severity="success"
-          tooltip="Nuevo producto"
-          tooltipOptions={{ position: "left" }}
-          onClick={() => setVisibleForm(true)}
-          raised
-        />
+        <div className="flex gap-2">
+          <Button
+            icon="pi pi-search"
+            severity="info"
+            tooltip="Buscar producto"
+            tooltipOptions={{ position: "left" }}
+            onClick={() => setVisibleSearch(true)}
+            raised
+          />
+
+          <Button
+            icon="pi pi-plus"
+            severity="success"
+            tooltip="Nuevo producto"
+            tooltipOptions={{ position: "left" }}
+            onClick={() => setVisibleForm(true)}
+            raised
+          />
+        </div>
       </div>
     );
   };
@@ -318,6 +331,14 @@ const ProductList = () => {
         onHide={() => setVisibleListInventory(false)}
       >
         {currentProduct && <ProductInventoryList product={currentProduct} />}
+      </Dialog>
+      <Dialog
+        className="md:w-[50vw] w-[90vw]"
+        visible={visibleSearch}
+        header="Buscar producto"
+        onHide={() => setVisibleSearch(false)}
+      >
+        <SearchProductForm />
       </Dialog>
     </div>
   );

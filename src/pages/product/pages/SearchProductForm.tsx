@@ -49,33 +49,33 @@ const SearchProductForm = () => {
   });
 
   return (
-    <Card title="Buscar productos" className="flex flex-col rounded-lg gap-5">
-  <form
-    onSubmit={handleSubmit}
-    className={`flex flex-col sm:flex-row gap-4 justify-center items-center`}
-  >
-    <FieldTextInput
-      className="w-full" // Aseguramos que ocupe el 100% del ancho en pantallas pequeñas
-      role="input-name"
-      label="Producto, serial"
-      type="text"
-      name="serial"
-      placeholder="Ingresar código, nombre o serial"
-      value={values.serial}
-      error={errors.serial ? errors.serial : ""}
-      onChange={handleChange}
-    />
+    <>
+      <form
+        onSubmit={handleSubmit}
+        className={`flex flex-col sm:flex-row gap-4 justify-center items-center`}
+      >
+        <FieldTextInput
+          className="w-full" // Aseguramos que ocupe el 100% del ancho en pantallas pequeñas
+          role="input-name"
+          label="Producto, serial"
+          type="text"
+          name="serial"
+          placeholder="Ingresar código, nombre o serial"
+          value={values.serial}
+          error={errors.serial ? errors.serial : ""}
+          onChange={handleChange}
+        />
 
-    <Button
-      type="submit"
-      severity="success"
-      label="Buscar"
-      disabled={!dirty || !isValid || isSubmitting}
-    />
-  </form>
+        <Button
+          type="submit"
+          severity="success"
+          label="Buscar"
+          disabled={!dirty || !isValid || isSubmitting}
+        />
+      </form>
 
-  {productFound && <ProductCard productData={productFound} />}
-</Card>
+      {productFound && <ProductCard productData={productFound} />}
+    </>
   );
 };
 

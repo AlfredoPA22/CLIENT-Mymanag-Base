@@ -82,7 +82,7 @@ const UserForm: FC<UserFormProps> = ({ setVisibleForm }) => {
 
         <FieldTextInput
           label="Contraseña"
-          type="text"
+          type="password"
           name="password"
           placeholder="Contraseña"
           mandatory

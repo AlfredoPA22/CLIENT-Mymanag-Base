@@ -41,8 +41,6 @@ const RoleForm: FC<RoleFormProps> = ({ setVisibleForm }) => {
   const handleChangePermissions = async (e: TreeSelectChangeEvent) => {
     const { name, value } = e.target;
 
-    console.log(value);
-
     setSelectedPermissions(value || null);
 
     const permissionKeys: string[] = Object.keys(value || {}).filter(

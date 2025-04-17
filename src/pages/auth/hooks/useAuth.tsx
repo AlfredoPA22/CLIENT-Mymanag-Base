@@ -23,7 +23,7 @@ const useAuth = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const { token, userName, userId, isAuthenticated } = useSelector(
+  const { token, userName, userId, isAuthenticated, permissions } = useSelector(
     (state: RootState) => state.authSlice
   );
   const [loadingLogin, setLoadingLogin] = useState<boolean>(false);
@@ -118,6 +118,7 @@ const useAuth = () => {
   return {
     userId,
     userName,
+    permissions,
     loadingLogin,
     isAuthenticated,
     login,
