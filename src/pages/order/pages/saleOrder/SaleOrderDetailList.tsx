@@ -187,7 +187,10 @@ const SaleOrderDetailList: FC<SaleOrderDetailListProps> = ({ saleOrderId }) => {
       sortable: true,
       style: { width: "15%" },
       body: (rowData: ISaleOrderDetail) => (
-        <LabelInput className="justify-center" label={`${rowData.sale_price} ${currencySymbol}`} />
+        <LabelInput
+          className="justify-center"
+          label={`${rowData.sale_price} ${currencySymbol}`}
+        />
       ),
       fieldEditor: (options: ColumnEditorOptions) =>
         numberEditor(options, true),
@@ -243,7 +246,9 @@ const SaleOrderDetailList: FC<SaleOrderDetailListProps> = ({ saleOrderId }) => {
 
   return (
     <Card
-      title={`Productos de la venta (${listSaleOrderDetail.length})`}
+      title={`Productos de la venta (${
+        listSaleOrderDetail ? listSaleOrderDetail.length : ""
+      })`}
     >
       <Table
         columns={columns}

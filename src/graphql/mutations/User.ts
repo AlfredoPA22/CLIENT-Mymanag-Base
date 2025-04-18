@@ -7,9 +7,39 @@ export const LOGIN = gql`
 `;
 
 export const CREATE_USER = gql`
-  mutation CreateUser($password: String!, $role: String!, $user_name: String!) {
+  mutation CreateUser(
+    $password: String!
+    $role: String!
+    $user_name: String!
+    $is_global: Boolean!
+  ) {
     createUser(
-      userInput: { password: $password, role: $role, user_name: $user_name }
+      userInput: {
+        password: $password
+        role: $role
+        user_name: $user_name
+        is_global: $is_global
+      }
+    ) {
+      _id
+    }
+  }
+`;
+
+export const UPDATE_USER = gql`
+  mutation Mutation(
+    $userId: String!
+    $role: String!
+    $user_name: String!
+    $is_global: Boolean!
+  ) {
+    updateUser(
+      userId: $userId
+      updateUserInput: {
+        user_name: $user_name
+        role: $role
+        is_global: $is_global
+      }
     ) {
       _id
     }
@@ -22,6 +52,14 @@ export const CHANGE_USER_STATUS = gql`
       _id
       user_name
       is_active
+    }
+  }
+`;
+
+export const DELETE_USER = gql`
+  mutation Mutation($userId: String!) {
+    deleteUser(userId: $userId) {
+      success
     }
   }
 `;

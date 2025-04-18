@@ -6,7 +6,6 @@ import LoadingSpinner from "../../../components/LoadingSpinner/LoadingSpinner";
 import TextLink from "../../../components/TextLink/TextLink";
 import { LIST_PRODUCT_SERIAL_BY_PRODUCT } from "../../../graphql/queries/Product";
 import useTableGlobalFilter from "../../../hooks/useTableGlobalFilter";
-import { orderStatus } from "../../../utils/enums/orderStatus.enum";
 import { ToastSeverity } from "../../../utils/enums/toast.enum";
 import { IProduct } from "../../../utils/interfaces/Product";
 import { IProductSerial } from "../../../utils/interfaces/ProductSerial";
@@ -42,20 +41,10 @@ const ProductSerialList: FC<ProductSerialListProps> = ({ product }) => {
   };
 
   const purchaseOrderBodyTemplate = (rowData: IProductSerial) => {
-    if (
-      rowData.purchase_order_detail.purchase_order.status ===
-      orderStatus.APROBADO
-    ) {
+    if (rowData.purchase_order_detail) {
       return (
         <TextLink
           link={`/order/viewPurchaseOrder/${rowData.purchase_order_detail.purchase_order._id}`}
-          text={rowData.purchase_order_detail.purchase_order.code}
-        />
-      );
-    } else {
-      return (
-        <TextLink
-          link={`/order/editPurchaseOrder/${rowData.purchase_order_detail.purchase_order._id}`}
           text={rowData.purchase_order_detail.purchase_order.code}
         />
       );
@@ -64,23 +53,12 @@ const ProductSerialList: FC<ProductSerialListProps> = ({ product }) => {
 
   const saleOrderBodyTemplate = (rowData: IProductSerial) => {
     if (rowData.sale_order_detail) {
-      if (
-        rowData.sale_order_detail.sale_order.status === orderStatus.APROBADO
-      ) {
-        return (
-          <TextLink
-            link={`/order/viewSaleOrder/${rowData.sale_order_detail.sale_order._id}`}
-            text={rowData.sale_order_detail.sale_order.code}
-          />
-        );
-      } else {
-        return (
-          <TextLink
-            link={`/order/editSaleOrder/${rowData.sale_order_detail.sale_order._id}`}
-            text={rowData.sale_order_detail.sale_order.code}
-          />
-        );
-      }
+      return (
+        <TextLink
+          link={`/order/viewSaleOrder/${rowData.sale_order_detail.sale_order._id}`}
+          text={rowData.sale_order_detail.sale_order.code}
+        />
+      );
     }
   };
 

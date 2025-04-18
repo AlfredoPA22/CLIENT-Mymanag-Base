@@ -1,13 +1,13 @@
 import { FC } from "react";
-import HeaderHome from "./HeaderHome";
-import SearchSection from "./SearchSection";
-import SalesSection from "./SalesSection";
 import { PermissionGuard } from "../auth/pages/PermissionGuard";
+import HeaderHome from "./HeaderHome";
+import SalesSection from "./SalesSection";
+import SearchSection from "./SearchSection";
 
 const Home: FC = () => {
   return (
     <div className="flex flex-col gap-2 w-full">
-      <PermissionGuard permissions={["GENERAL_DA    TA"]}>
+      <PermissionGuard permissions={["GENERAL_DATA"]}>
         <HeaderHome />
       </PermissionGuard>
       <PermissionGuard permissions={["SEARCH_PRODUCT"]}>

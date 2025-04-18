@@ -1,15 +1,20 @@
+import { useMutation } from "@apollo/client";
 import { Button } from "primereact/button";
+import { DataTableSelectionSingleChangeEvent } from "primereact/datatable";
 import { Dialog } from "primereact/dialog";
 import { useState } from "react";
 import Table from "../../../../components/datatable/Table";
 import LoadingSpinner from "../../../../components/LoadingSpinner/LoadingSpinner";
+import { DELETE_ROLE } from "../../../../graphql/mutations/Role";
+import { LIST_ROLE } from "../../../../graphql/queries/Role";
 import useTableGlobalFilter from "../../../../hooks/useTableGlobalFilter";
+import { ToastSeverity } from "../../../../utils/enums/toast.enum";
 import { IRole } from "../../../../utils/interfaces/Role";
 import { DataTableColumn } from "../../../../utils/interfaces/Table";
+import { showToast } from "../../../../utils/toastUtils";
 import useRoleList from "../../hooks/useRoleList";
-import RoleForm from "./RoleForm";
-import { DataTableSelectionSingleChangeEvent } from "primereact/datatable";
 import RoleDetail from "./RoleDetail";
+import RoleForm from "./RoleForm";
 
 const RoleList = () => {
   const { listRole, loadingListRole } = useRoleList();
@@ -17,55 +22,14 @@ const RoleList = () => {
   const [visibleDetail, setVisibleDetail] = useState<boolean>(false);
   const [currentRole, setCurrentRole] = useState<IRole>();
 
-  //   const [deleteClient] = useMutation(DELETE_CLIENT, {
-  //     refetchQueries: [
-  //       {
-  //         query: LIST_CLIENT,
-  //       },
-  //     ],
-  //   });
-
-  //   const [updateClient] = useMutation(UPDATE_CLIENT, {
-  //     refetchQueries: [
-  //       {
-  //         query: LIST_CLIENT,
-  //       },
-  //     ],
-  //   });
-  // const getStatus = (rowData: IUser): Status | null => {
-  //   switch (rowData.is_active) {
-  //     case false:
-  //       return {
-  //         severity: "danger",
-  //         label: "Inactivo",
-  //       };
-
-  //     case true:
-  //       return {
-  //         severity: "success",
-  //         label: "Activo",
-  //       };
-  //     default:
-  //       return null;
-  //   }
-  // };
-
-  // const statusBodyTemplate = (rowData: IUser) => {
-  //   const status = getStatus(rowData);
-  //   if (status) {
-  //     const { severity, label } = status;
-  //     return (
-  //       <Tag
-  //         value={rowData.is_active}
-  //         severity={severity as "danger" | "success"}
-  //       >
-  //         {label}
-  //       </Tag>
-  //     );
-  //   }
-  //   return null;
-  // };
-
+  const [deleteRole] = useMutation(DELETE_ROLE, {
+    refetchQueries: [
+      {
+        query: LIST_ROLE,
+      },
+    ],
+  });
+  
   const tableHeaderTemplate = () => {
     return (
       <div className="flex justify-between items-center m-2 px-5">
@@ -90,81 +54,40 @@ const RoleList = () => {
     setVisibleDetail(true);
   };
 
-  //   const handleDeleteClient = async (clientId: string) => {
-  //     try {
-  //       const { data } = await deleteClient({
-  //         variables: {
-  //           clientId,
-  //         },
-  //       });
+  const handleDeleteRole = async (roleId: string) => {
+    try {
+      const { data } = await deleteRole({
+        variables: {
+          roleId,
+        },
+      });
 
-  //       if (data.deleteClient.success) {
-  //         showToast({
-  //           detail: "Cliente eliminado.",
-  //           severity: ToastSeverity.Success,
-  //         });
-  //       }
-  //     } catch (error: any) {
-  //       showToast({ detail: error.message, severity: ToastSeverity.Error });
-  //     }
-  //   };
+      if (data.deleteRole.success) {
+        showToast({
+          detail: "Rol eliminado.",
+          severity: ToastSeverity.Success,
+        });
+      }
+    } catch (error: any) {
+      showToast({ detail: error.message, severity: ToastSeverity.Error });
+    }
+  };
 
-  //   const actionBodyTemplate = (rowData: IClient) => {
-  //     return (
-  //       <div className="flex justify-center gap-2">
-  //         <Button
-  //           tooltip="Eliminar cliente"
-  //           tooltipOptions={{ position: "left" }}
-  //           icon="pi pi-trash"
-  //           raised
-  //           severity="danger"
-  //           aria-label="Cancel"
-  //           onClick={() => handleDeleteClient(rowData._id)}
-  //         />
-  //         <Button
-  //           tooltip="Ver ventas"
-  //           tooltipOptions={{ position: "left" }}
-  //           icon="pi pi-list"
-  //           raised
-  //           severity="info"
-  //           aria-label="Cancel"
-  //           onClick={() => {
-  //             setCurrentClient(rowData);
-  //             setVisibleList(true);
-  //           }}
-  //         />
-  //       </div>
-  //     );
-  //   };
-
-  //   const onRowEditComplete = async (e: DataTableRowEditCompleteEvent) => {
-  //     try {
-  //       if (e.newData.firstName === "" || e.newData.lastName === "") {
-  //         showToast({
-  //           detail: "El nombre y el apellido son obligatorios",
-  //           severity: ToastSeverity.Error,
-  //         });
-  //       } else {
-  //         const { data } = await updateClient({
-  //           variables: {
-  //             clientId: e.newData._id,
-  //             firstName: e.newData.firstName,
-  //             lastName: e.newData.lastName,
-  //             phoneNumber: e.newData.phoneNumber,
-  //           },
-  //         });
-
-  //         if (data) {
-  //           showToast({
-  //             detail: "Cliente actualizado.",
-  //             severity: ToastSeverity.Success,
-  //           });
-  //         }
-  //       }
-  //     } catch (error: any) {
-  //       showToast({ detail: error.message, severity: ToastSeverity.Error });
-  //     }
-  //   };
+  const actionBodyTemplate = (rowData: IRole) => {
+    return (
+      <div className="flex justify-center gap-2">
+        <Button
+          tooltip="Eliminar rol"
+          tooltipOptions={{ position: "left" }}
+          icon="pi pi-trash"
+          raised
+          severity="danger"
+          aria-label="Cancel"
+          onClick={() => handleDeleteRole(rowData._id)}
+        />
+      </div>
+    );
+  };
 
   const [columns] = useState<DataTableColumn<IRole>[]>([
     {
@@ -195,11 +118,10 @@ const RoleList = () => {
         data={listRole}
         emptyMessage="Sin roles."
         size="small"
-        // actionBodyTemplate={actionBodyTemplate}
+        actionBodyTemplate={actionBodyTemplate}
         dataFilters={filters}
         tableHeader={renderFilterInput}
         editMode="row"
-        // onRowEditComplete={onRowEditComplete}
         onSelectionChange={handleSelectionChange}
       />
       <Dialog

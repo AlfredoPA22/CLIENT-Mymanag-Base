@@ -20,3 +20,11 @@ export const CREATE_ROLE = gql`
     }
   }
 `;
+
+export const DELETE_ROLE = gql`
+  mutation Mutation($roleId: String!) {
+    deleteRole(roleId: $roleId) {
+      success
+    }
+  }
+`;

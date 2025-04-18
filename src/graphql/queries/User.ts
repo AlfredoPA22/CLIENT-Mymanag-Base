@@ -6,6 +6,7 @@ export const LIST_USER = gql`
       _id
       user_name
       is_active
+      is_global
       role {
         _id
         description

@@ -5,3 +5,8 @@ export const schemaFormUser = object().shape({
   password: string().required("La contraseña es requerida"),
   role: string().required("El rol es requerido"),
 });
+
+export const schemaFormUpdateUser = object().shape({
+  user_name: string().required("El usuario es requerido"),
+  role: string().required("El rol es requerido"),
+});

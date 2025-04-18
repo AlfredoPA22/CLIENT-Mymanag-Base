@@ -18,7 +18,9 @@ const HeaderHome: FC = () => {
         className="raised-3xl font-bold bg-white p-4 shadow-xl rounded-lg text-center"
       >
         <div className="text-lg mb-2">Cantidad de ventas</div>
-        <div className="text-3xl font-semibold">{generalData.total_sales_number}</div>
+        <div className="text-3xl font-semibold">
+          {generalData.total_sales_number}
+        </div>
         <i className="pi pi-chart-line text-2xl mt-2" />
       </Link>
 
@@ -38,7 +40,9 @@ const HeaderHome: FC = () => {
         className="raised-3xl bg-[#919293] text-white font-bold p-4 shadow-xl rounded-lg text-center"
       >
         <div className="text-lg mb-2">Productos</div>
-        <div className="text-3xl font-semibold">{generalData.total_products_number}</div>
+        <div className="text-3xl font-semibold">
+          {generalData.total_products_number}
+        </div>
         <i className="pi pi-box text-2xl mt-2" />
       </Link>
 
@@ -56,7 +60,9 @@ const HeaderHome: FC = () => {
         className="raised-3xl bg-[#596cbd] text-white font-bold p-4 shadow-xl rounded-lg text-center"
       >
         <div className="text-lg mb-2">Productos fuera de stock</div>
-        <div className="text-3xl font-semibold">{generalData.total_products_out}</div>
+        <div className="text-3xl font-semibold">
+          {generalData.total_products_out}
+        </div>
         <i className="pi pi-exclamation-triangle text-2xl mt-2" />
       </Link>
 
@@ -68,7 +74,9 @@ const HeaderHome: FC = () => {
         <div className="text-xl font-semibold">
           {generalData.best_product ? generalData.best_product.name : "Ninguno"}
         </div>
-        <div className="text-xl">Ventas: {generalData.best_product_sales_number}</div>
+        <div className="text-xl">
+          Ventas: {generalData.best_product_sales_number} pz
+        </div>
         <i className="pi pi-star text-2xl mt-2" />
       </Link>
     </div>

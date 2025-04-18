@@ -19,10 +19,12 @@ export interface IUser {
   password: string;
   role: IRole;
   is_active: boolean;
+  is_global: boolean;
 }
 
 export interface IUserInput {
   user_name: string;
   password: string;
   role: string;
+  is_global: boolean;
 }
