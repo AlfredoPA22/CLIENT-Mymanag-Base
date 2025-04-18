@@ -95,24 +95,6 @@ const CategoryDetail: FC<CategoryDetailProps> = ({ category }) => {
   }
 
   return (
-    // <div className="flex flex-col gap-2">
-    //   <Card title={`${category.name}`}>
-    //     <p className="m-0">
-    //       {category.description}
-    //     </p>
-    //   </Card>
-    //   <Card title={`Productos asociados (${listProductWithParams.length})`}>
-    //     <Table
-    //       columns={columns}
-    //       data={listProductWithParams}
-    //       emptyMessage="Sin productos."
-    //       size="small"
-    //       dataFilters={filters}
-    //       tableHeader={renderFilterInput}
-    //       editMode="row"
-    //     />
-    //   </Card>
-    // </div>
     <div className="flex flex-col gap-2">
       {/* Tarjeta de Categoría */}
       <Card className="bg-white shadow-lg rounded-lg p-4">
@@ -120,24 +102,25 @@ const CategoryDetail: FC<CategoryDetailProps> = ({ category }) => {
         <p className="text-gray-600 mt-2">{category.description}</p>
       </Card>
 
-      {/* Tarjeta de Productos Asociados */}
-      <Card className="bg-white shadow-lg rounded-lg p-4">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-medium text-gray-800">
-            Productos Asociados ({listProductWithParams.length})
-          </h3>
-        </div>
+      {listProductWithParams && (
+        <Card className="bg-white shadow-lg rounded-lg p-4">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-medium text-gray-800">
+              Productos Asociados ({listProductWithParams.length})
+            </h3>
+          </div>
 
-        <Table
-          columns={columns}
-          data={listProductWithParams}
-          emptyMessage="Sin productos."
-          size="small"
-          dataFilters={filters}
-          tableHeader={renderFilterInput}
-          editMode="row"
-        />
-      </Card>
+          <Table
+            columns={columns}
+            data={listProductWithParams}
+            emptyMessage="Sin productos."
+            size="small"
+            dataFilters={filters}
+            tableHeader={renderFilterInput}
+            editMode="row"
+          />
+        </Card>
+      )}
     </div>
   );
 };

@@ -6,10 +6,7 @@ export const LIST_ROLE = gql`
       _id
       description
       name
-      permission {
-        name
-        value
-      }
+      permission
     }
   }
 `;

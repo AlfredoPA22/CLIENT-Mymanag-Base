@@ -8,12 +8,14 @@ import { IRole } from "../../../../utils/interfaces/Role";
 import { DataTableColumn } from "../../../../utils/interfaces/Table";
 import useRoleList from "../../hooks/useRoleList";
 import RoleForm from "./RoleForm";
+import { DataTableSelectionSingleChangeEvent } from "primereact/datatable";
+import RoleDetail from "./RoleDetail";
 
 const RoleList = () => {
   const { listRole, loadingListRole } = useRoleList();
   const [visibleForm, setVisibleForm] = useState<boolean>(false);
-  //   const [visibleList, setVisibleList] = useState<boolean>(false);
-  //   const [currentClient, setCurrentClient] = useState<IClient>();
+  const [visibleDetail, setVisibleDetail] = useState<boolean>(false);
+  const [currentRole, setCurrentRole] = useState<IRole>();
 
   //   const [deleteClient] = useMutation(DELETE_CLIENT, {
   //     refetchQueries: [
@@ -79,6 +81,13 @@ const RoleList = () => {
         />
       </div>
     );
+  };
+
+  const handleSelectionChange = (
+    e: DataTableSelectionSingleChangeEvent<IRole[]>
+  ) => {
+    setCurrentRole(e.value);
+    setVisibleDetail(true);
   };
 
   //   const handleDeleteClient = async (clientId: string) => {
@@ -191,6 +200,7 @@ const RoleList = () => {
         tableHeader={renderFilterInput}
         editMode="row"
         // onRowEditComplete={onRowEditComplete}
+        onSelectionChange={handleSelectionChange}
       />
       <Dialog
         header="Nuevo Rol"
@@ -198,6 +208,15 @@ const RoleList = () => {
         onHide={() => setVisibleForm(false)}
       >
         <RoleForm setVisibleForm={setVisibleForm} />
+      </Dialog>
+
+      <Dialog
+        className="md:w-[90vw] w-[90vw]"
+        visible={visibleDetail}
+        header={currentRole && `Detalle de rol`}
+        onHide={() => setVisibleDetail(false)}
+      >
+        {currentRole && <RoleDetail role={currentRole} />}
       </Dialog>
     </div>
   );

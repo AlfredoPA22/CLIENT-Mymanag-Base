@@ -16,7 +16,7 @@ const OrderRoutes = () => {
       <Route
         path="/purchaseOrder"
         element={
-          <PermissionRoute permissions={["LIST_AND_CREATE_PURCHASE"]}>
+          <PermissionRoute permissions={["LIST_AND_CREATE_PURCHASE","LIST_AND_CREATE_PROVIDER"]}>
             <PurchaseOrderPage />
           </PermissionRoute>
         }

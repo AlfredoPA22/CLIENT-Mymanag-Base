@@ -1,10 +1,8 @@
-import { IPermission } from "./Permission";
-
 export interface IRole {
   _id: string;
   name: string;
   description: string;
-  permission: IPermission[];
+  permission: string[];
 }
 
 export interface IRoleInput {
@@ -12,4 +10,3 @@ export interface IRoleInput {
   description?: string;
   permission: string[];
 }
-

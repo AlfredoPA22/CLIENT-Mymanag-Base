@@ -1,25 +1,24 @@
-import { Badge } from "primereact/badge";
 import { Card } from "primereact/card";
+import { FC, useMemo } from "react";
+import { IRole } from "../../../../utils/interfaces/Role";
+import usePermissionList from "../../hooks/usePermissionList";
 import { Tree } from "primereact/tree";
 import { TreeNode } from "primereact/treenode";
-import { FC, useMemo } from "react";
-import { IUser } from "../../../../utils/interfaces/User";
-import usePermissionList from "../../hooks/usePermissionList";
 
-interface UserDetailProps {
-  user: IUser;
+interface RoleDetailProps {
+  role: IRole;
 }
 
-const UserDetail: FC<UserDetailProps> = ({ user }) => {
+const RoleDetail: FC<RoleDetailProps> = ({ role }) => {
   const { listPermissionSelect } = usePermissionList();
 
   const filteredTree: TreeNode[] = useMemo(() => {
-    if (!user.role.permission || !listPermissionSelect) return [];
+    if (!role.permission || !listPermissionSelect) return [];
 
-    return listPermissionSelect
+    const tree = listPermissionSelect
       .map((category): TreeNode | null => {
         const matchedChildren = category.children?.filter((child) =>
-          user.role.permission.includes(child.key)
+          role.permission.includes(child.key)
         );
 
         if (matchedChildren && matchedChildren.length > 0) {
@@ -35,35 +34,27 @@ const UserDetail: FC<UserDetailProps> = ({ user }) => {
 
         return null;
       })
-      .filter((node): node is TreeNode => node !== null);
-  }, [user.role.permission, listPermissionSelect]);
+      .filter((node): node is TreeNode => node !== null); // 👈 Type guard correcto
+
+    return tree;
+  }, [role.permission, listPermissionSelect]);
 
   return (
     <div className="flex flex-col gap-4">
       <Card className="bg-white shadow-lg rounded-2xl p-6 border-none">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-2xl font-bold text-gray-800">{user.user_name}</h2>
-          <Badge
-            value={user.is_active ? "Activo" : "Inactivo"}
-            severity={user.is_active ? "success" : "danger"}
-          />
+          <h2 className="text-2xl font-bold text-gray-800">{role.name}</h2>
         </div>
 
         <div className="flex flex-col gap-2 text-gray-700 text-sm">
           <div className="flex items-center gap-2">
-            <i className="pi pi-id-card text-blue-500"></i>
-            <span className="font-medium">Rol:</span>
-            <span>{user.role.name}</span>
-          </div>
-
-          <div className="flex items-center gap-2">
             <i className="pi pi-align-left text-blue-500"></i>
             <span className="font-medium">Descripción:</span>
-            <span>{user.role.description}</span>
+            <span>{role.description}</span>
           </div>
 
-          {/* 🌳 Permisos del usuario */}
-          <div className="mt-4">
+          {/* 🌳 Permisos con PrimeReact Tree */}
+          <div className="mt-6">
             <div className="flex items-center gap-2 mb-2">
               <i className="pi pi-lock text-green-500"></i>
               <span className="font-medium text-gray-800">Permisos:</span>
@@ -76,4 +67,4 @@ const UserDetail: FC<UserDetailProps> = ({ user }) => {
   );
 };
 
-export default UserDetail;
+export default RoleDetail;

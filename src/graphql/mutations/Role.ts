@@ -16,10 +16,7 @@ export const CREATE_ROLE = gql`
       _id
       description
       name
-      permission {
-        name
-        value
-      }
+      permission
     }
   }
 `;

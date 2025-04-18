@@ -141,23 +141,25 @@ const ClientDetail: FC<ClientDetailProps> = ({ client }) => {
     <div className="flex flex-col gap-2">
       <Card header={header} className="shadow-lg rounded-2xl border-none p-4" />
 
-      <Card className="bg-white shadow-lg rounded-lg p-4">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-medium text-gray-800">
-            Lista de ventas ({listSaleOrderByClient.length})
-          </h3>
-        </div>
+      {listSaleOrderByClient && (
+        <Card className="bg-white shadow-lg rounded-lg p-4">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-medium text-gray-800">
+              Lista de ventas ({listSaleOrderByClient.length})
+            </h3>
+          </div>
 
-        <Table
-          columns={columns}
-          data={listSaleOrderByClient.saleOrder}
-          emptyMessage="Sin ventas."
-          size="small"
-          dataFilters={filters}
-          tableHeader={renderFilterInput}
-          footer={`Total vendido: ${listSaleOrderByClient.total} ${currencySymbol}`}
-        />
-      </Card>
+          <Table
+            columns={columns}
+            data={listSaleOrderByClient.saleOrder}
+            emptyMessage="Sin ventas."
+            size="small"
+            dataFilters={filters}
+            tableHeader={renderFilterInput}
+            footer={`Total vendido: ${listSaleOrderByClient.total} ${currencySymbol}`}
+          />
+        </Card>
+      )}
     </div>
   );
 };

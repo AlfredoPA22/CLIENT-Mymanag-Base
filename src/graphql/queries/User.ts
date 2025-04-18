@@ -10,6 +10,7 @@ export const LIST_USER = gql`
         _id
         description
         name
+        permission
       }
     }
   }

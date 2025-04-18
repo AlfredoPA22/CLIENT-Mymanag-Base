@@ -98,28 +98,31 @@ const WarehouseDetail: FC<WarehouseDetailProps> = ({ warehouse }) => {
     <div className="flex flex-col gap-2">
       {/* Tarjeta de Categoría */}
       <Card className="bg-white shadow-lg rounded-lg p-4">
-        <h2 className="text-xl font-semibold text-gray-800">{warehouse.name}</h2>
+        <h2 className="text-xl font-semibold text-gray-800">
+          {warehouse.name}
+        </h2>
         <p className="text-gray-600 mt-2">{warehouse.description}</p>
       </Card>
 
-      {/* Tarjeta de Productos Asociados */}
-      <Card className="bg-white shadow-lg rounded-lg p-4">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-medium text-gray-800">
-            Productos Asociados ({listProductWithParams.length})
-          </h3>
-        </div>
+      {listProductWithParams && (
+        <Card className="bg-white shadow-lg rounded-lg p-4">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-medium text-gray-800">
+              Productos Asociados ({listProductWithParams.length})
+            </h3>
+          </div>
 
-        <Table
-          columns={columns}
-          data={listProductWithParams}
-          emptyMessage="Sin productos."
-          size="small"
-          dataFilters={filters}
-          tableHeader={renderFilterInput}
-          editMode="row"
-        />
-      </Card>
+          <Table
+            columns={columns}
+            data={listProductWithParams}
+            emptyMessage="Sin productos."
+            size="small"
+            dataFilters={filters}
+            tableHeader={renderFilterInput}
+            editMode="row"
+          />
+        </Card>
+      )}
     </div>
   );
 };
