@@ -9,7 +9,6 @@ import TextLink from "../../../components/TextLink/TextLink";
 import { LIST_SALE_ORDER_BY_CLIENT } from "../../../graphql/queries/Client";
 import useTableGlobalFilter from "../../../hooks/useTableGlobalFilter";
 import { currencySymbol } from "../../../utils/constants/currencyConstants";
-import { orderStatus } from "../../../utils/enums/orderStatus.enum";
 import { ToastSeverity } from "../../../utils/enums/toast.enum";
 import { IClient } from "../../../utils/interfaces/Client";
 import { ISaleOrder } from "../../../utils/interfaces/SaleOrder";
@@ -45,21 +44,12 @@ const ClientDetail: FC<ClientDetailProps> = ({ client }) => {
   };
 
   const saleOrderBodyTemplate = (rowData: ISaleOrder) => {
-    if (rowData.status === orderStatus.APROBADO) {
-      return (
-        <TextLink
-          link={`/order/viewSaleOrder/${rowData._id}`}
-          text={rowData.code}
-        />
-      );
-    } else {
-      return (
-        <TextLink
-          link={`/order/editSaleOrder/${rowData._id}`}
-          text={rowData.code}
-        />
-      );
-    }
+    return (
+      <TextLink
+        link={`/order/viewSaleOrder/${rowData._id}`}
+        text={rowData.code}
+      />
+    );
   };
 
   const header = (
@@ -145,7 +135,7 @@ const ClientDetail: FC<ClientDetailProps> = ({ client }) => {
         <Card className="bg-white shadow-lg rounded-lg p-4">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-medium text-gray-800">
-              Lista de ventas ({listSaleOrderByClient.length})
+              Lista de ventas ({listSaleOrderByClient.saleOrder.length})
             </h3>
           </div>
 

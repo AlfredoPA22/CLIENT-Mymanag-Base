@@ -142,82 +142,86 @@ const PurchaseOrderDetailForm: FC<PurchaseOrderDetailFormProps> = ({
     <Card className="mb-2">
       <form
         onSubmit={handleSubmit}
-        className="flex justify-center items-center"
+        className="flex flex-col md:flex-row justify-center items-center gap-2"
       >
-        <div className="flex md:flex-row flex-col justify-center items-center gap-5">
-          <section
-            className={`grid ${
+        <section
+          className={`grid ${
+            selectedProduct &&
+            selectedProduct.stock_type === stockType.INDIVIDUAL
+              ? "xl:grid-cols-6"
+              : "xl:grid-cols-4"
+          }  grid-cols-1 gap-2 justify-center items-start`}
+        >
+          <DropdownInput
+            className={` ${
               selectedProduct &&
               selectedProduct.stock_type === stockType.INDIVIDUAL
-                ? "md:grid-cols-5"
-                : "md:grid-cols-4"
-            }  grid-cols-1 gap-5 justify-center items-start`}
-          >
-            <DropdownInput
-              className="md:col-span-2"
-              label="Producto"
-              name="product"
-              optionLabel="fullName"
-              placeholder="Seleccionar producto"
-              filter={true}
-              showClear={true}
-              mandatory
-              options={listProduct}
-              value={selectedProduct}
-              error={errors.product ? errors.product : ""}
-              onChange={handleProductChange}
-            />
+                ? "2xl:w-[400px] md:col-span-2"
+                : "2xl:w-[500px] md:col-span-2"
+            }`}
+            label="Producto"
+            name="product"
+            optionLabel="fullName"
+            placeholder="Seleccionar producto"
+            filter={true}
+            showClear={true}
+            mandatory
+            options={listProduct}
+            value={selectedProduct}
+            error={errors.product ? errors.product : ""}
+            onChange={handleProductChange}
+          />
 
-            {selectedProduct &&
-              selectedProduct.stock_type === stockType.INDIVIDUAL && (
-                <SelectInput
-                  label="Almacén"
-                  name="warehouse"
-                  placeholder="Seleccionar almacén"
-                  mandatory
-                  options={listWarehouseSelect}
-                  error={errors.warehouse ? errors.warehouse : ""}
-                  onChange={handleWarehouseChange}
-                  onCreateOption={onCreateWarehouse}
-                  value={selectedWarehouse}
-                />
-              )}
+          {selectedProduct &&
+            selectedProduct.stock_type === stockType.INDIVIDUAL && (
+              <SelectInput
+                className="2xl:w-[400px] md:col-span-2"
+                label="Almacén"
+                name="warehouse"
+                placeholder="Seleccionar almacén"
+                mandatory
+                options={listWarehouseSelect}
+                error={errors.warehouse ? errors.warehouse : ""}
+                onChange={handleWarehouseChange}
+                onCreateOption={onCreateWarehouse}
+                value={selectedWarehouse}
+              />
+            )}
 
-            <FieldTextInput
-              className="md:col-span-1"
-              label="Precio de compra"
-              type="number"
-              name="purchase_price"
-              mandatory
-              placeholder="Precio de Compra"
-              value={values.purchase_price}
-              error={errors.purchase_price ? errors.purchase_price : ""}
-              onChange={handleChange}
-            />
+          <FieldTextInput
+            className="md:col-span-1"
+            label="Precio de compra"
+            type="number"
+            name="purchase_price"
+            mandatory
+            placeholder="Precio de Compra"
+            value={values.purchase_price}
+            error={errors.purchase_price ? errors.purchase_price : ""}
+            onChange={handleChange}
+          />
 
-            <FieldTextInput
-              className="md:col-span-1"
-              label="Cantidad"
-              type="number"
-              name="quantity"
-              mandatory
-              placeholder="Cantidad"
-              value={values.quantity}
-              error={errors.quantity ? errors.quantity : ""}
-              onChange={handleChange}
-            />
-          </section>
-          <section className="flex items-end justify-center">
-            <Button
-              className="md:col-span-2"
-              icon="pi pi-plus"
-              type="submit"
-              severity="success"
-              label="Agregar producto"
-              disabled={!dirty || !isValid || isSubmitting}
-            />
-          </section>
-        </div>
+          <FieldTextInput
+            className="md:col-span-1"
+            label="Cantidad"
+            type="number"
+            name="quantity"
+            mandatory
+            placeholder="Cantidad"
+            value={values.quantity}
+            error={errors.quantity ? errors.quantity : ""}
+            onChange={handleChange}
+          />
+        </section>
+        <section className="flex items-end justify-center">
+          <Button
+            className="md:col-span-2"
+            icon="pi pi-plus"
+            type="submit"
+            severity="success"
+            label="Agregar producto"
+            disabled={!dirty || !isValid || isSubmitting}
+          />
+        </section>
       </form>
     </Card>
   );

@@ -77,7 +77,7 @@ const SidebarContent = ({
   handleNavigate: (to: string) => void;
   handleLogout: () => void;
 }) => {
-  const { permissions } = useAuth();
+  const { permissions, userName } = useAuth();
   const location = useLocation();
   const hasPermission = (requiredPermissions: string[]) => {
     if (requiredPermissions.length === 0) return true;
@@ -148,6 +148,9 @@ const SidebarContent = ({
           alt="logo"
           className="w-[80px] h-[70px] mb-2 rounded-full"
         />
+        <span className="text-[#e2e8f0] text-sm font-medium mt-1">
+          {userName || "Usuario"}
+        </span>
       </div>
 
       <nav className="flex flex-col gap-2 px-4 flex-grow">
