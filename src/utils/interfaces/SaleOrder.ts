@@ -24,3 +24,10 @@ export interface ISaleOrderByYear {
   month: string;
   total: Number;
 }
+
+export interface IFilterSaleOrderInput {
+  startDate?: Date | null;
+  endDate?: Date | null;
+  client?: string;
+  status?: string;
+}

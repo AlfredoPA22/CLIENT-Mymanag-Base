@@ -8,6 +8,7 @@ import ClientRoutes from "../pages/client/ClientRoutes";
 import Home from "../pages/home/Home";
 import OrderRoutes from "../pages/order/OrderRoutes";
 import ProductRoutes from "../pages/product/ProductRoutes";
+import ReportsRoutes from "../pages/reports/reportsRoutes";
 import { ProtectedRoute } from "./ProtectedRoute";
 
 const PrivateRoutes: FC = () => {
@@ -21,6 +22,7 @@ const PrivateRoutes: FC = () => {
           <Route path="/order/*" element={<OrderRoutes />} />
           <Route path="/client/*" element={<ClientRoutes />} />
           <Route path="/admin/*" element={<AdminRoutes />} />
+          <Route path="/reports/*" element={<ReportsRoutes />} />
         </Route>
       </Route>
     </Routes>

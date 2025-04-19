@@ -8,20 +8,22 @@ export const generatePDF = (data: ISaleOrderToPDF) => {
   const doc = new jsPDF();
 
   // Título del documento
-  doc.setFontSize(18);
+  doc.setFontSize(24); // Título más grande
+  doc.setTextColor("#2d66ea"); // Color del título (azul brillante)
+  doc.setFont("helvetica", "bold"); // Fuente en negrita
   doc.text("Orden de Venta", 75, 20);
 
-  // Datos de la orden de venta
+  // Espaciado y diseño para los datos de la orden de venta
   doc.setFontSize(12);
-  doc.text(`Código: ${data.saleOrder.code}`, 14, 30);
-  doc.text(
-    `Cliente: ${data.saleOrder.client.fullName}`,
-    14,
-    35
-  );
-  doc.text(`Total: ${data.saleOrder.total} ${currencySymbol}`, 14, 40);
-  doc.text(`Fecha: ${getDate(data.saleOrder.date)}`, 150, 30);
-  doc.text(`Estado: ${data.saleOrder.status}`, 150, 35);
+  doc.setTextColor("#333"); // Color de texto para los datos (gris oscuro)
+  doc.setFont("helvetica", "normal"); // Fuente normal
+
+  // Ajustes de los datos de la orden de venta
+  doc.text(`Código: ${data.saleOrder.code}`, 14, 35);
+  doc.text(`Cliente: ${data.saleOrder.client.fullName}`, 14, 45);
+  doc.text(`Total: ${data.saleOrder.total} ${currencySymbol}`, 14, 55);
+  doc.text(`Fecha: ${getDate(data.saleOrder.date)}`, 150, 35);
+  doc.text(`Estado: ${data.saleOrder.status}`, 150, 45);
 
   // Cabeceras para la tabla
   const columns = [

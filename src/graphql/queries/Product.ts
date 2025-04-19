@@ -185,3 +185,34 @@ export const LIST_PRODUCT_WITH_PARAMS = gql`
     }
   }
 `;
+
+export const REPORT_PRODUCT = gql`
+  query Query($brand: String, $category: String, $status: String) {
+    productReport(
+      filterProductInput: {
+        brand: $brand
+        category: $category
+        status: $status
+      }
+    ) {
+      _id
+      brand {
+        _id
+        name
+      }
+      category {
+        _id
+        name
+      }
+      code
+      description
+      image
+      last_cost_price
+      name
+      sale_price
+      status
+      stock
+      stock_type
+    }
+  }
+`;

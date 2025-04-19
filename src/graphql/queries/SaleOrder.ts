@@ -84,3 +84,31 @@ export const REPORT_SALE_ORDER_BY_YEAR = gql`
     }
   }
 `;
+
+export const REPORT_SALE_ORDER = gql`
+  query SaleOrderReport(
+    $startDate: Date
+    $endDate: Date
+    $client: String
+    $status: String
+  ) {
+    saleOrderReport(
+      filterSaleOrderInput: {
+        startDate: $startDate
+        endDate: $endDate
+        client: $client
+        status: $status
+      }
+    ) {
+      _id
+      code
+      date
+      client {
+        _id
+        fullName
+      }
+      status
+      total
+    }
+  }
+`;

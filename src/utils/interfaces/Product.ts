@@ -28,6 +28,12 @@ export interface IProductInput {
   stock_type: stockType;
 }
 
+export interface IFilterProductInput {
+  category?: string;
+  brand?: string;
+  status?: string;
+}
+
 export interface ISearchProductInput {
   serial: string;
 }

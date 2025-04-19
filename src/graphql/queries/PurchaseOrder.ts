@@ -5,7 +5,7 @@ export const LIST_PURCHASE_ORDER = gql`
     listPurchaseOrder {
       _id
       code
-      provider{
+      provider {
         _id
         code
         name
@@ -41,7 +41,7 @@ export const FIND_PURCHASE_ORDER_TO_PDF = gql`
       purchaseOrder {
         _id
         code
-        provider{
+        provider {
           _id
           code
           name
@@ -78,6 +78,34 @@ export const REPORT_PURCHASE_ORDER_BY_YEAR = gql`
   query ReportPurchaseOrderByYear {
     reportPurchaseOrderByYear {
       month
+      total
+    }
+  }
+`;
+
+export const REPORT_PURCHASE_ORDER = gql`
+  query PurchaseOrderReport(
+    $startDate: Date
+    $endDate: Date
+    $provider: String
+    $status: String
+  ) {
+    purchaseOrderReport(
+      filterPurchaseOrderInput: {
+        startDate: $startDate
+        endDate: $endDate
+        provider: $provider
+        status: $status
+      }
+    ) {
+      _id
+      code
+      date
+      provider {
+        _id
+        name
+      }
+      status
       total
     }
   }

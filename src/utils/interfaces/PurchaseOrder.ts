@@ -24,3 +24,10 @@ export interface IPurchaseOrderByYear {
   month: string;
   total: Number;
 }
+
+export interface IFilterPurchaseOrderInput {
+  startDate?: Date | null;
+  endDate?: Date | null;
+  provider?: string;
+  status?: string;
+}

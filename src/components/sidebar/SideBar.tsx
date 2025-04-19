@@ -1,6 +1,7 @@
 import { Sidebar } from "primereact/sidebar";
 import { AiFillHome } from "react-icons/ai";
 import {
+  MdInsertChart,
   MdOutlineInventory,
   MdPeopleAlt,
   MdPointOfSale,
@@ -120,6 +121,16 @@ const SidebarContent = ({
       icon: <MdPointOfSale />,
       to: "/order/saleOrder",
       permission: ["LIST_AND_CREATE_SALE"],
+    },
+    {
+      label: "Reportes",
+      icon: <MdInsertChart />,
+      to: "/reports",
+      permission: [
+        "PRODUCT_REPORT",
+        "PURCHASE_ORDER_REPORT",
+        "SALE_ORDER_REPORT",
+      ],
     },
     {
       label: "Admin",
