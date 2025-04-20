@@ -245,6 +245,11 @@ const SaleOrderList = () => {
       body: clientBodyTemplate,
     },
     {
+      field: "created_by.user_name",
+      header: "Usuario",
+      sortable: true,
+    },
+    {
       field: "total",
       header: "Total",
       sortable: true,

@@ -13,6 +13,10 @@ export const LIST_PURCHASE_ORDER = gql`
       date
       status
       total
+      created_by {
+        _id
+        user_name
+      }
     }
   }
 `;

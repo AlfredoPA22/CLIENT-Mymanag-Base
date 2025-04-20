@@ -3,11 +3,13 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { Button } from "primereact/button";
 import { confirmDialog } from "primereact/confirmdialog";
+import { DataTableSelectionSingleChangeEvent } from "primereact/datatable";
 import { Tag } from "primereact/tag";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Table from "../../../../components/datatable/Table";
 import LabelInput from "../../../../components/labelInput/LabelInput";
+import LoadingSpinner from "../../../../components/LoadingSpinner/LoadingSpinner";
 import { DELETE_PURCHASE_ORDER } from "../../../../graphql/mutations/PurchaseOrder";
 import { LIST_PRODUCT } from "../../../../graphql/queries/Product";
 import {
@@ -27,8 +29,6 @@ import { showToast } from "../../../../utils/toastUtils";
 import usePurchaseOrderList from "../../hooks/usePurchaseOrderList";
 import { getDate } from "../../utils/getDate";
 import { getStatus } from "../../utils/getStatus";
-import LoadingSpinner from "../../../../components/LoadingSpinner/LoadingSpinner";
-import { DataTableSelectionSingleChangeEvent } from "primereact/datatable";
 
 const PurchaseOrderList = () => {
   const { listPurchaseOrder, loadingListPurchaseOrder } =
@@ -305,6 +305,11 @@ const PurchaseOrderList = () => {
       header: "Proveedor",
       sortable: true,
       body: prodiverBodyTemplate,
+    },
+    {
+      field: "created_by.user_name",
+      header: "Usuario",
+      sortable: true,
     },
     {
       field: "total",

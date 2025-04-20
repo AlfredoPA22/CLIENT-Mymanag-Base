@@ -11,6 +11,10 @@ export const LIST_SALE_ORDER = gql`
         fullName
         phoneNumber
       }
+      created_by {
+        _id
+        user_name
+      }
       date
       status
       total

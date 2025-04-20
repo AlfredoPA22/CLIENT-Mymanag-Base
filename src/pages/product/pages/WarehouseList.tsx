@@ -1,30 +1,30 @@
+import { useMutation } from "@apollo/client";
 import { Button } from "primereact/button";
+import { ColumnEditorOptions } from "primereact/column";
+import {
+  DataTableRowEditCompleteEvent,
+  DataTableSelectionSingleChangeEvent,
+} from "primereact/datatable";
 import { Dialog } from "primereact/dialog";
 import { Tag } from "primereact/tag";
 import { useState } from "react";
 import Table from "../../../components/datatable/Table";
 import LoadingSpinner from "../../../components/LoadingSpinner/LoadingSpinner";
-import useTableGlobalFilter from "../../../hooks/useTableGlobalFilter";
-import { DataTableColumn } from "../../../utils/interfaces/Table";
-import { IWarehouse } from "../../../utils/interfaces/Warehouse";
-import { Status } from "../../../utils/types/StatusType";
-import useWarehouseList from "../hooks/useWarehouseList";
-import WarehouseForm from "./WarehouseForm";
-import { useMutation } from "@apollo/client";
+import { textEditor } from "../../../components/textEditor/textEditor";
 import {
   DELETE_WAREHOUSE,
   UPDATE_WAREHOUSE,
 } from "../../../graphql/mutations/Warehouse";
 import { LIST_WAREHOUSE } from "../../../graphql/queries/Warehouse";
-import { showToast } from "../../../utils/toastUtils";
+import useTableGlobalFilter from "../../../hooks/useTableGlobalFilter";
 import { ToastSeverity } from "../../../utils/enums/toast.enum";
-import {
-  DataTableRowEditCompleteEvent,
-  DataTableSelectionSingleChangeEvent,
-} from "primereact/datatable";
-import { ColumnEditorOptions } from "primereact/column";
-import { textEditor } from "../../../components/textEditor/textEditor";
+import { DataTableColumn } from "../../../utils/interfaces/Table";
+import { IWarehouse } from "../../../utils/interfaces/Warehouse";
+import { showToast } from "../../../utils/toastUtils";
+import { Status } from "../../../utils/types/StatusType";
+import useWarehouseList from "../hooks/useWarehouseList";
 import WarehouseDetail from "./WarehouseDetail";
+import WarehouseForm from "./WarehouseForm";
 
 const WarehouseList = () => {
   const { listWarehouse, loadingListWarehouse } = useWarehouseList();
@@ -221,7 +221,7 @@ const WarehouseList = () => {
       <Dialog
         className="md:w-[90vw] w-[90vw]"
         visible={visibleDetail}
-        header={currentWarehouse && `Detalle de marca`}
+        header={currentWarehouse && `Detalle de almacén`}
         onHide={() => setVisibleDetail(false)}
       >
         {currentWarehouse && <WarehouseDetail warehouse={currentWarehouse} />}

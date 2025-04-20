@@ -1,5 +1,6 @@
 import { IClient } from "./Client";
 import { ISaleOrderDetailToPDF } from "./SaleOrderDetail";
+import { IUser } from "./User";
 
 export interface ISaleOrder {
   _id: string;
@@ -8,6 +9,7 @@ export interface ISaleOrder {
   date: Date;
   total: number;
   status: string;
+  created_by: IUser;
 }
 
 export interface ISaleOrderInput {

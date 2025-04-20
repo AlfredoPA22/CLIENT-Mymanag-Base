@@ -1,5 +1,6 @@
-import { IPurchaseOrderDetailToPDF } from "./PurchaseOrderDetail";
 import { IProvider } from "./Provider";
+import { IPurchaseOrderDetailToPDF } from "./PurchaseOrderDetail";
+import { IUser } from "./User";
 
 export interface IPurchaseOrder {
   _id: string;
@@ -8,6 +9,7 @@ export interface IPurchaseOrder {
   date: Date;
   total: number;
   status: string;
+  created_by: IUser;
 }
 
 export interface IPurchaseOrderInput {
