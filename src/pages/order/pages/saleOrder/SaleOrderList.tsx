@@ -18,6 +18,7 @@ import {
 import useTableGlobalFilter from "../../../../hooks/useTableGlobalFilter";
 import { currencySymbol } from "../../../../utils/constants/currencyConstants";
 import { orderStatus } from "../../../../utils/enums/orderStatus.enum";
+import { paymentMethod } from "../../../../utils/enums/paymentMethod.enum";
 import { ToastSeverity } from "../../../../utils/enums/toast.enum";
 import { ISaleOrder } from "../../../../utils/interfaces/SaleOrder";
 import { DataTableColumn } from "../../../../utils/interfaces/Table";
@@ -206,6 +207,19 @@ const SaleOrderList = () => {
             aria-label="Cancel"
             onClick={() => handleGeneratePDF(rowData._id)}
           />
+
+          {rowData.payment_method === paymentMethod.CREDITO && (
+            <Button
+              tooltip="Pagos"
+              tooltipOptions={{ position: "left" }}
+              icon="pi pi-wallet"
+              raised
+              severity="info"
+              aria-label="Cancel"
+              onClick={() => navigate(`/order/salePayment/${rowData._id}`)}
+            />
+          )}
+
           <Button
             tooltip="Anular y eliminar venta"
             tooltipOptions={{ position: "left" }}
@@ -250,6 +264,11 @@ const SaleOrderList = () => {
       sortable: true,
     },
     {
+      field: "payment_method",
+      header: "Metodo de pago",
+      sortable: true,
+    },
+    {
       field: "total",
       header: "Total",
       sortable: true,
@@ -268,6 +287,19 @@ const SaleOrderList = () => {
       body: statusBodyTemplate,
       style: { textAlign: "center" },
     },
+    {
+      field: "is_paid",
+      header: "Estado de pago",
+      sortable: true,
+      style: { textAlign: "center" },
+      body: (rowData) => {
+        return rowData.is_paid ? (
+          <span style={{ color: 'green' }}>Pagada</span>
+        ) : (
+          <span style={{ color: 'red' }}>Pendiente</span>
+        );
+      },
+    }
   ]);
 
   const { filters, renderFilterInput } = useTableGlobalFilter(columns);

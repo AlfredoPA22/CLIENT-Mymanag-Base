@@ -15,6 +15,8 @@ export const LIST_SALE_ORDER = gql`
         _id
         user_name
       }
+      payment_method
+      is_paid
       date
       status
       total
@@ -36,6 +38,7 @@ export const FIND_SALE_ORDER = gql`
       date
       status
       total
+      payment_method
     }
   }
 `;

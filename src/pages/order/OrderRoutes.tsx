@@ -1,4 +1,5 @@
 import { Route, Routes } from "react-router-dom";
+import { PermissionRoute } from "../auth/pages/PermissionRoute";
 import CreatePurchaseOrder from "./pages/purchaseOrder/CreatePurchaseOrder";
 import EditPurchaseOrder from "./pages/purchaseOrder/EditPurchaseOrder";
 import PurchaseOrderPage from "./pages/purchaseOrder/PurchaOrderPage";
@@ -8,7 +9,7 @@ import EditSaleOrder from "./pages/saleOrder/EditSaleOrder";
 import PrintSaleOrder from "./pages/saleOrder/PrintSaleOrder";
 import SaleOrderList from "./pages/saleOrder/SaleOrderList";
 import ViewSaleOrder from "./pages/saleOrder/ViewSaleOrder";
-import { PermissionRoute } from "../auth/pages/PermissionRoute";
+import SalePayment from "./pages/salePayment/SalePayment";
 
 const OrderRoutes = () => {
   return (
@@ -16,7 +17,12 @@ const OrderRoutes = () => {
       <Route
         path="/purchaseOrder"
         element={
-          <PermissionRoute permissions={["LIST_AND_CREATE_PURCHASE","LIST_AND_CREATE_PROVIDER"]}>
+          <PermissionRoute
+            permissions={[
+              "LIST_AND_CREATE_PURCHASE",
+              "LIST_AND_CREATE_PROVIDER",
+            ]}
+          >
             <PurchaseOrderPage />
           </PermissionRoute>
         }
@@ -82,6 +88,14 @@ const OrderRoutes = () => {
         element={
           <PermissionRoute permissions={["DETAIL_SALE"]}>
             <PrintSaleOrder />
+          </PermissionRoute>
+        }
+      />
+      <Route
+        path="/salePayment/:id"
+        element={
+          <PermissionRoute permissions={["LIST_AND_CREATE_PAYMENT"]}>
+            <SalePayment />
           </PermissionRoute>
         }
       />

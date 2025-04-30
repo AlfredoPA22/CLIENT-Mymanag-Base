@@ -33,6 +33,9 @@ import { showToast } from "../../../../utils/toastUtils";
 import useClientList from "../../../client/hooks/useClientList";
 import { getStatus } from "../../utils/getStatus";
 import { schemaFormSaleOrder } from "../../validations/FormSaleOrderValidation";
+import DropdownInput from "../../../../components/dropdownInput/DropdownInput";
+import { saleOrderPaymentMethodOptions } from "../../utils/saleOrderPaymentMethodMock";
+import { AutoCompleteChangeEvent } from "primereact/autocomplete";
 
 const SaleOrderForm = () => {
   const {
@@ -49,6 +52,7 @@ const SaleOrderForm = () => {
   const [selectedClient, setSelectedClient] = useState<IReactSelect | null>(
     null
   );
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("Contado");
 
   const navigate = useNavigate();
 
@@ -73,6 +77,7 @@ const SaleOrderForm = () => {
   const initialValues: ISaleOrderInput = {
     date: new Date(),
     client: "",
+    payment_method: "Contado",
   };
 
   useEffect(() => {
@@ -88,6 +93,7 @@ const SaleOrderForm = () => {
     const order: ISaleOrderInput = {
       date: values.date,
       client: values.client,
+      payment_method: values.payment_method,
     };
 
     const { data } = await createSaleOrder({ variables: order });
@@ -159,6 +165,13 @@ const SaleOrderForm = () => {
     }
   };
 
+  const handlePaymentMethodChange = async (e: AutoCompleteChangeEvent) => {
+    const { value } = e.target;
+    setSelectedPaymentMethod(value ? value : "");
+    e.target.value = value ? value : "";
+    setFieldValue(e.target.name, e.target.value);
+  };
+
   const {
     handleChange,
     handleSubmit,
@@ -192,13 +205,28 @@ const SaleOrderForm = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
         {/* Información del proveedor y fecha */}
         <section className="flex flex-col gap-3 border-r md:border-r-gray-300 md:pr-6">
-          <div className="flex flex-col">
-            <LabelInput name="date" label="Fecha de venta" />
-            <Calendar
-              name="date"
-              value={values.date}
-              onChange={handleChange}
-              showIcon
+          <div className="grid xl:grid-cols-2 gap-5">
+            <div>
+              <LabelInput name="date" label="Fecha de venta" />
+              <Calendar
+                name="date"
+                value={values.date}
+                onChange={handleChange}
+                showIcon
+                disabled={saleOrderInitialized}
+              />
+            </div>
+
+            <DropdownInput
+              label="Metodo de pago"
+              name="payment_method"
+              optionLabel="label"
+              placeholder="Seleccionar metodo de pago"
+              mandatory
+              options={saleOrderPaymentMethodOptions}
+              value={selectedPaymentMethod}
+              error={errors.payment_method ? errors.payment_method : ""}
+              onChange={handlePaymentMethodChange}
               disabled={saleOrderInitialized}
             />
           </div>

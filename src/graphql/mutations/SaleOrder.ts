@@ -1,8 +1,18 @@
 import { gql } from "@apollo/client";
 
 export const CREATE_SALE_ORDER = gql`
-  mutation CreateSaleOrder($date: String!,$client: String!) {
-    createSaleOrder(saleOrderInput: { date: $date, client: $client }) {
+  mutation CreateSaleOrder(
+    $date: String!
+    $client: String!
+    $payment_method: String!
+  ) {
+    createSaleOrder(
+      saleOrderInput: {
+        date: $date
+        client: $client
+        payment_method: $payment_method
+      }
+    ) {
       _id
       code
       date

@@ -83,10 +83,19 @@ const SaleOrderDetail: FC<SaleOrderDetailProps> = ({ saleOrderId }) => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
         {/* Información del proveedor y fecha */}
         <section className="flex flex-col gap-3 border-r md:border-r-gray-300 md:pr-6">
-          <div className="flex flex-col">
-            <LabelInput name="date" label="Fecha de venta" />
-            <span className="text-lg font-medium text-gray-700">{date}</span>
+          <div className="grid lg:grid-cols-2 gap-2">
+            <div className="flex flex-col">
+              <LabelInput name="date" label="Fecha de venta" />
+              <span className="text-lg font-medium text-gray-700">{date}</span>
+            </div>
+            <div className="flex flex-col">
+              <LabelInput name="date" label="Metodo de pago" />
+              <span className="text-lg font-medium text-gray-700">
+                {data?.findSaleOrder.payment_method}
+              </span>
+            </div>
           </div>
+
           <div className="flex flex-col">
             <LabelInput name="client" label="Cliente" />
             <span className="text-lg font-medium text-gray-700">

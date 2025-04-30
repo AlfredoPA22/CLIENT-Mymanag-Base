@@ -9,12 +9,15 @@ export interface ISaleOrder {
   date: Date;
   total: number;
   status: string;
+  payment_method: string;
   created_by: IUser;
+  is_paid: boolean;
 }
 
 export interface ISaleOrderInput {
   date: Date;
   client: string;
+  payment_method: string;
 }
 
 export interface ISaleOrderToPDF {

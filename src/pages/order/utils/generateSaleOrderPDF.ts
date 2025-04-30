@@ -60,7 +60,7 @@ export const generatePDF = (data: ISaleOrderToPDF) => {
     head: [columns],
     headStyles: { fillColor: "#2d66ea" },
     body: rows,
-    startY: 50,
+    startY: 60,
     theme: "grid",
     columnStyles: {
       0: { cellWidth: 25 },
@@ -73,5 +73,5 @@ export const generatePDF = (data: ISaleOrderToPDF) => {
   });
 
   // Guardar el PDF
-  doc.save("orden_de_venta.pdf");
+  doc.save(`${data.saleOrder.code}.pdf`);
 };
