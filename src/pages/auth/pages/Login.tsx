@@ -49,7 +49,7 @@ const Login = () => {
   };
 
   return (
-    <div className="h-screen flex items-center justify-center bg-[#1e293b]">
+    <div className="h-screen flex items-center justify-center bg-slate-200">
       <Card
         className="w-full sm:w-[400px] rounded-3xl border border-slate-600 shadow-xl bg-[#334155]"
         header={headerTemplate}
@@ -57,7 +57,7 @@ const Login = () => {
         <h2 className="text-center text-2xl font-semibold text-slate-200 mb-6">
           Bienvenido
         </h2>
-  
+
         <form
           className="flex flex-col gap-5 items-center justify-center"
           onSubmit={handleSubmit}
@@ -99,7 +99,6 @@ const Login = () => {
       </Card>
     </div>
   );
-  
 };
 
 export default Login;

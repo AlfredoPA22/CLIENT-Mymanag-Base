@@ -210,7 +210,7 @@ const SaleOrderList = () => {
 
           {rowData.payment_method === paymentMethod.CREDITO && (
             <Button
-              tooltip="Pagos"
+              tooltip="Ver Pagos"
               tooltipOptions={{ position: "left" }}
               icon="pi pi-wallet"
               raised

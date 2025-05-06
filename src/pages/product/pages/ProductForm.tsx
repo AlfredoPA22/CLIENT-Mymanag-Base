@@ -1,36 +1,51 @@
 import { useMutation } from "@apollo/client";
 import { AutoCompleteChangeEvent } from "primereact/autocomplete";
 import { Button } from "primereact/button";
-import { FC, useState } from "react";
+import { InputNumberChangeEvent } from "primereact/inputnumber";
+import { FC, useEffect, useState } from "react";
 import { ActionMeta, SingleValue } from "react-select";
 import DropdownInput from "../../../components/dropdownInput/DropdownInput";
+import FieldNumberInput from "../../../components/FieldNumberInput/FieldNumberInput";
 import FieldSimpleFileUpload from "../../../components/fileuploadInput/FileUploadInput";
 import SelectInput from "../../../components/SelectInput/SelectInput";
 import FieldTextareaInput from "../../../components/textAreaInput/FieldTextareaInput";
 import FieldTextInput from "../../../components/textInput/FieldTextInput";
 import { CREATE_BRAND } from "../../../graphql/mutations/Brand";
 import { CREATE_CATEGORY } from "../../../graphql/mutations/Category";
-import { CREATE_PRODUCT } from "../../../graphql/mutations/Product";
+import {
+  CREATE_PRODUCT,
+  UPDATE_PRODUCT,
+} from "../../../graphql/mutations/Product";
 import { LIST_BRAND } from "../../../graphql/queries/Brand";
 import { LIST_CATEGORY } from "../../../graphql/queries/Category";
 import { LIST_PRODUCT } from "../../../graphql/queries/Product";
 import { useFormikForm } from "../../../hooks/useFormikForm";
 import { stockType } from "../../../utils/enums/stockType.enum";
 import { ToastSeverity } from "../../../utils/enums/toast.enum";
-import { IProductInput } from "../../../utils/interfaces/Product";
+import { IProduct, IProductInput } from "../../../utils/interfaces/Product";
 import { IReactSelect } from "../../../utils/interfaces/Select";
 import { showToast } from "../../../utils/toastUtils";
 import { uploadImage } from "../../../utils/uploadImage";
 import useBrandList from "../hooks/useBrandList";
 import useCategoryList from "../hooks/useCategoryList";
 import { stockTypeOptions } from "../utils/stockTypeMock";
-import { schemaFormProduct } from "../validations/FormProductValidation";
+import {
+  schemaFormProduct,
+  schemaFormUpdateProduct,
+} from "../validations/FormProductValidation";
 
 interface ProductFormProps {
   setVisibleForm: (isVisible: boolean) => void;
+  productToEdit?: IProduct | null;
 }
 
-const ProductForm: FC<ProductFormProps> = ({ setVisibleForm }) => {
+const ProductForm: FC<ProductFormProps> = ({
+  setVisibleForm,
+  productToEdit,
+}) => {
+  const { listCategorySelect } = useCategoryList();
+  const { listBrandSelect } = useBrandList();
+
   const [createProduct] = useMutation(CREATE_PRODUCT, {
     refetchQueries: [
       { query: LIST_PRODUCT },
@@ -38,11 +53,16 @@ const ProductForm: FC<ProductFormProps> = ({ setVisibleForm }) => {
       { query: LIST_BRAND },
     ],
   });
-
+  const [updateProduct] = useMutation(UPDATE_PRODUCT, {
+    refetchQueries: [
+      {
+        query: LIST_PRODUCT,
+      },
+    ],
+  });
   const [createCategory] = useMutation(CREATE_CATEGORY, {
     refetchQueries: [{ query: LIST_CATEGORY }],
   });
-
   const [createBrand] = useMutation(CREATE_BRAND, {
     refetchQueries: [{ query: LIST_BRAND }],
   });
@@ -55,18 +75,16 @@ const ProductForm: FC<ProductFormProps> = ({ setVisibleForm }) => {
   );
   const [selectedBrand, setSelectedBrand] = useState<IReactSelect | null>(null);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
-  const { listCategorySelect } = useCategoryList();
-  const { listBrandSelect } = useBrandList();
 
   const initialValues: IProductInput = {
-    name: "",
-    code: "",
-    description: "",
+    name: productToEdit?.name || "",
+    code: productToEdit?.code || "",
+    description: productToEdit?.description || "",
     image: "",
-    sale_price: "",
-    category: "",
-    brand: "",
-    stock_type: stockType.SERIALIZADO,
+    sale_price: productToEdit?.sale_price || 0,
+    category: productToEdit?.category._id || "",
+    brand: productToEdit?.brand._id || "",
+    stock_type: productToEdit?.stock_type || stockType.SERIALIZADO,
   };
 
   const onSubmit = async () => {
@@ -74,7 +92,16 @@ const ProductForm: FC<ProductFormProps> = ({ setVisibleForm }) => {
       const data = await uploadImage(selectedImage);
       values.image = data;
     }
-    await createProduct({ variables: values });
+    if (productToEdit) {
+      await updateProduct({
+        variables: {
+          productId: productToEdit._id,
+          ...values,
+        },
+      });
+    } else {
+      await createProduct({ variables: values });
+    }
     setVisibleForm(false);
     resetForm();
   };
@@ -159,6 +186,8 @@ const ProductForm: FC<ProductFormProps> = ({ setVisibleForm }) => {
   const onFileSelect = (e: { files: File[] }) => {
     const file: File = e.files[0];
     setSelectedImage(file);
+
+    setFieldValue("image", file.name || "");
   };
 
   const handleFileClear = () => {
@@ -177,10 +206,28 @@ const ProductForm: FC<ProductFormProps> = ({ setVisibleForm }) => {
     isSubmitting,
   } = useFormikForm({
     initialValues: initialValues,
-    msgSuccess: "Producto Creado",
+    msgSuccess: productToEdit ? "Producto Actualizado" : "Producto Creado",
     handleSubmit: onSubmit,
-    validationSchema: schemaFormProduct,
+    validationSchema: productToEdit
+      ? schemaFormUpdateProduct
+      : schemaFormProduct,
   });
+
+  useEffect(() => {
+    if (productToEdit) {
+      setSelectedCategory({
+        value: productToEdit.category?._id || "",
+        label: productToEdit.category?.name || "",
+      });
+
+      setSelectedBrand({
+        value: productToEdit.brand?._id || "",
+        label: productToEdit.brand?.name || "",
+      });
+
+      setSelectedStockType(productToEdit.stock_type);
+    }
+  }, [productToEdit]);
 
   return (
     <form onSubmit={handleSubmit} className="grid gap-4">
@@ -189,6 +236,7 @@ const ProductForm: FC<ProductFormProps> = ({ setVisibleForm }) => {
           label="Codigo"
           type="text"
           name="code"
+          mandatory={productToEdit ? true : false}
           placeholder="Codigo"
           value={values.code}
           error={errors.code ? errors.code : ""}
@@ -216,15 +264,16 @@ const ProductForm: FC<ProductFormProps> = ({ setVisibleForm }) => {
           onChange={handleStockTypeChange}
         />
 
-        <FieldTextInput
+        <FieldNumberInput
           label="Precio de venta"
-          type="number"
           name="sale_price"
           placeholder="Precio de venta"
           mandatory
           value={values.sale_price}
           error={errors.sale_price ? errors.sale_price : ""}
-          onChange={handleChange}
+          onChange={(e: InputNumberChangeEvent) =>
+            setFieldValue("sale_price", e.value || 0)
+          }
         />
 
         <SelectInput

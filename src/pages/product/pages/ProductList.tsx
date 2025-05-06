@@ -4,10 +4,7 @@ import useProductList from "../hooks/useProductList";
 import { useMutation } from "@apollo/client";
 import { Button } from "primereact/button";
 import { ColumnEditorOptions } from "primereact/column";
-import {
-  DataTableRowEditCompleteEvent,
-  DataTableSelectionSingleChangeEvent,
-} from "primereact/datatable";
+import { DataTableSelectionSingleChangeEvent } from "primereact/datatable";
 import { Dialog } from "primereact/dialog";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -17,10 +14,7 @@ import LabelInput from "../../../components/labelInput/LabelInput";
 import LoadingSpinner from "../../../components/LoadingSpinner/LoadingSpinner";
 import { numberEditor } from "../../../components/numberEditor/numberEditor";
 import { textEditor } from "../../../components/textEditor/textEditor";
-import {
-  DELETE_PRODUCT,
-  UPDATE_PRODUCT,
-} from "../../../graphql/mutations/Product";
+import { DELETE_PRODUCT } from "../../../graphql/mutations/Product";
 import { LIST_PRODUCT } from "../../../graphql/queries/Product";
 import useTableGlobalFilter from "../../../hooks/useTableGlobalFilter";
 import { currencySymbol } from "../../../utils/constants/currencyConstants";
@@ -31,8 +25,8 @@ import { DataTableColumn } from "../../../utils/interfaces/Table";
 import { showToast } from "../../../utils/toastUtils";
 import { getStatus } from "../../order/utils/getStatus";
 import ProductForm from "./ProductForm";
-import ProductSerialList from "./ProductSerialList";
 import ProductInventoryList from "./ProductInventoryList";
+import ProductSerialList from "./ProductSerialList";
 import SearchProductForm from "./SearchProductForm";
 
 const ProductList = () => {
@@ -42,19 +36,11 @@ const ProductList = () => {
   const [visibleListSerial, setVisibleListSerial] = useState<boolean>(false);
   const [visibleListInventory, setVisibleListInventory] =
     useState<boolean>(false);
-  const [currentProduct, setCurrentProduct] = useState<IProduct>();
+  const [currentProduct, setCurrentProduct] = useState<IProduct | null>();
 
   const navigate = useNavigate();
 
   const [deleteProduct] = useMutation(DELETE_PRODUCT, {
-    refetchQueries: [
-      {
-        query: LIST_PRODUCT,
-      },
-    ],
-  });
-
-  const [updateProduct] = useMutation(UPDATE_PRODUCT, {
     refetchQueries: [
       {
         query: LIST_PRODUCT,
@@ -121,7 +107,10 @@ const ProductList = () => {
             severity="success"
             tooltip="Nuevo producto"
             tooltipOptions={{ position: "left" }}
-            onClick={() => setVisibleForm(true)}
+            onClick={() => {
+              setCurrentProduct(null);
+              setVisibleForm(true);
+            }}
             raised
           />
         </div>
@@ -152,52 +141,27 @@ const ProductList = () => {
     return (
       <div className="flex justify-center gap-2">
         <Button
-          tooltip="eliminar producto"
+          icon="pi pi-pencil"
+          className="p-button-rounded p-button-info"
+          onClick={() => {
+            setCurrentProduct(rowData);
+            setVisibleForm(true);
+          }}
+          tooltip="Editar producto"
+          tooltipOptions={{ position: "left" }}
+        />
+
+        <Button
+          tooltip="Eliminar producto"
           tooltipOptions={{ position: "left" }}
           icon="pi pi-trash"
           raised
           severity="danger"
-          aria-label="Cancel"
+          aria-label="Eliminar"
           onClick={() => handleDeleteProduct(rowData._id)}
         />
       </div>
     );
-  };
-
-  const onRowEditComplete = async (e: DataTableRowEditCompleteEvent) => {
-    try {
-      if (
-        e.newData.name === "" ||
-        e.newData.brand === "" ||
-        e.newData.category === "" ||
-        e.newData.sale_price <= 0
-      ) {
-        showToast({
-          detail: "Campos incompletos",
-          severity: ToastSeverity.Error,
-        });
-      } else {
-        const { data } = await updateProduct({
-          variables: {
-            productId: e.newData._id,
-            name: e.newData.name,
-            description: e.newData.description,
-            sale_price: e.newData.sale_price,
-            brand: e.newData.brand._id,
-            category: e.newData.category._id,
-          },
-        });
-
-        if (data) {
-          showToast({
-            detail: "Producto actualizado.",
-            severity: ToastSeverity.Success,
-          });
-        }
-      }
-    } catch (error: any) {
-      showToast({ detail: error.message, severity: ToastSeverity.Error });
-    }
   };
 
   const handleSelectionChange = (
@@ -298,17 +262,18 @@ const ProductList = () => {
         actionBodyTemplate={actionBodyTemplate}
         dataFilters={filters}
         tableHeader={renderFilterInput}
-        editMode="row"
-        onRowEditComplete={onRowEditComplete}
         onSelectionChange={handleSelectionChange}
       />
       <Dialog
         className="md:w-[50vw] w-[90vw]"
-        header="Nuevo Producto"
+        header={currentProduct ? "Editar Producto" : "Nuevo Producto"}
         visible={visibleForm}
         onHide={() => setVisibleForm(false)}
       >
-        <ProductForm setVisibleForm={setVisibleForm} />
+        <ProductForm
+          setVisibleForm={setVisibleForm}
+          productToEdit={currentProduct}
+        />
       </Dialog>
       <Dialog
         className="md:w-[50vw] w-[90vw]"
@@ -322,7 +287,7 @@ const ProductList = () => {
         {currentProduct && <ProductSerialList product={currentProduct} />}
       </Dialog>
       <Dialog
-        className="md:w-[50vw] w-[90vw]"
+        className="md:w-[80vw] w-[90vw]"
         visible={visibleListInventory}
         header={
           currentProduct &&

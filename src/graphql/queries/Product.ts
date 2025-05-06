@@ -90,8 +90,10 @@ export const LIST_PRODUCT_INVENTORY_BY_PRODUCT = gql`
         name
       }
       quantity
+      available
       reserved
       sold
+      transferred
       status
     }
   }

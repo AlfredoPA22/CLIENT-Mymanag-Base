@@ -79,18 +79,18 @@ const SidebarContent = ({
 }) => {
   const { permissions, userName } = useAuth();
   const location = useLocation();
+
   const hasPermission = (requiredPermissions: string[]) => {
     if (requiredPermissions.length === 0) return true;
-    return requiredPermissions.some((permission) =>
-      permissions.includes(permission)
-    );
+    return requiredPermissions.some((p) => permissions.includes(p));
   };
 
   const menuItems = [
+    { label: "Inicio", icon: <AiFillHome />, to: "/", permission: [] },
     {
-      label: "Inicio",
-      icon: <AiFillHome />,
-      to: "/",
+      label: "Dashboard",
+      icon: <MdInsertChart />,
+      to: "/dashboard",
       permission: [],
     },
     {
@@ -142,18 +142,20 @@ const SidebarContent = ({
 
   return (
     <>
-      <div className="flex flex-col items-center mb-8 mt-4">
+      {/* LOGO y usuario */}
+      <div className="flex flex-col items-center py-6 border-b border-slate-700">
         <img
           src={logo}
           alt="logo"
-          className="w-[80px] h-[70px] mb-2 rounded-full"
+          className="w-16 h-16 rounded-full mb-2 shadow-md"
         />
-        <span className="text-[#e2e8f0] text-sm font-medium mt-1">
+        <span className="text-slate-200 text-sm font-medium">
           {userName || "Usuario"}
         </span>
       </div>
 
-      <nav className="flex flex-col gap-2 px-4 flex-grow">
+      {/* Menú */}
+      <nav className="flex flex-col gap-1 px-4 py-6 flex-grow">
         {menuItems
           .filter((item) => hasPermission(item.permission))
           .map((item, index) => {
@@ -163,34 +165,31 @@ const SidebarContent = ({
               <button
                 key={index}
                 onClick={() => handleNavigate(item.to)}
-                className={`flex items-center gap-3 py-3 px-4 rounded-lg text-sm font-semibold transition-all duration-300 ${
+                className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-300 ${
                   isActive
-                    ? "bg-[#f1f5f9] text-[#1e293b] shadow"
-                    : "bg-[#334155] text-[#e2e8f0] hover:bg-[#475569]"
+                    ? "bg-slate-100 text-slate-800 shadow-inner"
+                    : "text-slate-200 hover:bg-slate-600 hover:text-white"
                 }`}
               >
-                <span
-                  className={`text-xl ${
-                    isActive ? "text-[#1e293b]" : "text-[#e2e8f0]"
-                  }`}
-                >
-                  {item.icon}
-                </span>
+                <span className="text-xl">{item.icon}</span>
                 <span>{item.label}</span>
               </button>
             );
           })}
+      </nav>
 
+      {/* Cerrar sesión */}
+      <div className="mt-auto px-4 pb-5">
         <button
           onClick={handleLogout}
-          className="flex items-center gap-3 py-3 px-4 rounded-lg text-sm font-semibold text-white bg-[#ef4444] hover:bg-red-500 transition-all duration-300 mt-auto mb-5"
+          className="w-full flex items-center gap-3 py-3 px-4 rounded-lg text-sm font-semibold text-white bg-red-500 hover:bg-red-600 transition-all duration-300"
         >
           <span className="text-xl">
             <PiSignOut />
           </span>
           <span>Cerrar sesión</span>
         </button>
-      </nav>
+      </div>
     </>
   );
 };

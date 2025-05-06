@@ -22,7 +22,7 @@ export interface IProductInput {
   code?: string;
   description?: string;
   image?: string;
-  sale_price?: string;
+  sale_price?: number;
   category: string;
   brand: string;
   stock_type: stockType;

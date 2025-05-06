@@ -4,9 +4,7 @@ import { FC, useEffect, useState } from "react";
 import Table from "../../../components/datatable/Table";
 import LoadingSpinner from "../../../components/LoadingSpinner/LoadingSpinner";
 import TextLink from "../../../components/TextLink/TextLink";
-import {
-    LIST_PRODUCT_INVENTORY_BY_PRODUCT
-} from "../../../graphql/queries/Product";
+import { LIST_PRODUCT_INVENTORY_BY_PRODUCT } from "../../../graphql/queries/Product";
 import useTableGlobalFilter from "../../../hooks/useTableGlobalFilter";
 import { orderStatus } from "../../../utils/enums/orderStatus.enum";
 import { ToastSeverity } from "../../../utils/enums/toast.enum";
@@ -45,39 +43,38 @@ const ProductInventoryList: FC<ProductInventoryListProps> = ({ product }) => {
   };
 
   const purchaseOrderBodyTemplate = (rowData: IProductInventory) => {
-    if (
-      rowData.purchase_order_detail.purchase_order.status ===
-      orderStatus.APROBADO
-    ) {
-      return (
-        <TextLink
-          link={`/order/viewPurchaseOrder/${rowData.purchase_order_detail.purchase_order._id}`}
-          text={rowData.purchase_order_detail.purchase_order.code}
-        />
-      );
-    } else {
-      return (
-        <TextLink
-          link={`/order/editPurchaseOrder/${rowData.purchase_order_detail.purchase_order._id}`}
-          text={rowData.purchase_order_detail.purchase_order.code}
-        />
-      );
+    const purchaseOrderDetail = rowData.purchase_order_detail;
+    const purchaseOrder = purchaseOrderDetail?.purchase_order;
+
+    if (!purchaseOrder) {
+      return <span className="text-gray-400 italic">Sin orden</span>;
     }
+
+    const isApproved = purchaseOrder.status === orderStatus.APROBADO;
+
+    return (
+      <TextLink
+        link={`/order/${
+          isApproved ? "viewPurchaseOrder" : "editPurchaseOrder"
+        }/${purchaseOrder._id}`}
+        text={purchaseOrder.code}
+      />
+    );
   };
 
   const [columns] = useState<DataTableColumn<IProductSerial>[]>([
     {
-      field: "purchase_order_detail.purchase_order.code",
+      field: "purchase_order_detail",
       header: "orden de compra",
       sortable: true,
-      style: { width: "20%" },
+      style: { width: "15%" },
       body: purchaseOrderBodyTemplate,
     },
     {
       field: "warehouse.name",
       header: "Almacén",
       sortable: true,
-      style: { width: "20%" },
+      style: { width: "25%" },
     },
     {
       field: "quantity",
@@ -86,23 +83,35 @@ const ProductInventoryList: FC<ProductInventoryListProps> = ({ product }) => {
       style: { width: "10%" },
     },
     {
+      field: "available",
+      header: "Disponible",
+      sortable: true,
+      style: { width: "10%" },
+    },
+    {
       field: "reserved",
       header: "Reservados",
       sortable: true,
-      style: { width: "15%" },
+      style: { width: "10%" },
+    },
+    {
+      field: "transferred",
+      header: "Transferidos",
+      sortable: true,
+      style: { width: "10%" },
     },
     {
       field: "sold",
       header: "Vendidos",
       sortable: true,
-      style: { width: "15%" },
+      style: { width: "10%" },
     },
     {
       field: "status",
       header: "Estado",
       sortable: true,
       body: statusBodyTemplate,
-      style: { width: "20%", textAlign: "center" },
+      style: { width: "10%", textAlign: "center" },
     },
   ]);
 
