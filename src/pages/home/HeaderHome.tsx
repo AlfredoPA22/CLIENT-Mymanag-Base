@@ -16,7 +16,6 @@ const HeaderHome: FC = () => {
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-      {/* Cantidad de ventas */}
       <Link to="/order/saleOrder" className={`${cardBase} bg-white border`}>
         <div className="text-sm text-gray-500">Cantidad de ventas</div>
         <div className="text-4xl font-bold text-gray-800">
@@ -27,7 +26,6 @@ const HeaderHome: FC = () => {
         </div>
       </Link>
 
-      {/* Total de ventas */}
       <Link
         to="/order/saleOrder"
         className={`${cardBase} bg-gradient-to-r from-teal-500 to-emerald-500 text-white`}
@@ -41,11 +39,7 @@ const HeaderHome: FC = () => {
         </div>
       </Link>
 
-      {/* Productos */}
-      <Link
-        to="/product"
-        className={`${cardBase} bg-slate-600 text-white`}
-      >
+      <Link to="/product" className={`${cardBase} bg-slate-600 text-white`}>
         <div className="text-sm">Productos</div>
         <div className="text-4xl font-bold">
           {generalData.total_products_number}
@@ -55,25 +49,15 @@ const HeaderHome: FC = () => {
         </div>
       </Link>
 
-      {/* Stock de productos */}
-      <Link
-        to="/product"
-        className={`${cardBase} bg-slate-700 text-white`}
-      >
+      <Link to="/product" className={`${cardBase} bg-slate-700 text-white`}>
         <div className="text-sm">Stock de productos</div>
-        <div className="text-4xl font-bold">
-          {generalData.stock} pz
-        </div>
+        <div className="text-4xl font-bold">{generalData.stock} pz</div>
         <div className="bg-white/20 p-2 rounded-full mt-3">
           <i className="pi pi-box text-white text-xl" />
         </div>
       </Link>
 
-      {/* Productos fuera de stock */}
-      <Link
-        to="/product"
-        className={`${cardBase} bg-indigo-600 text-white`}
-      >
+      <Link to="/product" className={`${cardBase} bg-indigo-600 text-white`}>
         <div className="text-sm">Productos fuera de stock</div>
         <div className="text-4xl font-bold">
           {generalData.total_products_out}
@@ -83,11 +67,7 @@ const HeaderHome: FC = () => {
         </div>
       </Link>
 
-      {/* Producto más vendido */}
-      <Link
-        to="/product"
-        className={`${cardBase} bg-amber-400 text-white`}
-      >
+      <Link to="/product" className={`${cardBase} bg-amber-400 text-white`}>
         <div className="text-sm">Producto más vendido</div>
         <div className="text-xl font-semibold">
           {generalData.best_product ? generalData.best_product.name : "Ninguno"}

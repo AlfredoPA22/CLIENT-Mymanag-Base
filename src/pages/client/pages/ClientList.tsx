@@ -2,7 +2,10 @@ import { useMutation } from "@apollo/client";
 import { Button } from "primereact/button";
 import { Card } from "primereact/card";
 import { ColumnEditorOptions } from "primereact/column";
-import { DataTableRowEditCompleteEvent, DataTableSelectionSingleChangeEvent } from "primereact/datatable";
+import {
+  DataTableRowEditCompleteEvent,
+  DataTableSelectionSingleChangeEvent,
+} from "primereact/datatable";
 import { Dialog } from "primereact/dialog";
 import { useState } from "react";
 import Table from "../../../components/datatable/Table";
@@ -127,11 +130,11 @@ const ClientList = () => {
   };
 
   const handleSelectionChange = (
-      e: DataTableSelectionSingleChangeEvent<IClient[]>
-    ) => {
-      setCurrentClient(e.value);
-      setVisibleDetail(true);
-    };
+    e: DataTableSelectionSingleChangeEvent<IClient[]>
+  ) => {
+    setCurrentClient(e.value);
+    setVisibleDetail(true);
+  };
 
   const [columns] = useState<DataTableColumn<IClient>[]>([
     {
