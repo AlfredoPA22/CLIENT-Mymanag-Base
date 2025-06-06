@@ -1,8 +1,8 @@
 import { Tag } from "primereact/tag";
-import useProductList from "../../hooks/useProductList";
 
 import { useMutation } from "@apollo/client";
 import { Button } from "primereact/button";
+import { Card } from "primereact/card";
 import { ColumnEditorOptions } from "primereact/column";
 import { DataTableSelectionSingleChangeEvent } from "primereact/datatable";
 import { Dialog } from "primereact/dialog";
@@ -17,6 +17,7 @@ import { textEditor } from "../../../../components/textEditor/textEditor";
 import { DELETE_PRODUCT } from "../../../../graphql/mutations/Product";
 import { LIST_PRODUCT } from "../../../../graphql/queries/Product";
 import useTableGlobalFilter from "../../../../hooks/useTableGlobalFilter";
+import { ROUTES_MOCK } from "../../../../routes/RouteMocks";
 import { currencySymbol } from "../../../../utils/constants/currencyConstants";
 import { stockType } from "../../../../utils/enums/stockType.enum";
 import { ToastSeverity } from "../../../../utils/enums/toast.enum";
@@ -24,17 +25,16 @@ import { IProduct } from "../../../../utils/interfaces/Product";
 import { DataTableColumn } from "../../../../utils/interfaces/Table";
 import { showToast } from "../../../../utils/toastUtils";
 import { getStatus } from "../../../order/utils/getStatus";
+import useProductLowStockList from "../../hooks/useProductLowStockList";
 import ProductForm from "./ProductForm";
-import SearchProductForm from "./SearchProductForm";
-import ProductSerialList from "./ProductSerialList";
 import ProductInventoryList from "./ProductInventoryList";
-import { Card } from "primereact/card";
-import { ROUTES_MOCK } from "../../../../routes/RouteMocks";
-import { useDispatch } from "react-redux";
+import ProductSerialList from "./ProductSerialList";
+import SearchProductForm from "./SearchProductForm";
 import { setIsBlocked } from "../../../../redux/slices/blockUISlice";
+import { useDispatch } from "react-redux";
 
-const ProductList = () => {
-  const { listProduct, loadingListProduct } = useProductList();
+const ProductLowStockList = () => {
+  const { listLowStockProduct, loadingListProduct } = useProductLowStockList();
   const [visibleForm, setVisibleForm] = useState<boolean>(false);
   const [visibleSearch, setVisibleSearch] = useState<boolean>(false);
   const [visibleListSerial, setVisibleListSerial] = useState<boolean>(false);
@@ -95,7 +95,7 @@ const ProductList = () => {
   const tableHeaderTemplate = () => {
     return (
       <div className="flex justify-between items-center m-2 px-5">
-        <h1 className="text-2xl font-bold">{`Lista de productos (${listProduct.length})`}</h1>
+        <h1 className="text-2xl font-bold">{`Lista de productos con bajo stock (${listLowStockProduct.length})`}</h1>
 
         <div className="flex gap-2">
           <Button
@@ -104,18 +104,6 @@ const ProductList = () => {
             tooltip="Buscar producto"
             tooltipOptions={{ position: "left" }}
             onClick={() => setVisibleSearch(true)}
-            raised
-          />
-
-          <Button
-            icon="pi pi-plus"
-            severity="success"
-            tooltip="Nuevo producto"
-            tooltipOptions={{ position: "left" }}
-            onClick={() => {
-              setCurrentProduct(null);
-              setVisibleForm(true);
-            }}
             raised
           />
         </div>
@@ -265,7 +253,7 @@ const ProductList = () => {
     <Card className="py-2" header={tableHeaderTemplate}>
       <Table
         columns={columns}
-        data={listProduct}
+        data={listLowStockProduct}
         emptyMessage="Sin productos."
         size="small"
         actionBodyTemplate={actionBodyTemplate}
@@ -318,4 +306,4 @@ const ProductList = () => {
   );
 };
 
-export default ProductList;
+export default ProductLowStockList;

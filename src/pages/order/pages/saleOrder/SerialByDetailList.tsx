@@ -17,16 +17,22 @@ import {
 import { ISaleOrderDetail } from "../../../../utils/interfaces/SaleOrderDetail";
 import useTableGlobalFilter from "../../../../hooks/useTableGlobalFilter";
 import LoadingSpinner from "../../../../components/LoadingSpinner/LoadingSpinner";
+import { useDispatch } from "react-redux";
+import { setIsBlocked } from "../../../../redux/slices/blockUISlice";
 
 interface SerialByDetailListProps {
   saleOrderDetailId: string;
   saleOrderId: string;
+  editMode?: boolean;
 }
 
 const SerialByDetailList: FC<SerialByDetailListProps> = ({
   saleOrderDetailId,
   saleOrderId,
+  editMode = true,
 }) => {
+  const dispatch = useDispatch();
+
   const [deleteSerialToSaleOrderDetail] = useMutation(
     DELETE_SERIAL_TO_SALE_ORDER_DETAIL,
     {
@@ -60,6 +66,7 @@ const SerialByDetailList: FC<SerialByDetailListProps> = ({
 
   const handleDeleteSerial = async (productSerialId: string) => {
     try {
+      dispatch(setIsBlocked(true));
       const { data } = await deleteSerialToSaleOrderDetail({
         variables: {
           productSerialId,
@@ -73,6 +80,8 @@ const SerialByDetailList: FC<SerialByDetailListProps> = ({
       }
     } catch (error: any) {
       showToast({ detail: error.message, severity: ToastSeverity.Error });
+    } finally {
+      dispatch(setIsBlocked(false));
     }
   };
 
@@ -151,7 +160,7 @@ const SerialByDetailList: FC<SerialByDetailListProps> = ({
         data={listProductSerialBySaleOrder}
         emptyMessage="Producto sin seriales asignados."
         size="small"
-        actionBodyTemplate={actionBodyTemplate}
+        {...(editMode && { actionBodyTemplate })}
         dataFilters={filters}
         tableHeader={renderFilterInput}
       />

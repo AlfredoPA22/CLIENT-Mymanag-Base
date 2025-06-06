@@ -10,6 +10,8 @@ export const CREATE_PRODUCT = gql`
     $category: String!
     $brand: String!
     $stock_type: StockType!
+    $min_stock: Int!
+    $max_stock: Int!
   ) {
     createProduct(
       productInput: {
@@ -21,6 +23,8 @@ export const CREATE_PRODUCT = gql`
         category: $category
         brand: $brand
         stock_type: $stock_type
+        min_stock: $min_stock
+        max_stock: $max_stock
       }
     ) {
       _id
@@ -47,6 +51,8 @@ export const UPDATE_PRODUCT = gql`
     $sale_price: Float!
     $stock_type: StockType!
     $productId: String!
+    $min_stock: Int!
+    $max_stock: Int!
   ) {
     updateProduct(
       productId: $productId
@@ -59,6 +65,8 @@ export const UPDATE_PRODUCT = gql`
         description: $description
         sale_price: $sale_price
         stock_type: $stock_type
+        min_stock: $min_stock
+        max_stock: $max_stock
       }
     ) {
       _id

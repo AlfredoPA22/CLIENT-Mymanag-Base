@@ -6,14 +6,15 @@ import { FC, useState } from "react";
 import { useDispatch } from "react-redux";
 import { ActionMeta, SingleValue } from "react-select";
 import DropdownInput from "../../../../components/dropdownInput/DropdownInput";
-import LoadingSpinner from "../../../../components/LoadingSpinner/LoadingSpinner";
 import SelectInput from "../../../../components/SelectInput/SelectInput";
+import { OrderDetailFormSkeleton } from "../../../../components/skeleton/OrderDetailFormSkeleton";
 import FieldTextInput from "../../../../components/textInput/FieldTextInput";
 import { CREATE_PURCHASE_ORDER_DETAIL } from "../../../../graphql/mutations/PurchaseOrderDetail";
 import { CREATE_WAREHOUSE } from "../../../../graphql/mutations/Warehouse";
 import { LIST_PURCHASE_ORDER_DETAIL } from "../../../../graphql/queries/PurchaseOrderDetail";
 import { LIST_WAREHOUSE } from "../../../../graphql/queries/Warehouse";
 import { useFormikForm } from "../../../../hooks/useFormikForm";
+import { setIsBlocked } from "../../../../redux/slices/blockUISlice";
 import { setPurchaseOrder } from "../../../../redux/slices/purchaseOrderSlice";
 import { stockType } from "../../../../utils/enums/stockType.enum";
 import { ToastSeverity } from "../../../../utils/enums/toast.enum";
@@ -92,6 +93,7 @@ const PurchaseOrderDetailForm: FC<PurchaseOrderDetailFormProps> = ({
 
   const onCreateWarehouse = async (inputValue: string) => {
     try {
+      dispatch(setIsBlocked(true));
       const { data } = await createWarehouse({
         variables: {
           name: inputValue,
@@ -114,6 +116,8 @@ const PurchaseOrderDetailForm: FC<PurchaseOrderDetailFormProps> = ({
       }
     } catch (error: any) {
       showToast({ detail: error.message, severity: ToastSeverity.Error });
+    } finally {
+      dispatch(setIsBlocked(false));
     }
   };
 
@@ -135,7 +139,7 @@ const PurchaseOrderDetailForm: FC<PurchaseOrderDetailFormProps> = ({
   });
 
   if (loadingListProduct) {
-    return <LoadingSpinner />;
+    return <OrderDetailFormSkeleton />;
   }
 
   return (

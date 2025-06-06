@@ -15,6 +15,7 @@ import { ISaleOrder } from "../../../utils/interfaces/SaleOrder";
 import { DataTableColumn } from "../../../utils/interfaces/Table";
 import { showToast } from "../../../utils/toastUtils";
 import { getStatus } from "../../order/utils/getStatus";
+import { ROUTES_MOCK } from "../../../routes/RouteMocks";
 
 interface ClientDetailProps {
   client: IClient;
@@ -46,7 +47,7 @@ const ClientDetail: FC<ClientDetailProps> = ({ client }) => {
   const saleOrderBodyTemplate = (rowData: ISaleOrder) => {
     return (
       <TextLink
-        link={`/order/viewSaleOrder/${rowData._id}`}
+        link={`${ROUTES_MOCK.SALE_ORDERS}/detalle/${rowData._id}`}
         text={rowData.code}
       />
     );

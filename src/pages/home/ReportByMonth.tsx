@@ -12,6 +12,7 @@ import { ISaleOrder } from "../../utils/interfaces/SaleOrder";
 import { getDate } from "../order/utils/getDate";
 import { getStatus } from "../order/utils/getStatus";
 import useReportByMonth from "./hooks/useReportByMonth";
+import { ROUTES_MOCK } from "../../routes/RouteMocks";
 
 const ReportByMonth = () => {
   const { listSaleOrder, loadingListSaleOrder } = useReportByMonth();
@@ -52,7 +53,7 @@ const ReportByMonth = () => {
   const handleSelectionChange = (
     e: DataTableSelectionSingleChangeEvent<ISaleOrder[]>
   ) => {
-    navigate(`/order/viewSaleOrder/${e.value._id}`);
+    navigate(`${ROUTES_MOCK.SALE_ORDERS}/detalle/${e.value._id}`);
   };
 
   const [columns] = useState<DataTableColumn<ISaleOrder>[]>([
@@ -72,6 +73,11 @@ const ReportByMonth = () => {
       header: "Cliente",
       sortable: true,
       body: clientBodyTemplate,
+    },
+    {
+      field: "created_by.user_name",
+      header: "Usuario",
+      sortable: true,
     },
     {
       field: "total",

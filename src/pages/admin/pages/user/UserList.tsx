@@ -22,12 +22,16 @@ import useUserList from "../../hooks/useUserList";
 import UserForm from "./FormUser";
 import UserDetail from "./UserDetail";
 import { Card } from "primereact/card";
+import { useDispatch } from "react-redux";
+import { setIsBlocked } from "../../../../redux/slices/blockUISlice";
 
 const UserList = () => {
   const { listUser, loadingListUser } = useUserList();
   const [visibleForm, setVisibleForm] = useState<boolean>(false);
   const [visibleDetail, setVisibleDetail] = useState<boolean>(false);
   const [currentUser, setCurrentUser] = useState<IUser | null>();
+
+  const dispatch = useDispatch();
 
   const [switchUserState] = useMutation(CHANGE_USER_STATUS, {
     refetchQueries: [
@@ -135,6 +139,7 @@ const UserList = () => {
 
   const handleChangeUserStatus = async (userId: string) => {
     try {
+      dispatch(setIsBlocked(true));
       const { data } = await switchUserState({
         variables: {
           userId,
@@ -154,11 +159,14 @@ const UserList = () => {
       }
     } catch (error: any) {
       showToast({ detail: error.message, severity: ToastSeverity.Error });
+    } finally {
+      dispatch(setIsBlocked(false));
     }
   };
 
   const handleDeleteUser = async (userId: string) => {
     try {
+      dispatch(setIsBlocked(true));
       const { data } = await deleteUser({
         variables: {
           userId,
@@ -173,6 +181,8 @@ const UserList = () => {
       }
     } catch (error: any) {
       showToast({ detail: error.message, severity: ToastSeverity.Error });
+    } finally {
+      dispatch(setIsBlocked(false));
     }
   };
 

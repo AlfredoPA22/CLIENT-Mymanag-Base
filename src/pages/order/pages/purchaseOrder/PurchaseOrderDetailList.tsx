@@ -8,8 +8,8 @@ import { FC, useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import Table from "../../../../components/datatable/Table";
 import LabelInput from "../../../../components/labelInput/LabelInput";
-import LoadingSpinner from "../../../../components/LoadingSpinner/LoadingSpinner";
 import { numberEditor } from "../../../../components/numberEditor/numberEditor";
+import TableSkeleton from "../../../../components/skeleton/TableSkeleton";
 import {
   DELETE_PRODUCT_TO_PURCHASE_ORDER_DETAIL,
   UPDATE_PURCHASE_ORDER_DETAIL,
@@ -17,6 +17,7 @@ import {
 import { FIND_PURCHASE_ORDER } from "../../../../graphql/queries/PurchaseOrder";
 import { LIST_PURCHASE_ORDER_DETAIL } from "../../../../graphql/queries/PurchaseOrderDetail";
 import useTableGlobalFilter from "../../../../hooks/useTableGlobalFilter";
+import { setIsBlocked } from "../../../../redux/slices/blockUISlice";
 import { setPurchaseOrder } from "../../../../redux/slices/purchaseOrderSlice";
 import { currencySymbol } from "../../../../utils/constants/currencyConstants";
 import { stockType } from "../../../../utils/enums/stockType.enum";
@@ -28,10 +29,12 @@ import SerialToDetail from "./SerialToDetail";
 
 interface PurchaseOrderDetailListProps {
   purchaseOrderId: string;
+  editMode?: boolean;
 }
 
 const PurchaseOrderDetailList: FC<PurchaseOrderDetailListProps> = ({
   purchaseOrderId,
+  editMode = true,
 }) => {
   const [visibleForm, setVisibleForm] = useState<boolean>(false);
   const [currentPurchaseOrderDetail, setCurrentPurchaseOrderDetail] =
@@ -89,6 +92,7 @@ const PurchaseOrderDetailList: FC<PurchaseOrderDetailListProps> = ({
 
   const handleDeleteProduct = async (purchaseOrderDetailId: string) => {
     try {
+      dispatch(setIsBlocked(true));
       const { data } = await deleteProductToPurchaseOrderDetail({
         variables: {
           purchaseOrderDetailId,
@@ -110,6 +114,8 @@ const PurchaseOrderDetailList: FC<PurchaseOrderDetailListProps> = ({
       }
     } catch (error: any) {
       showToast({ detail: error.message, severity: ToastSeverity.Error });
+    } finally {
+      dispatch(setIsBlocked(false));
     }
   };
 
@@ -118,7 +124,7 @@ const PurchaseOrderDetailList: FC<PurchaseOrderDetailListProps> = ({
       <div className="flex justify-center gap-2">
         {rowData.product.stock_type === stockType.SERIALIZADO && (
           <Button
-            tooltip="Agregar Seriales"
+            tooltip={editMode ? "Agregar seriales" : "Ver seriales"}
             icon="pi pi-cart-plus"
             raised
             severity="success"
@@ -130,20 +136,23 @@ const PurchaseOrderDetailList: FC<PurchaseOrderDetailListProps> = ({
           />
         )}
 
-        <Button
-          tooltip="eliminar detalle"
-          icon="pi pi-trash"
-          raised
-          severity="danger"
-          aria-label="Cancel"
-          onClick={() => handleDeleteProduct(rowData._id)}
-        />
+        {editMode && (
+          <Button
+            tooltip="eliminar detalle"
+            icon="pi pi-trash"
+            raised
+            severity="danger"
+            aria-label="Cancel"
+            onClick={() => handleDeleteProduct(rowData._id)}
+          />
+        )}
       </div>
     );
   };
 
   const onRowEditComplete = async (e: DataTableRowEditCompleteEvent) => {
     try {
+      dispatch(setIsBlocked(true));
       if (e.newData.purchase_price <= 0 || e.newData.quantity <= 0) {
         showToast({
           detail: "El precio y la cantidad son obligatorios.",
@@ -175,6 +184,8 @@ const PurchaseOrderDetailList: FC<PurchaseOrderDetailListProps> = ({
       }
     } catch (error: any) {
       showToast({ detail: error.message, severity: ToastSeverity.Error });
+    } finally {
+      dispatch(setIsBlocked(false));
     }
   };
 
@@ -245,9 +256,9 @@ const PurchaseOrderDetailList: FC<PurchaseOrderDetailListProps> = ({
   }, [error]);
 
   if (loadingListPurchaseOrderDetail) {
-    return <LoadingSpinner />;
+    return <TableSkeleton />;
   }
-  
+
   return (
     <Card title={`Productos de la compra (${listPurchaseOrderDetail.length})`}>
       <Table
@@ -259,11 +270,11 @@ const PurchaseOrderDetailList: FC<PurchaseOrderDetailListProps> = ({
         dataFilters={filters}
         tableHeader={renderFilterInput}
         editMode="row"
-        onRowEditComplete={onRowEditComplete}
+        {...(editMode && { onRowEditComplete })}
       />
       <Dialog
         className="md:w-[1000px] w-[350px]"
-        header="Agregar serial"
+        header={editMode ? "Agregar serial" : ""}
         visible={visibleForm}
         onHide={() => setVisibleForm(false)}
       >
@@ -271,6 +282,7 @@ const PurchaseOrderDetailList: FC<PurchaseOrderDetailListProps> = ({
           <SerialToDetail
             purchaseOrderId={purchaseOrderId}
             purchaseOrderDetailId={currentPurchaseOrderDetail?._id}
+            editMode={editMode}
           />
         )}
       </Dialog>

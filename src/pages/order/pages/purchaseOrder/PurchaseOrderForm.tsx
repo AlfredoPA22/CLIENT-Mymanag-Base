@@ -33,6 +33,8 @@ import { showToast } from "../../../../utils/toastUtils";
 import useProviderList from "../../../provider/hooks/useProviderList";
 import { getStatus } from "../../utils/getStatus";
 import { schemaFormPurchaseOrder } from "../../validations/FormPurchaseOrderValidation";
+import { setIsBlocked } from "../../../../redux/slices/blockUISlice";
+import { ROUTES_MOCK } from "../../../../routes/RouteMocks";
 
 const PurchaseOrderForm = () => {
   const {
@@ -106,6 +108,7 @@ const PurchaseOrderForm = () => {
 
   const setApprovePurchaseOrder = async () => {
     try {
+      dispatch(setIsBlocked(true));
       const { data } = await approvePurchaseOrder({
         variables: { purchaseOrderId: purchaseOrderData?._id },
       });
@@ -114,11 +117,15 @@ const PurchaseOrderForm = () => {
           detail: "Compra Aprobada exitosamente",
           severity: ToastSeverity.Success,
         });
-        navigate("/order/purchaseOrder");
+        navigate(
+          `${ROUTES_MOCK.PURCHASE_ORDERS}/detalle/${data.approvePurchaseOrder._id}`
+        );
       }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       showToast({ detail: error.message, severity: ToastSeverity.Error });
+    } finally {
+      dispatch(setIsBlocked(false));
     }
   };
 
@@ -132,6 +139,7 @@ const PurchaseOrderForm = () => {
 
   const onCreateProvider = async (inputValue: string) => {
     try {
+      dispatch(setIsBlocked(true));
       const { data } = await createProvider({
         variables: {
           name: inputValue,
@@ -155,6 +163,8 @@ const PurchaseOrderForm = () => {
       }
     } catch (error: any) {
       showToast({ detail: error.message, severity: ToastSeverity.Error });
+    } finally {
+      dispatch(setIsBlocked(false));
     }
   };
 
@@ -256,7 +266,7 @@ const PurchaseOrderForm = () => {
                 </Tag>
               )}
             </div>
-            
+
             <div className="flex flex-row justify-center gap-4">
               <Button
                 type="button"

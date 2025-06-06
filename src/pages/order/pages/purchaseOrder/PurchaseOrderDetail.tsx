@@ -2,21 +2,25 @@ import { useMutation, useQuery } from "@apollo/client";
 import { Button } from "primereact/button";
 import { Tag } from "primereact/tag";
 import { FC, useEffect } from "react";
+import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import LabelInput from "../../../../components/labelInput/LabelInput";
-import LoadingSpinner from "../../../../components/LoadingSpinner/LoadingSpinner";
+import { OrderSkeleton } from "../../../../components/skeleton/OrderSkeleton";
 import { APPROVE_PURCHASE_ORDER } from "../../../../graphql/mutations/PurchaseOrder";
 import { LIST_PRODUCT } from "../../../../graphql/queries/Product";
 import {
   FIND_PURCHASE_ORDER,
   LIST_PURCHASE_ORDER,
 } from "../../../../graphql/queries/PurchaseOrder";
+import { setIsBlocked } from "../../../../redux/slices/blockUISlice";
+import { ROUTES_MOCK } from "../../../../routes/RouteMocks";
 import { currencySymbol } from "../../../../utils/constants/currencyConstants";
 import { orderStatus } from "../../../../utils/enums/orderStatus.enum";
 import { ToastSeverity } from "../../../../utils/enums/toast.enum";
 import { showToast } from "../../../../utils/toastUtils";
 import { getDate } from "../../utils/getDate";
 import { getStatus } from "../../utils/getStatus";
+import SectionHeader from "../../../../components/sectionHeader/SectionHeader";
 
 interface PurchaseOrderDetailProps {
   purchaseOrderId: string;
@@ -35,6 +39,7 @@ const PurchaseOrderDetail: FC<PurchaseOrderDetailProps> = ({
   });
 
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const [approvePurchaseOrder] = useMutation(APPROVE_PURCHASE_ORDER, {
     refetchQueries: [{ query: LIST_PURCHASE_ORDER }, { query: LIST_PRODUCT }],
@@ -42,6 +47,7 @@ const PurchaseOrderDetail: FC<PurchaseOrderDetailProps> = ({
 
   const setApprovePurchaseOrder = async () => {
     try {
+      dispatch(setIsBlocked(true));
       const { data } = await approvePurchaseOrder({
         variables: { purchaseOrderId },
       });
@@ -50,11 +56,15 @@ const PurchaseOrderDetail: FC<PurchaseOrderDetailProps> = ({
           detail: "Compra Aprobada exitosamente",
           severity: ToastSeverity.Success,
         });
-        navigate("/order/purchaseOrder");
+        navigate(
+          `${ROUTES_MOCK.PURCHASE_ORDERS}/detalle/${data.approvePurchaseOrder._id}`
+        );
       }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       showToast({ detail: error.message, severity: ToastSeverity.Error });
+    } finally {
+      dispatch(setIsBlocked(false));
     }
   };
 
@@ -70,17 +80,24 @@ const PurchaseOrderDetail: FC<PurchaseOrderDetailProps> = ({
   const date = getDate(data?.findPurchaseOrder.date) || "";
 
   if (loadingPurchaseOrder) {
-    return <LoadingSpinner />;
+    return <OrderSkeleton />;
   }
 
   return (
     <div className="p-5 shadow-lg rounded-lg border border-gray-200 bg-white mb-2">
-      <div className="flex flex-col items-center text-center gap-2 mb-5">
-        <h2 className="text-2xl font-bold text-gray-800">Detalle de compra</h2>
-        <p className="text-gray-500 text-sm">
-        Consulta la información de tu compra y realiza cambios si es necesario.
-        </p>
-      </div>
+      <SectionHeader
+        title="Detalle de compra"
+        subtitle="Consulta la información de tu compra y realiza cambios si es
+          necesario."
+        actions={
+          <Button
+            label="Volver a la lista"
+            icon="pi pi-arrow-left"
+            className="p-button-outlined"
+            onClick={() => navigate(ROUTES_MOCK.PURCHASE_ORDERS)}
+          />
+        }
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
         {/* Información del proveedor y fecha */}

@@ -36,6 +36,8 @@ import { schemaFormSaleOrder } from "../../validations/FormSaleOrderValidation";
 import DropdownInput from "../../../../components/dropdownInput/DropdownInput";
 import { saleOrderPaymentMethodOptions } from "../../utils/saleOrderPaymentMethodMock";
 import { AutoCompleteChangeEvent } from "primereact/autocomplete";
+import { setIsBlocked } from "../../../../redux/slices/blockUISlice";
+import { ROUTES_MOCK } from "../../../../routes/RouteMocks";
 
 const SaleOrderForm = () => {
   const {
@@ -106,12 +108,14 @@ const SaleOrderForm = () => {
     e.preventDefault();
     dispatch(resetSaleOrder());
     setSelectedClient(null);
+    setSelectedPaymentMethod("Contado");
     await refetchCodeOrder();
     resetForm();
   };
 
   const setApproveSaleOrder = async () => {
     try {
+      dispatch(setIsBlocked(true));
       const { data } = await approveSaleOrder({
         variables: { saleOrderId: saleOrderData?._id },
       });
@@ -120,11 +124,15 @@ const SaleOrderForm = () => {
           detail: "Venta Aprobada exitosamente",
           severity: ToastSeverity.Success,
         });
-        navigate("/order/saleOrder");
+        navigate(
+          `${ROUTES_MOCK.SALE_ORDERS}/detalle/${data.approveSaleOrder._id}`
+        );
       }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       showToast({ detail: error.message, severity: ToastSeverity.Error });
+    } finally {
+      dispatch(setIsBlocked(false));
     }
   };
 
@@ -138,6 +146,7 @@ const SaleOrderForm = () => {
 
   const onCreateClient = async (inputValue: string) => {
     try {
+      dispatch(setIsBlocked(true));
       const { data } = await createClient({
         variables: {
           fullName: inputValue,
@@ -162,6 +171,8 @@ const SaleOrderForm = () => {
       }
     } catch (error: any) {
       showToast({ detail: error.message, severity: ToastSeverity.Error });
+    } finally {
+      dispatch(setIsBlocked(false));
     }
   };
 

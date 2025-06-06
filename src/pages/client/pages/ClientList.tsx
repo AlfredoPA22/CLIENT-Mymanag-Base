@@ -24,12 +24,16 @@ import { showToast } from "../../../utils/toastUtils";
 import useClientList from "../hooks/useClientList";
 import ClientDetail from "./ClientDetail";
 import ClientForm from "./ClientForm";
+import { useDispatch } from "react-redux";
+import { setIsBlocked } from "../../../redux/slices/blockUISlice";
 
 const ClientList = () => {
   const { listClient, loadingListClient } = useClientList();
   const [visibleForm, setVisibleForm] = useState<boolean>(false);
   const [visibleDetail, setVisibleDetail] = useState<boolean>(false);
   const [currentClient, setCurrentClient] = useState<IClient>();
+
+  const dispatch = useDispatch();
 
   const [deleteClient] = useMutation(DELETE_CLIENT, {
     refetchQueries: [
@@ -66,6 +70,7 @@ const ClientList = () => {
 
   const handleDeleteClient = async (clientId: string) => {
     try {
+      dispatch(setIsBlocked(true));
       const { data } = await deleteClient({
         variables: {
           clientId,
@@ -80,6 +85,8 @@ const ClientList = () => {
       }
     } catch (error: any) {
       showToast({ detail: error.message, severity: ToastSeverity.Error });
+    } finally {
+      dispatch(setIsBlocked(false));
     }
   };
 
@@ -101,6 +108,7 @@ const ClientList = () => {
 
   const onRowEditComplete = async (e: DataTableRowEditCompleteEvent) => {
     try {
+      dispatch(setIsBlocked(true));
       if (e.newData.fullName === "") {
         showToast({
           detail: "El nombre es obligatorio",
@@ -126,6 +134,8 @@ const ClientList = () => {
       }
     } catch (error: any) {
       showToast({ detail: error.message, severity: ToastSeverity.Error });
+    } finally {
+      dispatch(setIsBlocked(false));
     }
   };
 

@@ -5,9 +5,10 @@ import { confirmDialog } from "primereact/confirmdialog";
 import { Dialog } from "primereact/dialog";
 import { Tag } from "primereact/tag";
 import { FC, useState } from "react";
-import LoadingSpinner from "../../../../components/LoadingSpinner/LoadingSpinner";
+import { useDispatch } from "react-redux";
 import Table from "../../../../components/datatable/Table";
 import LabelInput from "../../../../components/labelInput/LabelInput";
+import TableSkeleton from "../../../../components/skeleton/TableSkeleton";
 import { DELETE_SALE_PAYMENT } from "../../../../graphql/mutations/SalePayment";
 import { LIST_SALE_ORDER } from "../../../../graphql/queries/SaleOrder";
 import {
@@ -15,6 +16,7 @@ import {
   LIST_SALE_PAYMENT_BY_SALE_ORDER,
 } from "../../../../graphql/queries/SalePayment";
 import useTableGlobalFilter from "../../../../hooks/useTableGlobalFilter";
+import { setIsBlocked } from "../../../../redux/slices/blockUISlice";
 import { currencySymbol } from "../../../../utils/constants/currencyConstants";
 import { ToastSeverity } from "../../../../utils/enums/toast.enum";
 import {
@@ -44,6 +46,8 @@ const SalePaymentList: FC<SalePaymentListProps> = ({
   saleOrderId,
 }) => {
   const [visibleForm, setVisibleForm] = useState<boolean>(false);
+
+  const dispatch = useDispatch();
 
   const [DeleteSalePayment] = useMutation(DELETE_SALE_PAYMENT, {
     refetchQueries: [
@@ -100,6 +104,7 @@ const SalePaymentList: FC<SalePaymentListProps> = ({
 
   const handleDeleteSalePayment = async (salePaymentId: string) => {
     try {
+      dispatch(setIsBlocked(true));
       const { data } = await DeleteSalePayment({
         variables: {
           salePaymentId,
@@ -113,6 +118,8 @@ const SalePaymentList: FC<SalePaymentListProps> = ({
       }
     } catch (error: any) {
       showToast({ detail: error.message, severity: ToastSeverity.Error });
+    } finally {
+      dispatch(setIsBlocked(false));
     }
   };
 
@@ -190,7 +197,7 @@ const SalePaymentList: FC<SalePaymentListProps> = ({
   const { filters, renderFilterInput } = useTableGlobalFilter(columns);
 
   if (loadingSalePayment || loadingDetailSalePayment) {
-    return <LoadingSpinner />;
+    return <TableSkeleton />;
   }
   return (
     <Card className="py-2" header={tableHeaderTemplate}>

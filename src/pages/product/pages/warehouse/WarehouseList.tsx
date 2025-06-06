@@ -26,12 +26,16 @@ import useWarehouseList from "../../hooks/useWarehouseList";
 import WarehouseDetail from "./WarehouseDetail";
 import WarehouseForm from "./WarehouseForm";
 import { Card } from "primereact/card";
+import { useDispatch } from "react-redux";
+import { setIsBlocked } from "../../../../redux/slices/blockUISlice";
 
 const WarehouseList = () => {
   const { listWarehouse, loadingListWarehouse } = useWarehouseList();
   const [visibleForm, setVisibleForm] = useState<boolean>(false);
   const [visibleDetail, setVisibleDetail] = useState<boolean>(false);
   const [currentWarehouse, setCurrentWarehouse] = useState<IWarehouse>();
+
+  const dispatch = useDispatch();
 
   const [deleteWarehouse] = useMutation(DELETE_WAREHOUSE, {
     refetchQueries: [
@@ -101,6 +105,7 @@ const WarehouseList = () => {
 
   const handleDeleteWarehouse = async (warehouseId: string) => {
     try {
+      dispatch(setIsBlocked(true));
       const { data } = await deleteWarehouse({
         variables: {
           warehouseId,
@@ -115,6 +120,8 @@ const WarehouseList = () => {
       }
     } catch (error: any) {
       showToast({ detail: error.message, severity: ToastSeverity.Error });
+    } finally {
+      dispatch(setIsBlocked(false));
     }
   };
 
@@ -143,6 +150,7 @@ const WarehouseList = () => {
 
   const onRowEditComplete = async (e: DataTableRowEditCompleteEvent) => {
     try {
+      dispatch(setIsBlocked(true));
       if (e.newData.name === "") {
         showToast({
           detail: "El nombre es obligatorio",
@@ -166,6 +174,8 @@ const WarehouseList = () => {
       }
     } catch (error: any) {
       showToast({ detail: error.message, severity: ToastSeverity.Error });
+    } finally {
+      dispatch(setIsBlocked(false));
     }
   };
 

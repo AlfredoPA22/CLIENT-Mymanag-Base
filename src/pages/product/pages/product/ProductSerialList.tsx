@@ -12,6 +12,7 @@ import { IProductSerial } from "../../../../utils/interfaces/ProductSerial";
 import { DataTableColumn } from "../../../../utils/interfaces/Table";
 import { showToast } from "../../../../utils/toastUtils";
 import { getStatus } from "../../../order/utils/getStatus";
+import { ROUTES_MOCK } from "../../../../routes/RouteMocks";
 
 interface ProductSerialListProps {
   product: IProduct;
@@ -44,7 +45,7 @@ const ProductSerialList: FC<ProductSerialListProps> = ({ product }) => {
     if (rowData.purchase_order_detail) {
       return (
         <TextLink
-          link={`/order/viewPurchaseOrder/${rowData.purchase_order_detail.purchase_order._id}`}
+          link={`${ROUTES_MOCK.PURCHASE_ORDERS}/detalle/${rowData.purchase_order_detail.purchase_order._id}`}
           text={rowData.purchase_order_detail.purchase_order.code}
         />
       );
@@ -55,7 +56,7 @@ const ProductSerialList: FC<ProductSerialListProps> = ({ product }) => {
     if (rowData.sale_order_detail) {
       return (
         <TextLink
-          link={`/order/viewSaleOrder/${rowData.sale_order_detail.sale_order._id}`}
+          link={`${ROUTES_MOCK.SALE_ORDERS}/detalle/${rowData.sale_order_detail.sale_order._id}`}
           text={rowData.sale_order_detail.sale_order.code}
         />
       );

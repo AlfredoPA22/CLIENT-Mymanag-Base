@@ -15,6 +15,8 @@ export interface IProduct {
   category: ICategory;
   brand: IBrand;
   stock_type: stockType;
+  min_stock: number;
+  max_stock: number;
 }
 
 export interface IProductInput {
@@ -26,6 +28,8 @@ export interface IProductInput {
   category: string;
   brand: string;
   stock_type: stockType;
+  min_stock: number;
+  max_stock: number;
 }
 
 export interface IFilterProductInput {

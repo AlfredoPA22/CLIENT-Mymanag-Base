@@ -39,105 +39,125 @@ const SidebarMenu = ({
   const location = useLocation();
   const { logout, userName, permissions } = useAuth();
 
-  const menuItems = [
-    { type: "title", label: "Inicio" },
+  const menuSections = [
     {
-      label: "Dashboard",
-      icon: <MdDashboard />,
-      to: ROUTES_MOCK.DASHBOARD,
-      permission: [],
-    },
-    { type: "title", label: "Inventario" },
-    {
-      label: "Productos",
-      icon: <FiPackage />,
-      permission: ["LIST_AND_CREATE_PRODUCT"],
+      title: "Inicio",
       items: [
         {
-          label: "Gestión de productos",
-          to: `${ROUTES_MOCK.INVENTORY}${ROUTES_MOCK.PRODUCTS}`,
+          label: "Dashboard",
+          icon: <MdDashboard />,
+          to: ROUTES_MOCK.DASHBOARD,
+          permission: [],
+        },
+      ],
+    },
+    {
+      title: "Inventario",
+      items: [
+        {
+          label: "Productos",
+          icon: <FiPackage />,
           permission: ["LIST_AND_CREATE_PRODUCT"],
-          icon: <MdInventory />,
+          items: [
+            {
+              label: "Gestión de productos",
+              to: `${ROUTES_MOCK.INVENTORY}${ROUTES_MOCK.PRODUCTS}`,
+              permission: ["LIST_AND_CREATE_PRODUCT"],
+              icon: <MdInventory />,
+            },
+            {
+              label: "Bajo stock",
+              to: `${ROUTES_MOCK.INVENTORY}${ROUTES_MOCK.LOW_PRODUCTS}`,
+              permission: ["LIST_AND_CREATE_PRODUCT"],
+              icon: <BsBoxSeam />,
+            },
+          ],
         },
         {
-          label: "Sin stock",
-          to: "/products/out-of-stock",
-          permission: ["LIST_AND_CREATE_PRODUCT"],
-          icon: <BsBoxSeam />,
+          label: "Marcas",
+          icon: <AiOutlineTags />,
+          to: `${ROUTES_MOCK.INVENTORY}${ROUTES_MOCK.BRANDS}`,
+          permission: ["LIST_AND_CREATE_BRAND"],
+        },
+        {
+          label: "Categorías",
+          icon: <MdCategory />,
+          to: `${ROUTES_MOCK.INVENTORY}${ROUTES_MOCK.CATEGORIES}`,
+          permission: ["LIST_AND_CREATE_CATEGORY"],
+        },
+        {
+          label: "Almacenes",
+          icon: <MdWarehouse />,
+          to: `${ROUTES_MOCK.INVENTORY}${ROUTES_MOCK.WAREHOUSES}`,
+          permission: ["LIST_AND_CREATE_WAREHOUSE"],
         },
       ],
     },
     {
-      label: "Marcas",
-      icon: <AiOutlineTags />,
-      to: `${ROUTES_MOCK.INVENTORY}${ROUTES_MOCK.BRANDS}`,
-      permission: ["LIST_AND_CREATE_BRAND"],
-    },
-    {
-      label: "Categorías",
-      icon: <MdCategory />,
-      to: `${ROUTES_MOCK.INVENTORY}${ROUTES_MOCK.CATEGORIES}`,
-      permission: ["LIST_AND_CREATE_CATEGORY"],
-    },
-    {
-      label: "Almacenes",
-      icon: <MdWarehouse />,
-      to: `${ROUTES_MOCK.INVENTORY}${ROUTES_MOCK.WAREHOUSES}`,
-      permission: ["LIST_AND_CREATE_WAREHOUSE"],
-    },
-
-    { type: "title", label: "Compras" },
-    {
-      label: "Órdenes de compra",
-      icon: <AiOutlineShoppingCart />,
-      to: ROUTES_MOCK.PURCHASE_ORDERS,
-      permission: ["LIST_AND_CREATE_PURCHASE"],
-    },
-    {
-      label: "Proveedores",
-      icon: <FiTruck />,
-      to: ROUTES_MOCK.PROVIDERS,
-      permission: ["LIST_AND_CREATE_PROVIDER"],
-    },
-
-    { type: "title", label: "Ventas" },
-    {
-      label: "Órdenes de venta",
-      icon: <RiStore3Line />,
-      to: ROUTES_MOCK.SALE_ORDERS,
-      permission: ["LIST_AND_CREATE_SALE"],
-    },
-    {
-      label: "Clientes",
-      icon: <HiOutlineUsers />,
-      to: ROUTES_MOCK.CLIENTS,
-      permission: ["LIST_AND_CREATE_CLIENT"],
-    },
-
-    { type: "title", label: "Reportes" },
-    {
-      label: "Panel de reportes",
-      icon: <MdOutlineInventory />,
-      to: ROUTES_MOCK.REPORTS,
-      permission: [
-        "PRODUCT_REPORT",
-        "PURCHASE_ORDER_REPORT",
-        "SALE_ORDER_REPORT",
+      title: "Compras",
+      items: [
+        {
+          label: "Órdenes de compra",
+          icon: <AiOutlineShoppingCart />,
+          to: ROUTES_MOCK.PURCHASE_ORDERS,
+          permission: ["LIST_AND_CREATE_PURCHASE"],
+        },
+        {
+          label: "Proveedores",
+          icon: <FiTruck />,
+          to: ROUTES_MOCK.PROVIDERS,
+          permission: ["LIST_AND_CREATE_PROVIDER"],
+        },
       ],
     },
-
-    { type: "title", label: "Administración" },
     {
-      label: "Usuarios",
-      icon: <AiOutlineUser />,
-      to: ROUTES_MOCK.USERS,
-      permission: ["USER_AND_ROLE"],
+      title: "Ventas",
+      items: [
+        {
+          label: "Órdenes de venta",
+          icon: <RiStore3Line />,
+          to: ROUTES_MOCK.SALE_ORDERS,
+          permission: ["LIST_AND_CREATE_SALE"],
+        },
+        {
+          label: "Clientes",
+          icon: <HiOutlineUsers />,
+          to: ROUTES_MOCK.CLIENTS,
+          permission: ["LIST_AND_CREATE_CLIENT"],
+        },
+      ],
     },
     {
-      label: "Roles y permisos",
-      icon: <PiUsersThree />,
-      to: ROUTES_MOCK.ROLES,
-      permission: ["USER_AND_ROLE"],
+      title: "Reportes",
+      items: [
+        {
+          label: "Panel de reportes",
+          icon: <MdOutlineInventory />,
+          to: ROUTES_MOCK.REPORTS,
+          permission: [
+            "PRODUCT_REPORT",
+            "PURCHASE_ORDER_REPORT",
+            "SALE_ORDER_REPORT",
+          ],
+        },
+      ],
+    },
+    {
+      title: "Administración",
+      items: [
+        {
+          label: "Usuarios",
+          icon: <AiOutlineUser />,
+          to: ROUTES_MOCK.USERS,
+          permission: ["USER_AND_ROLE"],
+        },
+        {
+          label: "Roles y permisos",
+          icon: <PiUsersThree />,
+          to: ROUTES_MOCK.ROLES,
+          permission: ["USER_AND_ROLE"],
+        },
+      ],
     },
   ];
 
@@ -170,28 +190,32 @@ const SidebarMenu = ({
       {/* Menú con scroll */}
       <div className="flex-grow overflow-y-auto px-4 py-6 space-y-2">
         <nav className="flex flex-col gap-1">
-          {menuItems
-            .filter(
+          {menuSections.map((section, i) => {
+            const visibleItems = section.items.filter(
               (item) =>
-                item.type === "title" || hasPermission(item.permission ?? [])
-            )
-            .map((item, index) =>
-              item.type === "title" ? (
-                <div
-                  key={index}
-                  className="uppercase text-[10px] text-gray-500 font-semibold mt-6 mb-2 tracking-wider"
-                >
-                  {item.label}
+                hasPermission(item.permission) ||
+                item.items?.some((sub) => hasPermission(sub.permission))
+            );
+
+            if (visibleItems.length === 0) return null;
+
+            return (
+              <div key={i}>
+                <div className="uppercase text-[10px] text-gray-500 font-semibold mt-6 mb-2 tracking-wider">
+                  {section.title}
                 </div>
-              ) : (
-                <SidebarMenuItem
-                  key={index}
-                  item={item}
-                  handleNavigate={handleNavigate}
-                  location={location}
-                />
-              )
-            )}
+
+                {visibleItems.map((item, j) => (
+                  <SidebarMenuItem
+                    key={j}
+                    item={item}
+                    handleNavigate={handleNavigate}
+                    location={location}
+                  />
+                ))}
+              </div>
+            );
+          })}
         </nav>
       </div>
 

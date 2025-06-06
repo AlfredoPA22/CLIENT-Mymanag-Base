@@ -12,6 +12,7 @@ import { IProduct } from "../../../../utils/interfaces/Product";
 import { DataTableColumn } from "../../../../utils/interfaces/Table";
 import { getStatus } from "../../../order/utils/getStatus";
 import useProductListWithParams from "../../hooks/useProductListWithParams";
+import { ROUTES_MOCK } from "../../../../routes/RouteMocks";
 
 interface CategoryDetailProps {
   category: ICategory;
@@ -43,7 +44,7 @@ const CategoryDetail: FC<CategoryDetailProps> = ({ category }) => {
       body: (rowData: IProduct) => (
         <Link
           className="underline hover:text-blue-300"
-          to={`/product/Detail/${rowData._id}`}
+          to={`${ROUTES_MOCK.INVENTORY}${ROUTES_MOCK.PRODUCTS}/detalle/${rowData._id}`}
         >
           {rowData.code}
         </Link>

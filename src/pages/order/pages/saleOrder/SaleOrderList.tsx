@@ -28,10 +28,13 @@ import { generatePDF } from "../../utils/generateSaleOrderPDF";
 import { getDate } from "../../utils/getDate";
 import { getStatus } from "../../utils/getStatus";
 import { ROUTES_MOCK } from "../../../../routes/RouteMocks";
+import { useDispatch } from "react-redux";
+import { setIsBlocked } from "../../../../redux/slices/blockUISlice";
 
 const SaleOrderList = () => {
   const { listSaleOrder, loadingListSaleOrder } = useSaleOrderList();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const client = useApolloClient();
 
@@ -103,6 +106,7 @@ const SaleOrderList = () => {
 
   const handleDeleteSaleOrder = async (saleOrderId: string) => {
     try {
+      dispatch(setIsBlocked(true));
       const { data } = await DeleteSaleOrder({
         variables: {
           saleOrderId,
@@ -116,6 +120,8 @@ const SaleOrderList = () => {
       }
     } catch (error: any) {
       showToast({ detail: error.message, severity: ToastSeverity.Error });
+    } finally {
+      dispatch(setIsBlocked(false));
     }
   };
 
@@ -134,6 +140,7 @@ const SaleOrderList = () => {
 
   const handleGeneratePDF = async (saleOrderId: string) => {
     try {
+      dispatch(setIsBlocked(true));
       const { data } = await client.query({
         query: FIND_SALE_ORDER_TO_PDF,
         variables: {
@@ -145,6 +152,8 @@ const SaleOrderList = () => {
       generatePDF(data.findSaleOrderToPDF);
     } catch (error: any) {
       showToast({ detail: error.message, severity: ToastSeverity.Error });
+    } finally {
+      dispatch(setIsBlocked(false));
     }
   };
 
@@ -308,6 +317,9 @@ const SaleOrderList = () => {
       sortable: true,
       style: { textAlign: "center" },
       body: (rowData) => {
+        if (rowData.status !== orderStatus.APROBADO) {
+          return <span style={{ color: "#6B7280" }}>Borrador</span>;
+        }
         return rowData.is_paid ? (
           <span style={{ color: "green" }}>Pagada</span>
         ) : (

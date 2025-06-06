@@ -2,6 +2,7 @@ import { FC } from "react";
 import { AiOutlineArrowRight } from "react-icons/ai";
 import { Link } from "react-router-dom";
 import logo from "../../assets/LOGO.png";
+import { ROUTES_MOCK } from "../../routes/RouteMocks";
 
 const WelcomePage: FC = () => {
   return (
@@ -12,9 +13,7 @@ const WelcomePage: FC = () => {
           alt="MYMANAG Logo"
           className="w-24 h-24 mx-auto mb-4 rounded-full shadow"
         />
-        <h1 className="text-3xl font-bold text-slate-800 mb-2">
-          ¡Bienvenido!
-        </h1>
+        <h1 className="text-3xl font-bold text-slate-800 mb-2">¡Bienvenido!</h1>
         <p className="text-slate-600 mb-6">
           El sistema de gestión de inventarios diseñado para optimizar tus
           operaciones de compras, ventas, productos y almacenes.
@@ -22,13 +21,13 @@ const WelcomePage: FC = () => {
 
         <div className="grid sm:grid-cols-2 gap-4">
           <Link
-            to="/product"
+            to={`${ROUTES_MOCK.INVENTORY}${ROUTES_MOCK.PRODUCTS}`}
             className="bg-indigo-600 text-white font-semibold py-3 px-6 rounded-xl flex items-center justify-center gap-2 hover:bg-indigo-700 transition"
           >
             Ir al Inventario <AiOutlineArrowRight className="text-lg" />
           </Link>
           <Link
-            to="/order/saleOrder"
+            to={ROUTES_MOCK.SALE_ORDERS}
             className="bg-teal-500 text-white font-semibold py-3 px-6 rounded-xl flex items-center justify-center gap-2 hover:bg-teal-600 transition"
           >
             Ver ventas <AiOutlineArrowRight className="text-lg" />

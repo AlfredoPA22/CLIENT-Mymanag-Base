@@ -18,6 +18,8 @@ import { CREATE_WAREHOUSE } from "../../../../graphql/mutations/Warehouse";
 import { LIST_WAREHOUSE } from "../../../../graphql/queries/Warehouse";
 import { showToast } from "../../../../utils/toastUtils";
 import { ToastSeverity } from "../../../../utils/enums/toast.enum";
+import { useDispatch } from "react-redux";
+import { setIsBlocked } from "../../../../redux/slices/blockUISlice";
 
 interface AddSerialToDetailFormProps {
   purchaseOrderId: string;
@@ -29,6 +31,8 @@ const AddSerialToDetailForm: FC<AddSerialToDetailFormProps> = ({
   purchaseOrderDetailId,
 }) => {
   const { listWarehouseSelect } = useWarehouseList();
+
+  const dispatch = useDispatch();
 
   const serialInputRef = useRef<HTMLInputElement>(null);
 
@@ -80,6 +84,7 @@ const AddSerialToDetailForm: FC<AddSerialToDetailFormProps> = ({
 
   const onCreateWarehouse = async (inputValue: string) => {
     try {
+      dispatch(setIsBlocked(true));
       const { data } = await createWarehouse({
         variables: {
           name: inputValue,
@@ -102,6 +107,8 @@ const AddSerialToDetailForm: FC<AddSerialToDetailFormProps> = ({
       }
     } catch (error: any) {
       showToast({ detail: error.message, severity: ToastSeverity.Error });
+    } finally {
+      dispatch(setIsBlocked(false));
     }
   };
 

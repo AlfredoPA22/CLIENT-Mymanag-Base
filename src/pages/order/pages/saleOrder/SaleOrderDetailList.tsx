@@ -8,8 +8,8 @@ import { FC, useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import Table from "../../../../components/datatable/Table";
 import LabelInput from "../../../../components/labelInput/LabelInput";
-import LoadingSpinner from "../../../../components/LoadingSpinner/LoadingSpinner";
 import { numberEditor } from "../../../../components/numberEditor/numberEditor";
+import TableSkeleton from "../../../../components/skeleton/TableSkeleton";
 import {
   DELETE_PRODUCT_TO_SALE_ORDER_DETAIL,
   UPDATE_SALE_ORDER_DETAIL,
@@ -25,12 +25,17 @@ import { ISaleOrderDetail } from "../../../../utils/interfaces/SaleOrderDetail";
 import { DataTableColumn } from "../../../../utils/interfaces/Table";
 import { showToast } from "../../../../utils/toastUtils";
 import SerialToDetail from "./SerialToDetail";
+import { setIsBlocked } from "../../../../redux/slices/blockUISlice";
 
 interface SaleOrderDetailListProps {
   saleOrderId: string;
+  editMode?: boolean;
 }
 
-const SaleOrderDetailList: FC<SaleOrderDetailListProps> = ({ saleOrderId }) => {
+const SaleOrderDetailList: FC<SaleOrderDetailListProps> = ({
+  saleOrderId,
+  editMode = true,
+}) => {
   const [visibleForm, setVisibleForm] = useState<boolean>(false);
   const [currentSaleOrderDetail, setCurrentSaleOrderDetail] =
     useState<ISaleOrderDetail>();
@@ -84,6 +89,7 @@ const SaleOrderDetailList: FC<SaleOrderDetailListProps> = ({ saleOrderId }) => {
 
   const handleDeleteProduct = async (saleOrderDetailId: string) => {
     try {
+      dispatch(setIsBlocked(true));
       const { data } = await deleteProductToSaleOrderDetail({
         variables: {
           saleOrderDetailId,
@@ -105,6 +111,8 @@ const SaleOrderDetailList: FC<SaleOrderDetailListProps> = ({ saleOrderId }) => {
       }
     } catch (error: any) {
       showToast({ detail: error.message, severity: ToastSeverity.Error });
+    } finally {
+      dispatch(setIsBlocked(false));
     }
   };
 
@@ -113,7 +121,7 @@ const SaleOrderDetailList: FC<SaleOrderDetailListProps> = ({ saleOrderId }) => {
       <div className="flex justify-center gap-2">
         {rowData.product.stock_type === stockType.SERIALIZADO && (
           <Button
-            tooltip="Agregar Seriales"
+            tooltip={editMode ? "Agregar seriales" : "Ver seriales"}
             icon="pi pi-cart-plus"
             raised
             severity="success"
@@ -125,20 +133,23 @@ const SaleOrderDetailList: FC<SaleOrderDetailListProps> = ({ saleOrderId }) => {
           />
         )}
 
-        <Button
-          tooltip="eliminar detalle"
-          icon="pi pi-trash"
-          raised
-          severity="danger"
-          aria-label="Cancel"
-          onClick={() => handleDeleteProduct(rowData._id)}
-        />
+        {editMode && (
+          <Button
+            tooltip="eliminar detalle"
+            icon="pi pi-trash"
+            raised
+            severity="danger"
+            aria-label="Cancel"
+            onClick={() => handleDeleteProduct(rowData._id)}
+          />
+        )}
       </div>
     );
   };
 
   const onRowEditComplete = async (e: DataTableRowEditCompleteEvent) => {
     try {
+      dispatch(setIsBlocked(true));
       if (e.newData.sale_price <= 0 || e.newData.quantity <= 0) {
         showToast({
           detail: "El precio y la cantidad son obligatorios.",
@@ -171,6 +182,8 @@ const SaleOrderDetailList: FC<SaleOrderDetailListProps> = ({ saleOrderId }) => {
       }
     } catch (error: any) {
       showToast({ detail: error.message, severity: ToastSeverity.Error });
+    } finally {
+      dispatch(setIsBlocked(false));
     }
   };
 
@@ -241,7 +254,7 @@ const SaleOrderDetailList: FC<SaleOrderDetailListProps> = ({ saleOrderId }) => {
   }, [error]);
 
   if (loadingListSaleOrderDetail) {
-    return <LoadingSpinner />;
+    return <TableSkeleton />;
   }
 
   return (
@@ -259,11 +272,11 @@ const SaleOrderDetailList: FC<SaleOrderDetailListProps> = ({ saleOrderId }) => {
         dataFilters={filters}
         tableHeader={renderFilterInput}
         editMode="row"
-        onRowEditComplete={onRowEditComplete}
+        {...(editMode && { onRowEditComplete })}
       />
       <Dialog
         className="md:w-[700px] w-[350px]"
-        header="Agregar serial"
+        header={editMode ? "Agregar serial" : ""}
         visible={visibleForm}
         onHide={() => setVisibleForm(false)}
       >
@@ -271,6 +284,7 @@ const SaleOrderDetailList: FC<SaleOrderDetailListProps> = ({ saleOrderId }) => {
           <SerialToDetail
             saleOrderId={saleOrderId}
             saleOrderDetailId={currentSaleOrderDetail?._id}
+            editMode={editMode}
           />
         )}
       </Dialog>

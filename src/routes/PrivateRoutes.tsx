@@ -22,6 +22,7 @@ import ProviderList from "../pages/provider/pages/ProviderList";
 import ReportsPage from "../pages/reports/pages/ReportsPage";
 import { ProtectedRoute } from "./ProtectedRoute";
 import { ROUTES_MOCK } from "./RouteMocks";
+import SalePayment from "../pages/order/pages/salePayment/SalePayment";
 
 const PrivateRoutes: FC = () => {
   return (
@@ -123,7 +124,7 @@ const PrivateRoutes: FC = () => {
             path={`${ROUTES_MOCK.SALE_ORDERS}${ROUTES_MOCK.SALE_PAYMENT}/:id`}
             element={
               <PermissionRoute permissions={["LIST_AND_CREATE_PAYMENT"]}>
-                <ViewSaleOrder />
+                <SalePayment />
               </PermissionRoute>
             }
           />

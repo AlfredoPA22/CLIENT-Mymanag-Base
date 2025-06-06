@@ -2,6 +2,7 @@ export const ROUTES_MOCK = {
   LOGIN: "/login",
   INVENTORY: "/inventario",
   PRODUCTS: "/productos",
+  LOW_PRODUCTS: "/productos-bajo-stock",
   BRANDS: "/marcas",
   CATEGORIES: "/categorias",
   WAREHOUSES: "/almacenes",

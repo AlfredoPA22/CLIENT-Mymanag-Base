@@ -1,9 +1,9 @@
-import { FC } from 'react';
+import { FC } from "react";
 
 import {
   ProgressSpinner,
   ProgressSpinnerProps,
-} from 'primereact/progressspinner';
+} from "primereact/progressspinner";
 
 interface LoadingSpinnerProps extends ProgressSpinnerProps {
   className?: string;
@@ -11,14 +11,16 @@ interface LoadingSpinnerProps extends ProgressSpinnerProps {
 }
 
 const LoadingSpinner: FC<LoadingSpinnerProps> = ({
-  className,
-  strokeWidth = '8',
-  animationDuration = '.5s',
+  className = "",
+  strokeWidth = "8",
+  animationDuration = ".5s",
   sizeFull = 45,
   ...props
 }) => {
   return (
-    <div className={`flex ${className}`}>
+    <div
+      className={`flex items-center justify-center w-full h-full ${className}`}
+    >
       <ProgressSpinner
         style={{ width: `${sizeFull}px`, height: `${sizeFull}px` }}
         strokeWidth={strokeWidth}

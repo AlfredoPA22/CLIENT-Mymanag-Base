@@ -3,6 +3,7 @@ import { AutoCompleteChangeEvent } from "primereact/autocomplete";
 import { Button } from "primereact/button";
 import { InputNumberChangeEvent } from "primereact/inputnumber";
 import { FC, useEffect, useState } from "react";
+import { useDispatch } from "react-redux";
 import { ActionMeta, SingleValue } from "react-select";
 import DropdownInput from "../../../../components/dropdownInput/DropdownInput";
 import FieldNumberInput from "../../../../components/FieldNumberInput/FieldNumberInput";
@@ -20,6 +21,7 @@ import { LIST_BRAND } from "../../../../graphql/queries/Brand";
 import { LIST_CATEGORY } from "../../../../graphql/queries/Category";
 import { LIST_PRODUCT } from "../../../../graphql/queries/Product";
 import { useFormikForm } from "../../../../hooks/useFormikForm";
+import { setIsBlocked } from "../../../../redux/slices/blockUISlice";
 import { stockType } from "../../../../utils/enums/stockType.enum";
 import { ToastSeverity } from "../../../../utils/enums/toast.enum";
 import { IProduct, IProductInput } from "../../../../utils/interfaces/Product";
@@ -33,6 +35,7 @@ import {
   schemaFormProduct,
   schemaFormUpdateProduct,
 } from "../../validations/FormProductValidation";
+import { Divider } from "primereact/divider";
 
 interface ProductFormProps {
   setVisibleForm: (isVisible: boolean) => void;
@@ -45,6 +48,8 @@ const ProductForm: FC<ProductFormProps> = ({
 }) => {
   const { listCategorySelect } = useCategoryList();
   const { listBrandSelect } = useBrandList();
+
+  const dispatch = useDispatch();
 
   const [createProduct] = useMutation(CREATE_PRODUCT, {
     refetchQueries: [
@@ -85,6 +90,8 @@ const ProductForm: FC<ProductFormProps> = ({
     category: productToEdit?.category._id || "",
     brand: productToEdit?.brand._id || "",
     stock_type: productToEdit?.stock_type || stockType.SERIALIZADO,
+    min_stock: productToEdit?.min_stock || 0,
+    max_stock: productToEdit?.max_stock || 0,
   };
 
   const onSubmit = async () => {
@@ -123,6 +130,7 @@ const ProductForm: FC<ProductFormProps> = ({
 
   const onCreateCategory = async (inputValue: string) => {
     try {
+      dispatch(setIsBlocked(true));
       const { data } = await createCategory({
         variables: {
           name: inputValue,
@@ -145,6 +153,8 @@ const ProductForm: FC<ProductFormProps> = ({
       }
     } catch (error: any) {
       showToast({ detail: error.message, severity: ToastSeverity.Error });
+    } finally {
+      dispatch(setIsBlocked(false));
     }
   };
 
@@ -158,6 +168,7 @@ const ProductForm: FC<ProductFormProps> = ({
 
   const onCreateBrand = async (inputValue: string) => {
     try {
+      dispatch(setIsBlocked(true));
       const { data } = await createBrand({
         variables: {
           name: inputValue,
@@ -180,6 +191,8 @@ const ProductForm: FC<ProductFormProps> = ({
       }
     } catch (error: any) {
       showToast({ detail: error.message, severity: ToastSeverity.Error });
+    } finally {
+      dispatch(setIsBlocked(false));
     }
   };
 
@@ -230,102 +243,146 @@ const ProductForm: FC<ProductFormProps> = ({
   }, [productToEdit]);
 
   return (
-    <form onSubmit={handleSubmit} className="grid gap-4">
-      <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <FieldTextInput
-          label="Codigo"
-          type="text"
-          name="code"
-          mandatory={productToEdit ? true : false}
-          placeholder="Codigo"
-          value={values.code}
-          error={errors.code ? errors.code : ""}
-          onChange={handleChange}
-        />
-        <FieldTextInput
-          label="Nombre"
-          type="text"
-          name="name"
-          placeholder="Nombre"
-          mandatory
-          value={values.name}
-          error={errors.name ? errors.name : ""}
-          onChange={handleChange}
-        />
-        <DropdownInput
-          label="Tipo de stock"
-          name="stock_type"
-          optionLabel="label"
-          placeholder="Seleccionar tipo de stock"
-          mandatory
-          options={stockTypeOptions}
-          value={selectedStockType}
-          error={errors.stock_type ? errors.stock_type : ""}
-          onChange={handleStockTypeChange}
-        />
-
-        <FieldNumberInput
-          label="Precio de venta"
-          name="sale_price"
-          placeholder="Precio de venta"
-          mandatory
-          value={values.sale_price}
-          error={errors.sale_price ? errors.sale_price : ""}
-          onChange={(e: InputNumberChangeEvent) =>
-            setFieldValue("sale_price", e.value || 0)
-          }
-        />
-
-        <SelectInput
-          label="Categoria"
-          name="category"
-          placeholder="Seleccionar categoria"
-          mandatory
-          options={listCategorySelect}
-          error={errors.category ? errors.category : ""}
-          onChange={handleCategoryChange}
-          onCreateOption={onCreateCategory}
-          value={selectedCategory}
-        />
-
-        <SelectInput
-          label="Marca"
-          name="brand"
-          placeholder="Seleccionar marca"
-          mandatory
-          options={listBrandSelect}
-          error={errors.brand ? errors.brand : ""}
-          onChange={handleBrandChange}
-          onCreateOption={onCreateBrand}
-          value={selectedBrand}
-        />
-
-        <FieldTextareaInput
-          label="Descripcion"
-          name="description"
-          value={values.description}
-          rows={5}
-          cols={30}
-          error={errors.description ? errors.description : ""}
-          onChange={handleChange}
-        />
-
-        <FieldSimpleFileUpload
-          id="image"
-          label="Imagen"
-          onSelect={onFileSelect}
-          name="image"
-          chooseLabel="Buscar archivo"
-          mode="basic"
-          auto={false}
-          customUpload={true}
-          style={{ display: values.image ? "none" : "block" }}
-          onFileClear={handleFileClear}
-          file={selectedImage}
-        />
+    <form onSubmit={handleSubmit} className="grid gap-6">
+      {/* 1. Información básica */}
+      <section className="space-y-4">
+        <Divider align="center">
+          <span className="font-semibold text-sm">
+            Información del producto
+          </span>
+        </Divider>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FieldTextInput
+            label="Código"
+            type="text"
+            name="code"
+            mandatory={!!productToEdit}
+            placeholder="Código"
+            value={values.code}
+            error={errors.code || ""}
+            onChange={handleChange}
+          />
+          <FieldTextInput
+            label="Nombre"
+            type="text"
+            name="name"
+            placeholder="Nombre"
+            mandatory
+            value={values.name}
+            error={errors.name || ""}
+            onChange={handleChange}
+          />
+          <DropdownInput
+            label="Tipo de stock"
+            name="stock_type"
+            optionLabel="label"
+            placeholder="Seleccionar tipo de stock"
+            mandatory
+            options={stockTypeOptions}
+            value={selectedStockType}
+            error={errors.stock_type || ""}
+            onChange={handleStockTypeChange}
+          />
+          <FieldTextareaInput
+            label="Descripción"
+            name="description"
+            value={values.description}
+            rows={5}
+            cols={30}
+            error={errors.description || ""}
+            onChange={handleChange}
+          />
+        </div>
       </section>
 
-      <section className="flex justify-center">
+      {/* 2. Clasificación y precios */}
+      <section className="space-y-4">
+        <Divider align="center">
+          <span className="font-semibold text-sm">Clasificación y precios</span>
+        </Divider>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <SelectInput
+            label="Categoría"
+            name="category"
+            placeholder="Seleccionar categoría"
+            mandatory
+            options={listCategorySelect}
+            error={errors.category || ""}
+            onChange={handleCategoryChange}
+            onCreateOption={onCreateCategory}
+            value={selectedCategory}
+          />
+          <SelectInput
+            label="Marca"
+            name="brand"
+            placeholder="Seleccionar marca"
+            mandatory
+            options={listBrandSelect}
+            error={errors.brand || ""}
+            onChange={handleBrandChange}
+            onCreateOption={onCreateBrand}
+            value={selectedBrand}
+          />
+          <FieldNumberInput
+            label="Precio de venta"
+            name="sale_price"
+            placeholder="Precio de venta"
+            mandatory
+            value={values.sale_price}
+            error={errors.sale_price || ""}
+            onChange={(e: InputNumberChangeEvent) =>
+              setFieldValue("sale_price", e.value || 0)
+            }
+          />
+          <FieldSimpleFileUpload
+            id="image"
+            label="Imagen"
+            onSelect={onFileSelect}
+            name="image"
+            chooseLabel="Buscar archivo"
+            mode="basic"
+            auto={false}
+            customUpload={true}
+            style={{ display: values.image ? "none" : "block" }}
+            onFileClear={handleFileClear}
+            file={selectedImage}
+          />
+        </div>
+      </section>
+
+      {/* 3. Gestión de stock */}
+      <section className="space-y-4">
+        <Divider align="center">
+          <span className="font-semibold text-sm">Gestión de stock</span>
+        </Divider>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FieldNumberInput
+            label="Stock mínimo"
+            name="min_stock"
+            placeholder="Stock mínimo"
+            mandatory
+            value={values.min_stock}
+            error={errors.min_stock || ""}
+            onChange={(e: InputNumberChangeEvent) =>
+              setFieldValue("min_stock", e.value || 0)
+            }
+          />
+          <FieldNumberInput
+            label="Stock máximo"
+            name="max_stock"
+            placeholder="Stock máximo"
+            mandatory
+            value={values.max_stock}
+            error={errors.max_stock || ""}
+            onChange={(e: InputNumberChangeEvent) =>
+              setFieldValue("max_stock", e.value || 0)
+            }
+          />
+        </div>
+      </section>
+
+      {/* Botón */}
+      <section className="flex justify-center pt-4">
         <Button
           type="submit"
           severity="success"

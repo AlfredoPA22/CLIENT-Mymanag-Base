@@ -21,6 +21,35 @@ export const LIST_PRODUCT = gql`
       status
       stock
       stock_type
+      min_stock
+      max_stock
+    }
+  }
+`;
+
+export const LIST_LOW_STOCK_PRODUCT = gql`
+  query {
+    listLowStockProduct {
+      _id
+      brand {
+        _id
+        name
+      }
+      category {
+        _id
+        name
+      }
+      code
+      description
+      last_cost_price
+      name
+      image
+      sale_price
+      status
+      stock
+      stock_type
+      min_stock
+      max_stock
     }
   }
 `;
@@ -126,6 +155,8 @@ export const SEARCH_PRODUCT = gql`
       status
       stock
       stock_type
+      min_stock
+      max_stock
     }
   }
 `;
@@ -151,6 +182,8 @@ export const FIND_PRODUCT = gql`
       status
       stock
       stock_type
+      min_stock
+      max_stock
     }
   }
 `;
@@ -184,6 +217,8 @@ export const LIST_PRODUCT_WITH_PARAMS = gql`
       status
       stock
       stock_type
+      min_stock
+      max_stock
     }
   }
 `;

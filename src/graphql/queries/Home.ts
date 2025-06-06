@@ -5,7 +5,7 @@ export const GENERAL_DATA = gql`
     generalData {
       stock
       total_products_number
-      total_products_out
+      total_products_low
       total_sales_number
       total_sales_value
       best_product {
@@ -44,6 +44,10 @@ export const REPORT_SALE_ORDER_BY_MONTH = gql`
       _id
       client {
         fullName
+      }
+      created_by {
+        _id
+        user_name
       }
       code
       date

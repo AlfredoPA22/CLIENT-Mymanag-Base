@@ -1,10 +1,14 @@
 import { Tag } from "primereact/tag";
 import { FC } from "react";
 import LabelInput from "../../../../components/labelInput/LabelInput";
-import LoadingSpinner from "../../../../components/LoadingSpinner/LoadingSpinner";
+import { PaymentSkeleton } from "../../../../components/skeleton/PaymentSkeleton";
 import { currencySymbol } from "../../../../utils/constants/currencyConstants";
 import { IDetailSalePayment } from "../../../../utils/interfaces/SalePayment";
 import { getStatus } from "../../utils/getStatus";
+import { Button } from "primereact/button";
+import { useNavigate } from "react-router-dom";
+import { ROUTES_MOCK } from "../../../../routes/RouteMocks";
+import SectionHeader from "../../../../components/sectionHeader/SectionHeader";
 
 interface SalePaymentHeaderDetailProps {
   detailSalePayment: IDetailSalePayment;
@@ -15,19 +19,33 @@ const SalePaymentHeaderDetail: FC<SalePaymentHeaderDetailProps> = ({
   detailSalePayment,
   loadingDetailSalePayment,
 }) => {
+  const navigate = useNavigate();
+
+  const goBackToSale = () => {
+    navigate(
+      `${ROUTES_MOCK.SALE_ORDERS}/detalle/${detailSalePayment.sale_order._id}`
+    );
+  };
+
   if (loadingDetailSalePayment) {
-    return <LoadingSpinner />;
+    return <PaymentSkeleton />;
   }
 
   return (
     <div className="p-5 shadow-lg rounded-lg border border-gray-200 bg-white mb-2">
       {/* Encabezado */}
-      <div className="flex flex-col items-center text-center gap-2 mb-5">
-        <h2 className="text-2xl font-bold text-gray-800">Detalle de pagos</h2>
-        <p className="text-gray-500 text-sm">
-          Información general de los pagos realizados para esta venta.
-        </p>
-      </div>
+      <SectionHeader
+        title="Detalle de pagos"
+        subtitle="Información general de los pagos realizados para esta venta."
+        actions={
+          <Button
+            label="Volver a la venta"
+            icon="pi pi-arrow-left"
+            className="p-button-outlined"
+            onClick={goBackToSale}
+          />
+        }
+      />
 
       {/* Información de pagos */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

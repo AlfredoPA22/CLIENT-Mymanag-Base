@@ -6,6 +6,7 @@ import Table from "../../../../components/datatable/Table";
 import LabelInput from "../../../../components/labelInput/LabelInput";
 import LoadingSpinner from "../../../../components/LoadingSpinner/LoadingSpinner";
 import useTableGlobalFilter from "../../../../hooks/useTableGlobalFilter";
+import { ROUTES_MOCK } from "../../../../routes/RouteMocks";
 import { currencySymbol } from "../../../../utils/constants/currencyConstants";
 import { IProduct } from "../../../../utils/interfaces/Product";
 import { DataTableColumn } from "../../../../utils/interfaces/Table";
@@ -43,7 +44,7 @@ const WarehouseDetail: FC<WarehouseDetailProps> = ({ warehouse }) => {
       body: (rowData: IProduct) => (
         <Link
           className="underline hover:text-blue-300"
-          to={`/product/Detail/${rowData._id}`}
+          to={`${ROUTES_MOCK.INVENTORY}${ROUTES_MOCK.PRODUCTS}/detalle/${rowData._id}`}
         >
           {rowData.code}
         </Link>

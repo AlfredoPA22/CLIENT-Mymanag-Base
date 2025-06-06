@@ -7,9 +7,8 @@ const ViewSaleOrder = () => {
   const saleOrderId: string = id || "";
   return (
     <div className="size-full">
-
       <SaleOrderDetail saleOrderId={saleOrderId} />
-      <SaleOrderDetailList saleOrderId={saleOrderId} />
+      <SaleOrderDetailList saleOrderId={saleOrderId} editMode={false} />
     </div>
   );
 };

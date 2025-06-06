@@ -8,7 +8,10 @@ const ViewPurchaseOrder = () => {
   return (
     <div className="size-full">
       <PurchaseOrderDetail purchaseOrderId={purchaseOrderId} />
-      <PurchaseOrderDetailList purchaseOrderId={purchaseOrderId} />
+      <PurchaseOrderDetailList
+        purchaseOrderId={purchaseOrderId}
+        editMode={false}
+      />
     </div>
   );
 };

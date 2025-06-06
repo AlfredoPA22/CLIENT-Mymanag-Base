@@ -20,10 +20,14 @@ import { showToast } from "../../../utils/toastUtils";
 import useProviderList from "../hooks/useProviderList";
 import ProviderForm from "./ProviderForm";
 import { Card } from "primereact/card";
+import { useDispatch } from "react-redux";
+import { setIsBlocked } from "../../../redux/slices/blockUISlice";
 
 const ProviderList = () => {
   const { listProvider, loadingListProvider } = useProviderList();
   const [visibleForm, setVisibleForm] = useState<boolean>(false);
+
+  const dispatch = useDispatch();
 
   const [deleteProvider] = useMutation(DELETE_PROVIDER, {
     refetchQueries: [
@@ -60,6 +64,7 @@ const ProviderList = () => {
 
   const handleDeleteProvider = async (providerId: string) => {
     try {
+      dispatch(setIsBlocked(true));
       const { data } = await deleteProvider({
         variables: {
           providerId,
@@ -74,6 +79,8 @@ const ProviderList = () => {
       }
     } catch (error: any) {
       showToast({ detail: error.message, severity: ToastSeverity.Error });
+    } finally {
+      dispatch(setIsBlocked(false));
     }
   };
 
@@ -95,6 +102,7 @@ const ProviderList = () => {
 
   const onRowEditComplete = async (e: DataTableRowEditCompleteEvent) => {
     try {
+      dispatch(setIsBlocked(true));
       if (e.newData.name === "") {
         showToast({
           detail: "El nombre es obligatorio",
@@ -119,6 +127,8 @@ const ProviderList = () => {
       }
     } catch (error: any) {
       showToast({ detail: error.message, severity: ToastSeverity.Error });
+    } finally {
+      dispatch(setIsBlocked(false));
     }
   };
 

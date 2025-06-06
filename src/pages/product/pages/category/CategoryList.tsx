@@ -26,12 +26,16 @@ import useCategoryList from "../../hooks/useCategoryList";
 import CategoryDetail from "./CategoryDetail";
 import CategoryForm from "./CategoryForm";
 import { Card } from "primereact/card";
+import { useDispatch } from "react-redux";
+import { setIsBlocked } from "../../../../redux/slices/blockUISlice";
 
 const CategoryList = () => {
   const { listCategory, loadingListCategory } = useCategoryList();
   const [visibleForm, setVisibleForm] = useState<boolean>(false);
   const [visibleDetail, setVisibleDetail] = useState<boolean>(false);
   const [currentCategory, setCurrentCategory] = useState<ICategory>();
+
+  const dispatch = useDispatch();
 
   const [deleteCategory] = useMutation(DELETE_CATEGORY, {
     refetchQueries: [
@@ -102,6 +106,7 @@ const CategoryList = () => {
 
   const handleDeleteCategory = async (categoryId: string) => {
     try {
+      dispatch(setIsBlocked(true));
       const { data } = await deleteCategory({
         variables: {
           categoryId,
@@ -116,6 +121,8 @@ const CategoryList = () => {
       }
     } catch (error: any) {
       showToast({ detail: error.message, severity: ToastSeverity.Error });
+    } finally {
+      dispatch(setIsBlocked(false));
     }
   };
 
@@ -137,6 +144,7 @@ const CategoryList = () => {
 
   const onRowEditComplete = async (e: DataTableRowEditCompleteEvent) => {
     try {
+      dispatch(setIsBlocked(true));
       if (e.newData.name === "") {
         showToast({
           detail: "El nombre es obligatorio",
@@ -160,6 +168,8 @@ const CategoryList = () => {
       }
     } catch (error: any) {
       showToast({ detail: error.message, severity: ToastSeverity.Error });
+    } finally {
+      dispatch(setIsBlocked(false));
     }
   };
 

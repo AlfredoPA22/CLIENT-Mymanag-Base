@@ -27,11 +27,14 @@ import { getDate } from "../../utils/getDate";
 import { getStatus } from "../../utils/getStatus";
 import { Card } from "primereact/card";
 import { ROUTES_MOCK } from "../../../../routes/RouteMocks";
+import { useDispatch } from "react-redux";
+import { setIsBlocked } from "../../../../redux/slices/blockUISlice";
 
 const PurchaseOrderList = () => {
   const { listPurchaseOrder, loadingListPurchaseOrder } =
     usePurchaseOrderList();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const client = useApolloClient();
 
@@ -101,6 +104,7 @@ const PurchaseOrderList = () => {
 
   const handleDeletePurchaseOrder = async (purchaseOrderId: string) => {
     try {
+      dispatch(setIsBlocked(true));
       const { data } = await DeletePurchaseOrder({
         variables: {
           purchaseOrderId,
@@ -114,6 +118,8 @@ const PurchaseOrderList = () => {
       }
     } catch (error: any) {
       showToast({ detail: error.message, severity: ToastSeverity.Error });
+    } finally {
+      dispatch(setIsBlocked(false));
     }
   };
 

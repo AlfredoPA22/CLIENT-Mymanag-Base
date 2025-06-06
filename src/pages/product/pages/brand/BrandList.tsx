@@ -11,7 +11,10 @@ import { useState } from "react";
 import Table from "../../../../components/datatable/Table";
 import LoadingSpinner from "../../../../components/LoadingSpinner/LoadingSpinner";
 import { textEditor } from "../../../../components/textEditor/textEditor";
-import { DELETE_BRAND, UPDATE_BRAND } from "../../../../graphql/mutations/Brand";
+import {
+  DELETE_BRAND,
+  UPDATE_BRAND,
+} from "../../../../graphql/mutations/Brand";
 import { LIST_BRAND } from "../../../../graphql/queries/Brand";
 import useTableGlobalFilter from "../../../../hooks/useTableGlobalFilter";
 import { ToastSeverity } from "../../../../utils/enums/toast.enum";
@@ -23,12 +26,16 @@ import useBrandList from "../../hooks/useBrandList";
 import BrandForm from "./BrandForm";
 import BrandDetail from "./BrandDetail";
 import { Card } from "primereact/card";
+import { setIsBlocked } from "../../../../redux/slices/blockUISlice";
+import { useDispatch } from "react-redux";
 
 const BrandList = () => {
   const { listBrand, loadingListBrand } = useBrandList();
   const [visibleForm, setVisibleForm] = useState<boolean>(false);
   const [visibleDetail, setVisibleDetail] = useState<boolean>(false);
   const [currentBrand, setCurrentBrand] = useState<IBrand>();
+
+  const dispatch = useDispatch();
 
   const [deleteBrand] = useMutation(DELETE_BRAND, {
     refetchQueries: [
@@ -98,6 +105,7 @@ const BrandList = () => {
 
   const handleDeleteBrand = async (brandId: string) => {
     try {
+      dispatch(setIsBlocked(true));
       const { data } = await deleteBrand({
         variables: {
           brandId,
@@ -112,6 +120,8 @@ const BrandList = () => {
       }
     } catch (error: any) {
       showToast({ detail: error.message, severity: ToastSeverity.Error });
+    } finally {
+      dispatch(setIsBlocked(false));
     }
   };
 
@@ -140,6 +150,7 @@ const BrandList = () => {
 
   const onRowEditComplete = async (e: DataTableRowEditCompleteEvent) => {
     try {
+      dispatch(setIsBlocked(true));
       if (e.newData.name === "") {
         showToast({
           detail: "El nombre es obligatorio",
@@ -163,6 +174,8 @@ const BrandList = () => {
       }
     } catch (error: any) {
       showToast({ detail: error.message, severity: ToastSeverity.Error });
+    } finally {
+      dispatch(setIsBlocked(false));
     }
   };
 

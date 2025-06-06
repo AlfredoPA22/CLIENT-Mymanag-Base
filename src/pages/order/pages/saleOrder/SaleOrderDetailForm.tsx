@@ -5,7 +5,7 @@ import { Card } from "primereact/card";
 import { FC, useState } from "react";
 import { useDispatch } from "react-redux";
 import DropdownInput from "../../../../components/dropdownInput/DropdownInput";
-import LoadingSpinner from "../../../../components/LoadingSpinner/LoadingSpinner";
+import { OrderDetailFormSkeleton } from "../../../../components/skeleton/OrderDetailFormSkeleton";
 import FieldTextInput from "../../../../components/textInput/FieldTextInput";
 import { CREATE_SALE_ORDER_DETAIL } from "../../../../graphql/mutations/SaleOrderDetail";
 import { LIST_SALE_ORDER_DETAIL } from "../../../../graphql/queries/SaleOrderDetail";
@@ -95,7 +95,7 @@ const SaleOrderDetailForm: FC<SaleOrderDetailFormProps> = ({ saleOrderId }) => {
   });
 
   if (loadingListProduct) {
-    return <LoadingSpinner />;
+    return <OrderDetailFormSkeleton />;
   }
 
   return (
