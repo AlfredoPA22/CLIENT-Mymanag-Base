@@ -1,5 +1,5 @@
 import { Card } from "primereact/card";
-import SearchProductForm from "../product/pages/SearchProductForm";
+import SearchProductForm from "../product/pages/product/SearchProductForm";
 import ReportByClient from "./ReportByClient";
 import { PermissionGuard } from "../auth/pages/PermissionGuard";
 

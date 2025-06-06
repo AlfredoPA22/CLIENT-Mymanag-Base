@@ -2,16 +2,16 @@ import { Card } from "primereact/card";
 import { Tag } from "primereact/tag";
 import { FC, useState } from "react";
 import { Link } from "react-router-dom";
-import Table from "../../../components/datatable/Table";
-import LabelInput from "../../../components/labelInput/LabelInput";
-import LoadingSpinner from "../../../components/LoadingSpinner/LoadingSpinner";
-import useTableGlobalFilter from "../../../hooks/useTableGlobalFilter";
-import { currencySymbol } from "../../../utils/constants/currencyConstants";
-import { IProduct } from "../../../utils/interfaces/Product";
-import { DataTableColumn } from "../../../utils/interfaces/Table";
-import { IWarehouse } from "../../../utils/interfaces/Warehouse";
-import { getStatus } from "../../order/utils/getStatus";
-import useProductListWithParams from "../hooks/useProductListWithParams";
+import Table from "../../../../components/datatable/Table";
+import LabelInput from "../../../../components/labelInput/LabelInput";
+import LoadingSpinner from "../../../../components/LoadingSpinner/LoadingSpinner";
+import useTableGlobalFilter from "../../../../hooks/useTableGlobalFilter";
+import { currencySymbol } from "../../../../utils/constants/currencyConstants";
+import { IProduct } from "../../../../utils/interfaces/Product";
+import { DataTableColumn } from "../../../../utils/interfaces/Table";
+import { IWarehouse } from "../../../../utils/interfaces/Warehouse";
+import { getStatus } from "../../../order/utils/getStatus";
+import useProductListWithParams from "../../hooks/useProductListWithParams";
 
 interface WarehouseDetailProps {
   warehouse: IWarehouse;

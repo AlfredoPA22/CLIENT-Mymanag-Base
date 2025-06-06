@@ -2,10 +2,10 @@ import { useQuery } from "@apollo/client";
 import { TabPanel, TabView } from "primereact/tabview";
 import { useEffect } from "react";
 import { useParams } from "react-router-dom";
-import LoadingSpinner from "../../../components/LoadingSpinner/LoadingSpinner";
-import { FIND_PRODUCT } from "../../../graphql/queries/Product";
-import { ToastSeverity } from "../../../utils/enums/toast.enum";
-import { showToast } from "../../../utils/toastUtils";
+import LoadingSpinner from "../../../../components/LoadingSpinner/LoadingSpinner";
+import { FIND_PRODUCT } from "../../../../graphql/queries/Product";
+import { ToastSeverity } from "../../../../utils/enums/toast.enum";
+import { showToast } from "../../../../utils/toastUtils";
 import ProductCard from "./ProductCard";
 
 const ProductDetail = () => {

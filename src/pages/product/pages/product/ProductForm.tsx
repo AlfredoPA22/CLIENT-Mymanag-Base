@@ -4,35 +4,35 @@ import { Button } from "primereact/button";
 import { InputNumberChangeEvent } from "primereact/inputnumber";
 import { FC, useEffect, useState } from "react";
 import { ActionMeta, SingleValue } from "react-select";
-import DropdownInput from "../../../components/dropdownInput/DropdownInput";
-import FieldNumberInput from "../../../components/FieldNumberInput/FieldNumberInput";
-import FieldSimpleFileUpload from "../../../components/fileuploadInput/FileUploadInput";
-import SelectInput from "../../../components/SelectInput/SelectInput";
-import FieldTextareaInput from "../../../components/textAreaInput/FieldTextareaInput";
-import FieldTextInput from "../../../components/textInput/FieldTextInput";
-import { CREATE_BRAND } from "../../../graphql/mutations/Brand";
-import { CREATE_CATEGORY } from "../../../graphql/mutations/Category";
+import DropdownInput from "../../../../components/dropdownInput/DropdownInput";
+import FieldNumberInput from "../../../../components/FieldNumberInput/FieldNumberInput";
+import FieldSimpleFileUpload from "../../../../components/fileuploadInput/FileUploadInput";
+import SelectInput from "../../../../components/SelectInput/SelectInput";
+import FieldTextareaInput from "../../../../components/textAreaInput/FieldTextareaInput";
+import FieldTextInput from "../../../../components/textInput/FieldTextInput";
+import { CREATE_BRAND } from "../../../../graphql/mutations/Brand";
+import { CREATE_CATEGORY } from "../../../../graphql/mutations/Category";
 import {
   CREATE_PRODUCT,
   UPDATE_PRODUCT,
-} from "../../../graphql/mutations/Product";
-import { LIST_BRAND } from "../../../graphql/queries/Brand";
-import { LIST_CATEGORY } from "../../../graphql/queries/Category";
-import { LIST_PRODUCT } from "../../../graphql/queries/Product";
-import { useFormikForm } from "../../../hooks/useFormikForm";
-import { stockType } from "../../../utils/enums/stockType.enum";
-import { ToastSeverity } from "../../../utils/enums/toast.enum";
-import { IProduct, IProductInput } from "../../../utils/interfaces/Product";
-import { IReactSelect } from "../../../utils/interfaces/Select";
-import { showToast } from "../../../utils/toastUtils";
-import { uploadImage } from "../../../utils/uploadImage";
-import useBrandList from "../hooks/useBrandList";
-import useCategoryList from "../hooks/useCategoryList";
-import { stockTypeOptions } from "../utils/stockTypeMock";
+} from "../../../../graphql/mutations/Product";
+import { LIST_BRAND } from "../../../../graphql/queries/Brand";
+import { LIST_CATEGORY } from "../../../../graphql/queries/Category";
+import { LIST_PRODUCT } from "../../../../graphql/queries/Product";
+import { useFormikForm } from "../../../../hooks/useFormikForm";
+import { stockType } from "../../../../utils/enums/stockType.enum";
+import { ToastSeverity } from "../../../../utils/enums/toast.enum";
+import { IProduct, IProductInput } from "../../../../utils/interfaces/Product";
+import { IReactSelect } from "../../../../utils/interfaces/Select";
+import { showToast } from "../../../../utils/toastUtils";
+import { uploadImage } from "../../../../utils/uploadImage";
+import useBrandList from "../../hooks/useBrandList";
+import useCategoryList from "../../hooks/useCategoryList";
+import { stockTypeOptions } from "../../utils/stockTypeMock";
 import {
   schemaFormProduct,
   schemaFormUpdateProduct,
-} from "../validations/FormProductValidation";
+} from "../../validations/FormProductValidation";
 
 interface ProductFormProps {
   setVisibleForm: (isVisible: boolean) => void;

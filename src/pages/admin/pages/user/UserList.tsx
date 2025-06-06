@@ -21,6 +21,7 @@ import { Status } from "../../../../utils/types/StatusType";
 import useUserList from "../../hooks/useUserList";
 import UserForm from "./FormUser";
 import UserDetail from "./UserDetail";
+import { Card } from "primereact/card";
 
 const UserList = () => {
   const { listUser, loadingListUser } = useUserList();
@@ -256,8 +257,7 @@ const UserList = () => {
     return <LoadingSpinner />;
   }
   return (
-    <div className="size-full">
-      {tableHeaderTemplate()}
+    <Card className="py-2" header={tableHeaderTemplate}>
       <Table
         columns={columns}
         data={listUser}
@@ -284,7 +284,7 @@ const UserList = () => {
       >
         {currentUser && <UserDetail user={currentUser} />}
       </Dialog>
-    </div>
+    </Card>
   );
 };
 

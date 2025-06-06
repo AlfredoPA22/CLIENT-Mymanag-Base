@@ -2,26 +2,26 @@ import { Card } from "primereact/card";
 import { Tag } from "primereact/tag";
 import { FC, useState } from "react";
 import { Link } from "react-router-dom";
-import Table from "../../../components/datatable/Table";
-import LabelInput from "../../../components/labelInput/LabelInput";
-import LoadingSpinner from "../../../components/LoadingSpinner/LoadingSpinner";
-import useTableGlobalFilter from "../../../hooks/useTableGlobalFilter";
-import { currencySymbol } from "../../../utils/constants/currencyConstants";
-import { ICategory } from "../../../utils/interfaces/Category";
-import { IProduct } from "../../../utils/interfaces/Product";
-import { DataTableColumn } from "../../../utils/interfaces/Table";
-import { getStatus } from "../../order/utils/getStatus";
-import useProductListWithParams from "../hooks/useProductListWithParams";
+import LoadingSpinner from "../../../../components/LoadingSpinner/LoadingSpinner";
+import Table from "../../../../components/datatable/Table";
+import LabelInput from "../../../../components/labelInput/LabelInput";
+import useTableGlobalFilter from "../../../../hooks/useTableGlobalFilter";
+import { currencySymbol } from "../../../../utils/constants/currencyConstants";
+import { IBrand } from "../../../../utils/interfaces/Brand";
+import { IProduct } from "../../../../utils/interfaces/Product";
+import { DataTableColumn } from "../../../../utils/interfaces/Table";
+import { getStatus } from "../../../order/utils/getStatus";
+import useProductListWithParams from "../../hooks/useProductListWithParams";
 
-interface CategoryDetailProps {
-  category: ICategory;
+interface BrandDetailProps {
+  brand: IBrand;
 }
 
-const CategoryDetail: FC<CategoryDetailProps> = ({ category }) => {
+const BrandDetail: FC<BrandDetailProps> = ({ brand }) => {
   const { listProductWithParams, loadingListProductWithParams } =
     useProductListWithParams({
-      brandId: "",
-      categoryId: category._id,
+      brandId: brand._id,
+      categoryId: "",
       warehouseId: "",
     });
 
@@ -56,8 +56,8 @@ const CategoryDetail: FC<CategoryDetailProps> = ({ category }) => {
       style: { width: "20%" },
     },
     {
-      field: "brand.name",
-      header: "Marca",
+      field: "category.name",
+      header: "Categoria",
       sortable: true,
       style: { width: "15%" },
     },
@@ -96,10 +96,9 @@ const CategoryDetail: FC<CategoryDetailProps> = ({ category }) => {
 
   return (
     <div className="flex flex-col gap-2">
-      {/* Tarjeta de Categoría */}
       <Card className="bg-white shadow-lg rounded-lg p-4">
-        <h2 className="text-xl font-semibold text-gray-800">{category.name}</h2>
-        <p className="text-gray-600 mt-2">{category.description}</p>
+        <h2 className="text-xl font-semibold text-gray-800">{brand.name}</h2>
+        <p className="text-gray-600 mt-2">{brand.description}</p>
       </Card>
 
       {listProductWithParams && (
@@ -115,8 +114,8 @@ const CategoryDetail: FC<CategoryDetailProps> = ({ category }) => {
             data={listProductWithParams}
             emptyMessage="Sin productos."
             size="small"
-            dataFilters={filters}
             tableHeader={renderFilterInput}
+            dataFilters={filters}
             editMode="row"
           />
         </Card>
@@ -125,4 +124,4 @@ const CategoryDetail: FC<CategoryDetailProps> = ({ category }) => {
   );
 };
 
-export default CategoryDetail;
+export default BrandDetail;

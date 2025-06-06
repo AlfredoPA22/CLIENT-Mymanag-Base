@@ -3,7 +3,7 @@ import { ArcElement, Chart as ChartJS, Legend, Title, Tooltip } from "chart.js";
 import { Card } from "primereact/card";
 import { Chart } from "primereact/chart";
 import { useEffect } from "react";
-import LoadingSpinner from "../../components/LoadingSpinner/LoadingSpinner";
+import ReportByCategorySkeleton from "../../components/skeleton/ReportByCategorySkeleton";
 import { REPORT_SALE_ORDER_BY_CATEGORY } from "../../graphql/queries/Home";
 import { currencySymbol } from "../../utils/constants/currencyConstants";
 import { ToastSeverity } from "../../utils/enums/toast.enum";
@@ -29,7 +29,7 @@ const ReportByCategory = () => {
   }, [errorSale]);
 
   if (loadingSaleOrderByCategory) {
-    return <LoadingSpinner />;
+    return <ReportByCategorySkeleton />;
   }
 
   // Preparar datos
@@ -57,7 +57,7 @@ const ReportByCategory = () => {
   };
 
   return (
-    <Card title="Mejores categorias" className="w-full">
+    <Card title="Categorías más vendidas" className="w-full">
       <Chart type="pie" data={data} options={options} />
     </Card>
   );

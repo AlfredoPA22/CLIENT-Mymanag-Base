@@ -8,20 +8,21 @@ import {
 import { Dialog } from "primereact/dialog";
 import { Tag } from "primereact/tag";
 import { useState } from "react";
-import Table from "../../../components/datatable/Table";
-import LoadingSpinner from "../../../components/LoadingSpinner/LoadingSpinner";
-import { textEditor } from "../../../components/textEditor/textEditor";
-import { DELETE_BRAND, UPDATE_BRAND } from "../../../graphql/mutations/Brand";
-import { LIST_BRAND } from "../../../graphql/queries/Brand";
-import useTableGlobalFilter from "../../../hooks/useTableGlobalFilter";
-import { ToastSeverity } from "../../../utils/enums/toast.enum";
-import { IBrand } from "../../../utils/interfaces/Brand";
-import { DataTableColumn } from "../../../utils/interfaces/Table";
-import { showToast } from "../../../utils/toastUtils";
-import { Status } from "../../../utils/types/StatusType";
-import useBrandList from "../hooks/useBrandList";
-import BrandDetail from "./BrandDetail";
+import Table from "../../../../components/datatable/Table";
+import LoadingSpinner from "../../../../components/LoadingSpinner/LoadingSpinner";
+import { textEditor } from "../../../../components/textEditor/textEditor";
+import { DELETE_BRAND, UPDATE_BRAND } from "../../../../graphql/mutations/Brand";
+import { LIST_BRAND } from "../../../../graphql/queries/Brand";
+import useTableGlobalFilter from "../../../../hooks/useTableGlobalFilter";
+import { ToastSeverity } from "../../../../utils/enums/toast.enum";
+import { IBrand } from "../../../../utils/interfaces/Brand";
+import { DataTableColumn } from "../../../../utils/interfaces/Table";
+import { showToast } from "../../../../utils/toastUtils";
+import { Status } from "../../../../utils/types/StatusType";
+import useBrandList from "../../hooks/useBrandList";
 import BrandForm from "./BrandForm";
+import BrandDetail from "./BrandDetail";
+import { Card } from "primereact/card";
 
 const BrandList = () => {
   const { listBrand, loadingListBrand } = useBrandList();
@@ -200,8 +201,7 @@ const BrandList = () => {
     return <LoadingSpinner />;
   }
   return (
-    <div className="size-full">
-      {tableHeaderTemplate()}
+    <Card className="py-2" header={tableHeaderTemplate}>
       <Table
         columns={columns}
         data={listBrand}
@@ -229,7 +229,7 @@ const BrandList = () => {
       >
         {currentBrand && <BrandDetail brand={currentBrand} />}
       </Dialog>
-    </div>
+    </Card>
   );
 };
 

@@ -8,47 +8,48 @@ import {
 import { Dialog } from "primereact/dialog";
 import { Tag } from "primereact/tag";
 import { useState } from "react";
-import Table from "../../../components/datatable/Table";
-import LoadingSpinner from "../../../components/LoadingSpinner/LoadingSpinner";
-import { textEditor } from "../../../components/textEditor/textEditor";
+import Table from "../../../../components/datatable/Table";
+import LoadingSpinner from "../../../../components/LoadingSpinner/LoadingSpinner";
+import { textEditor } from "../../../../components/textEditor/textEditor";
 import {
-  DELETE_CATEGORY,
-  UPDATE_CATEGORY,
-} from "../../../graphql/mutations/Category";
-import { LIST_CATEGORY } from "../../../graphql/queries/Category";
-import useTableGlobalFilter from "../../../hooks/useTableGlobalFilter";
-import { ToastSeverity } from "../../../utils/enums/toast.enum";
-import { ICategory } from "../../../utils/interfaces/Category";
-import { DataTableColumn } from "../../../utils/interfaces/Table";
-import { showToast } from "../../../utils/toastUtils";
-import { Status } from "../../../utils/types/StatusType";
-import useCategoryList from "../hooks/useCategoryList";
-import CategoryDetail from "./CategoryDetail";
-import CategoryForm from "./CategoryForm";
+  DELETE_WAREHOUSE,
+  UPDATE_WAREHOUSE,
+} from "../../../../graphql/mutations/Warehouse";
+import { LIST_WAREHOUSE } from "../../../../graphql/queries/Warehouse";
+import useTableGlobalFilter from "../../../../hooks/useTableGlobalFilter";
+import { ToastSeverity } from "../../../../utils/enums/toast.enum";
+import { DataTableColumn } from "../../../../utils/interfaces/Table";
+import { IWarehouse } from "../../../../utils/interfaces/Warehouse";
+import { showToast } from "../../../../utils/toastUtils";
+import { Status } from "../../../../utils/types/StatusType";
+import useWarehouseList from "../../hooks/useWarehouseList";
+import WarehouseDetail from "./WarehouseDetail";
+import WarehouseForm from "./WarehouseForm";
+import { Card } from "primereact/card";
 
-const CategoryList = () => {
-  const { listCategory, loadingListCategory } = useCategoryList();
+const WarehouseList = () => {
+  const { listWarehouse, loadingListWarehouse } = useWarehouseList();
   const [visibleForm, setVisibleForm] = useState<boolean>(false);
   const [visibleDetail, setVisibleDetail] = useState<boolean>(false);
-  const [currentCategory, setCurrentCategory] = useState<ICategory>();
+  const [currentWarehouse, setCurrentWarehouse] = useState<IWarehouse>();
 
-  const [deleteCategory] = useMutation(DELETE_CATEGORY, {
+  const [deleteWarehouse] = useMutation(DELETE_WAREHOUSE, {
     refetchQueries: [
       {
-        query: LIST_CATEGORY,
+        query: LIST_WAREHOUSE,
       },
     ],
   });
 
-  const [updateCategory] = useMutation(UPDATE_CATEGORY, {
+  const [updateWarehouse] = useMutation(UPDATE_WAREHOUSE, {
     refetchQueries: [
       {
-        query: LIST_CATEGORY,
+        query: LIST_WAREHOUSE,
       },
     ],
   });
 
-  const getStatus = (rowData: ICategory): Status | null => {
+  const getStatus = (rowData: IWarehouse): Status | null => {
     switch (rowData.is_active) {
       case false:
         return {
@@ -66,7 +67,7 @@ const CategoryList = () => {
     }
   };
 
-  const statusBodyTemplate = (rowData: ICategory) => {
+  const statusBodyTemplate = (rowData: IWarehouse) => {
     const status = getStatus(rowData);
     if (status) {
       const { severity, label } = status;
@@ -85,12 +86,11 @@ const CategoryList = () => {
   const tableHeaderTemplate = () => {
     return (
       <div className="flex justify-between items-center m-2 px-5">
-        <h1 className="text-2xl font-bold">{`Lista de categorias (${listCategory.length})`}</h1>
-
+        <h1 className="text-2xl font-bold">{`Lista de almacenes (${listWarehouse.length})`}</h1>
         <Button
           icon="pi pi-plus"
           severity="success"
-          tooltip="Nueva categoria"
+          tooltip="Nuevo almacén"
           tooltipOptions={{ position: "left" }}
           onClick={() => setVisibleForm(true)}
           raised
@@ -99,17 +99,17 @@ const CategoryList = () => {
     );
   };
 
-  const handleDeleteCategory = async (categoryId: string) => {
+  const handleDeleteWarehouse = async (warehouseId: string) => {
     try {
-      const { data } = await deleteCategory({
+      const { data } = await deleteWarehouse({
         variables: {
-          categoryId,
+          warehouseId,
         },
       });
 
-      if (data.deleteCategory.success) {
+      if (data.deleteWarehouse.success) {
         showToast({
-          detail: "Categoria eliminada.",
+          detail: "Almacén eliminada.",
           severity: ToastSeverity.Success,
         });
       }
@@ -118,20 +118,27 @@ const CategoryList = () => {
     }
   };
 
-  const actionBodyTemplate = (rowData: ICategory) => {
+  const actionBodyTemplate = (rowData: IWarehouse) => {
     return (
       <div className="flex justify-center gap-2">
         <Button
-          tooltip="eliminar categoria"
+          tooltip="eliminar almacén"
           tooltipOptions={{ position: "left" }}
           icon="pi pi-trash"
           raised
           severity="danger"
           aria-label="Cancel"
-          onClick={() => handleDeleteCategory(rowData._id)}
+          onClick={() => handleDeleteWarehouse(rowData._id)}
         />
       </div>
     );
+  };
+
+  const handleSelectionChange = (
+    e: DataTableSelectionSingleChangeEvent<IWarehouse[]>
+  ) => {
+    setCurrentWarehouse(e.value);
+    setVisibleDetail(true);
   };
 
   const onRowEditComplete = async (e: DataTableRowEditCompleteEvent) => {
@@ -142,9 +149,9 @@ const CategoryList = () => {
           severity: ToastSeverity.Error,
         });
       } else {
-        const { data } = await updateCategory({
+        const { data } = await updateWarehouse({
           variables: {
-            categoryId: e.newData._id,
+            warehouseId: e.newData._id,
             name: e.newData.name,
             description: e.newData.description,
           },
@@ -152,7 +159,7 @@ const CategoryList = () => {
 
         if (data) {
           showToast({
-            detail: "Marca actualizada.",
+            detail: "Almacén actualizado.",
             severity: ToastSeverity.Success,
           });
         }
@@ -162,14 +169,7 @@ const CategoryList = () => {
     }
   };
 
-  const handleSelectionChange = (
-    e: DataTableSelectionSingleChangeEvent<ICategory[]>
-  ) => {
-    setCurrentCategory(e.value);
-    setVisibleDetail(true);
-  };
-
-  const [columns] = useState<DataTableColumn<ICategory>[]>([
+  const [columns] = useState<DataTableColumn<IWarehouse>[]>([
     {
       field: "name",
       header: "Nombre",
@@ -184,12 +184,6 @@ const CategoryList = () => {
       fieldEditor: (options: ColumnEditorOptions) => textEditor(options),
     },
     {
-      field: "count_product",
-      header: "Productos con esta categoria",
-      sortable: true,
-      style: { width: "15%", textAlign: "center" },
-    },
-    {
       field: "is_active",
       header: "Estado",
       sortable: true,
@@ -200,17 +194,15 @@ const CategoryList = () => {
 
   const { filters, renderFilterInput } = useTableGlobalFilter(columns);
 
-  if (loadingListCategory) {
+  if (loadingListWarehouse) {
     return <LoadingSpinner />;
   }
-
   return (
-    <div className="size-full">
-      {tableHeaderTemplate()}
+    <Card className="py-2" header={tableHeaderTemplate}>
       <Table
         columns={columns}
-        data={listCategory}
-        emptyMessage="Sin categorias."
+        data={listWarehouse}
+        emptyMessage="Sin almacenes."
         size="small"
         actionBodyTemplate={actionBodyTemplate}
         dataFilters={filters}
@@ -220,22 +212,22 @@ const CategoryList = () => {
         onSelectionChange={handleSelectionChange}
       />
       <Dialog
-        header="Nueva Categoria"
+        header="Nuevo Almacén"
         visible={visibleForm}
         onHide={() => setVisibleForm(false)}
       >
-        <CategoryForm setVisibleForm={setVisibleForm} />
+        <WarehouseForm setVisibleForm={setVisibleForm} />
       </Dialog>
       <Dialog
         className="md:w-[90vw] w-[90vw]"
         visible={visibleDetail}
-        header={currentCategory && `Detalle de categoria`}
+        header={currentWarehouse && `Detalle de almacén`}
         onHide={() => setVisibleDetail(false)}
       >
-        {currentCategory && <CategoryDetail category={currentCategory} />}
+        {currentWarehouse && <WarehouseDetail warehouse={currentWarehouse} />}
       </Dialog>
-    </div>
+    </Card>
   );
 };
 
-export default CategoryList;
+export default WarehouseList;

@@ -1,14 +1,14 @@
 import { useApolloClient } from "@apollo/client";
 import { Button } from "primereact/button";
 import { useState } from "react";
-import FieldTextInput from "../../../components/textInput/FieldTextInput";
-import { SEARCH_PRODUCT } from "../../../graphql/queries/Product";
-import { useFormikForm } from "../../../hooks/useFormikForm";
+import FieldTextInput from "../../../../components/textInput/FieldTextInput";
+import { SEARCH_PRODUCT } from "../../../../graphql/queries/Product";
+import { useFormikForm } from "../../../../hooks/useFormikForm";
 import {
   IProduct,
   ISearchProductInput,
-} from "../../../utils/interfaces/Product";
-import { schemaFormSearchProduct } from "../validations/FormSearchProductValidation";
+} from "../../../../utils/interfaces/Product";
+import { schemaFormSearchProduct } from "../../validations/FormSearchProductValidation";
 import ProductCard from "./ProductCard";
 
 const SearchProductForm = () => {

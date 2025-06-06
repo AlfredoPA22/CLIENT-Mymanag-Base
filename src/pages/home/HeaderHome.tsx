@@ -1,8 +1,8 @@
 import { FC } from "react";
 import { Link } from "react-router-dom";
-import LoadingSpinner from "../../components/LoadingSpinner/LoadingSpinner";
 import { currencySymbol } from "../../utils/constants/currencyConstants";
 import useGeneralData from "./hooks/useGeneralData";
+import HeaderHomeSkeleton from "../../components/skeleton/HeaderHomeSkeleton";
 
 const cardBase =
   "rounded-2xl p-5 flex flex-col items-center justify-center text-center transition-all duration-200 transform hover:-translate-y-1 hover:shadow-2xl";
@@ -11,7 +11,7 @@ const HeaderHome: FC = () => {
   const { generalData, loadingGeneralData } = useGeneralData();
 
   if (loadingGeneralData) {
-    return <LoadingSpinner />;
+    return <HeaderHomeSkeleton />;
   }
 
   return (

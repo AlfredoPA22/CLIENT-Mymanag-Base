@@ -5,7 +5,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Table, { DataTableColumn } from "../../components/datatable/Table";
 import LabelInput from "../../components/labelInput/LabelInput";
-import LoadingSpinner from "../../components/LoadingSpinner/LoadingSpinner";
+import TableSkeleton from "../../components/skeleton/TableSkeleton";
 import useTableGlobalFilter from "../../hooks/useTableGlobalFilter";
 import { currencySymbol } from "../../utils/constants/currencyConstants";
 import { ISaleOrder } from "../../utils/interfaces/SaleOrder";
@@ -96,12 +96,9 @@ const ReportByMonth = () => {
 
   const { filters, renderFilterInput } = useTableGlobalFilter(columns);
 
-  if (loadingListSaleOrder) {
-    return <LoadingSpinner />;
-  }
-
   return (
-    <Card className="lg:col-span-2" title="Ventas recientes">
+    <Card className="lg:col-span-2" title="Últimas ventas del mes">
+      {loadingListSaleOrder && <TableSkeleton />}
       <Table
         columns={columns}
         data={listSaleOrder}

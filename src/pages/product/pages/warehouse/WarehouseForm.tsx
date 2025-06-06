@@ -1,28 +1,28 @@
-import { useFormikForm } from "../../../hooks/useFormikForm";
 import { useMutation } from "@apollo/client";
 import { Button } from "primereact/button";
-import FieldTextareaInput from "../../../components/textAreaInput/FieldTextareaInput";
-import FieldTextInput from "../../../components/textInput/FieldTextInput";
 import { FC } from "react";
-import { CREATE_BRAND } from "../../../graphql/mutations/Brand";
-import { LIST_BRAND } from "../../../graphql/queries/Brand";
-import { IBrandInput } from "../../../utils/interfaces/Brand";
-import { schemaFormBrand } from "../validations/FormBrandValidation";
+import FieldTextareaInput from "../../../../components/textAreaInput/FieldTextareaInput";
+import FieldTextInput from "../../../../components/textInput/FieldTextInput";
+import { CREATE_WAREHOUSE } from "../../../../graphql/mutations/Warehouse";
+import { LIST_WAREHOUSE } from "../../../../graphql/queries/Warehouse";
+import { useFormikForm } from "../../../../hooks/useFormikForm";
+import { IWarehouseInput } from "../../../../utils/interfaces/Warehouse";
+import { schemaFormWarehouse } from "../../validations/FormWarehouseValidation";
 
-interface BrandFormProps {
+interface WarehouseFormProps {
   setVisibleForm: (isVisible: boolean) => void;
 }
 
-const BrandForm: FC<BrandFormProps> = ({ setVisibleForm }) => {
-  const [createBrand] = useMutation(CREATE_BRAND, {
-    refetchQueries: [{ query: LIST_BRAND }],
+const WarehouseForm: FC<WarehouseFormProps> = ({ setVisibleForm }) => {
+  const [createWarehouse] = useMutation(CREATE_WAREHOUSE, {
+    refetchQueries: [{ query: LIST_WAREHOUSE }],
   });
-  const initialValues: IBrandInput = {
+  const initialValues: IWarehouseInput = {
     name: "",
     description: "",
   };
   const onSubmit = async () => {
-    await createBrand({ variables: values });
+    await createWarehouse({ variables: values });
     setVisibleForm(false);
     resetForm();
   };
@@ -38,9 +38,9 @@ const BrandForm: FC<BrandFormProps> = ({ setVisibleForm }) => {
     isSubmitting,
   } = useFormikForm({
     initialValues: initialValues,
-    msgSuccess: "Marca creada",
+    msgSuccess: "Almacén creado",
     handleSubmit: onSubmit,
-    validationSchema: schemaFormBrand,
+    validationSchema: schemaFormWarehouse,
   });
   return (
     <form onSubmit={handleSubmit} className="grid gap-4 justify-center">
@@ -81,4 +81,4 @@ const BrandForm: FC<BrandFormProps> = ({ setVisibleForm }) => {
   );
 };
 
-export default BrandForm;
+export default WarehouseForm;

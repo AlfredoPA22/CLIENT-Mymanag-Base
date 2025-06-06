@@ -1,31 +1,52 @@
 import { Route, Routes } from "react-router-dom";
-import ProductDetail from "./pages/ProductDetail";
-import ProductPage from "./pages/ProductPage";
 import { PermissionRoute } from "../auth/pages/PermissionRoute";
+import BrandList from "./pages/brand/BrandList";
+import CategoryList from "./pages/category/CategoryList";
+import ProductDetail from "./pages/product/ProductDetail";
+import ProductList from "./pages/product/ProductList";
+import WarehouseList from "./pages/warehouse/WarehouseList";
+import { ROUTES_MOCK } from "../../routes/RouteMocks";
 
 const ProductRoutes = () => {
   return (
     <Routes>
       <Route
-        path="/"
+        path={ROUTES_MOCK.PRODUCTS}
         element={
-          <PermissionRoute
-            permissions={[
-              "LIST_AND_CREATE_PRODUCT",
-              "LIST_AND_CREATE_BRAND",
-              "LIST_AND_CREATE_CATEGORY",
-              "LIST_AND_CREATE_WAREHOUSE",
-            ]}
-          >
-            <ProductPage />
+          <PermissionRoute permissions={["LIST_AND_CREATE_PRODUCT"]}>
+            <ProductList />
           </PermissionRoute>
         }
       />
       <Route
-        path="/Detail/:id"
+        path={`${ROUTES_MOCK.PRODUCTS}/detalle/:id`}
         element={
           <PermissionRoute permissions={["FIND_PRODUCT"]}>
             <ProductDetail />
+          </PermissionRoute>
+        }
+      />
+      <Route
+        path={ROUTES_MOCK.BRANDS}
+        element={
+          <PermissionRoute permissions={["LIST_AND_CREATE_BRAND"]}>
+            <BrandList />
+          </PermissionRoute>
+        }
+      />
+      <Route
+        path={ROUTES_MOCK.CATEGORIES}
+        element={
+          <PermissionRoute permissions={["LIST_AND_CREATE_CATEGORY"]}>
+            <CategoryList />
+          </PermissionRoute>
+        }
+      />
+      <Route
+        path={ROUTES_MOCK.WAREHOUSES}
+        element={
+          <PermissionRoute permissions={["LIST_AND_CREATE_WAREHOUSE"]}>
+            <WarehouseList />
           </PermissionRoute>
         }
       />

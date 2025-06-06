@@ -1,28 +1,28 @@
-import { ICategoryInput } from "../../../utils/interfaces/Category";
-import { useFormikForm } from "../../../hooks/useFormikForm";
-import { schemaFormCategory } from "../validations/FormCategoryValidation";
-import FieldTextInput from "../../../components/textInput/FieldTextInput";
-import FieldTextareaInput from "../../../components/textAreaInput/FieldTextareaInput";
-import { Button } from "primereact/button";
 import { useMutation } from "@apollo/client";
-import { CREATE_CATEGORY } from "../../../graphql/mutations/Category";
-import { LIST_CATEGORY } from "../../../graphql/queries/Category";
+import { Button } from "primereact/button";
 import { FC } from "react";
+import { CREATE_BRAND } from "../../../../graphql/mutations/Brand";
+import { LIST_BRAND } from "../../../../graphql/queries/Brand";
+import { IBrandInput } from "../../../../utils/interfaces/Brand";
+import { useFormikForm } from "../../../../hooks/useFormikForm";
+import { schemaFormBrand } from "../../validations/FormBrandValidation";
+import FieldTextInput from "../../../../components/textInput/FieldTextInput";
+import FieldTextareaInput from "../../../../components/textAreaInput/FieldTextareaInput";
 
-interface CategoryFormProps {
+interface BrandFormProps {
   setVisibleForm: (isVisible: boolean) => void;
 }
 
-const CategoryForm: FC<CategoryFormProps> = ({ setVisibleForm }) => {
-  const [createCategory] = useMutation(CREATE_CATEGORY, {
-    refetchQueries: [{ query: LIST_CATEGORY }],
+const BrandForm: FC<BrandFormProps> = ({ setVisibleForm }) => {
+  const [createBrand] = useMutation(CREATE_BRAND, {
+    refetchQueries: [{ query: LIST_BRAND }],
   });
-  const initialValues: ICategoryInput = {
+  const initialValues: IBrandInput = {
     name: "",
     description: "",
   };
   const onSubmit = async () => {
-    await createCategory({ variables: values });
+    await createBrand({ variables: values });
     setVisibleForm(false);
     resetForm();
   };
@@ -38,9 +38,9 @@ const CategoryForm: FC<CategoryFormProps> = ({ setVisibleForm }) => {
     isSubmitting,
   } = useFormikForm({
     initialValues: initialValues,
-    msgSuccess: "Categoria creada",
+    msgSuccess: "Marca creada",
     handleSubmit: onSubmit,
-    validationSchema: schemaFormCategory,
+    validationSchema: schemaFormBrand,
   });
   return (
     <form onSubmit={handleSubmit} className="grid gap-4 justify-center">
@@ -71,7 +71,6 @@ const CategoryForm: FC<CategoryFormProps> = ({ setVisibleForm }) => {
 
       <section className="flex justify-center">
         <Button
-          role="submit-warehouse"
           type="submit"
           severity="success"
           label="Guardar"
@@ -82,4 +81,4 @@ const CategoryForm: FC<CategoryFormProps> = ({ setVisibleForm }) => {
   );
 };
 
-export default CategoryForm;
+export default BrandForm;

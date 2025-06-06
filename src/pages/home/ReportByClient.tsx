@@ -11,7 +11,7 @@ import {
 import { Card } from "primereact/card";
 import { useEffect } from "react";
 import { Bar } from "react-chartjs-2";
-import LoadingSpinner from "../../components/LoadingSpinner/LoadingSpinner";
+import ReportByClientSkeleton from "../../components/skeleton/ReportByClientSkeleton";
 import { REPORT_SALE_ORDER_BY_CLIENT } from "../../graphql/queries/Home";
 import { currencySymbol } from "../../utils/constants/currencyConstants";
 import { ToastSeverity } from "../../utils/enums/toast.enum";
@@ -52,7 +52,7 @@ const ReportByClient = () => {
   }, [errorSale]);
 
   if (loadingSaleOrderByClient) {
-    return <LoadingSpinner />;
+    return <ReportByClientSkeleton />;
   }
 
   // Extraer los datos para el gráfico

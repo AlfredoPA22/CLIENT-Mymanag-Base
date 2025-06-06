@@ -1,17 +1,17 @@
 import { useQuery } from "@apollo/client";
 import { Tag } from "primereact/tag";
 import { FC, useEffect, useState } from "react";
-import Table from "../../../components/datatable/Table";
-import LoadingSpinner from "../../../components/LoadingSpinner/LoadingSpinner";
-import TextLink from "../../../components/TextLink/TextLink";
-import { LIST_PRODUCT_SERIAL_BY_PRODUCT } from "../../../graphql/queries/Product";
-import useTableGlobalFilter from "../../../hooks/useTableGlobalFilter";
-import { ToastSeverity } from "../../../utils/enums/toast.enum";
-import { IProduct } from "../../../utils/interfaces/Product";
-import { IProductSerial } from "../../../utils/interfaces/ProductSerial";
-import { DataTableColumn } from "../../../utils/interfaces/Table";
-import { showToast } from "../../../utils/toastUtils";
-import { getStatus } from "../../order/utils/getStatus";
+import Table from "../../../../components/datatable/Table";
+import LoadingSpinner from "../../../../components/LoadingSpinner/LoadingSpinner";
+import TextLink from "../../../../components/TextLink/TextLink";
+import { LIST_PRODUCT_SERIAL_BY_PRODUCT } from "../../../../graphql/queries/Product";
+import useTableGlobalFilter from "../../../../hooks/useTableGlobalFilter";
+import { ToastSeverity } from "../../../../utils/enums/toast.enum";
+import { IProduct } from "../../../../utils/interfaces/Product";
+import { IProductSerial } from "../../../../utils/interfaces/ProductSerial";
+import { DataTableColumn } from "../../../../utils/interfaces/Table";
+import { showToast } from "../../../../utils/toastUtils";
+import { getStatus } from "../../../order/utils/getStatus";
 
 interface ProductSerialListProps {
   product: IProduct;

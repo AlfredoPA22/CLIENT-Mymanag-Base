@@ -2,15 +2,26 @@ import { type FC } from "react";
 
 import { Route, Routes } from "react-router-dom";
 import Dashboard from "../components/dashboard/Dashboard";
-import AdminRoutes from "../pages/admin/adminRoutes";
+import RoleList from "../pages/admin/pages/role/RoleList";
+import UserList from "../pages/admin/pages/user/UserList";
+import { PermissionRoute } from "../pages/auth/pages/PermissionRoute";
 import UnauthorizedPage from "../pages/auth/pages/UnauthorizedPage";
-import ClientRoutes from "../pages/client/ClientRoutes";
+import ClientList from "../pages/client/pages/ClientList";
 import Home from "../pages/home/Home";
 import WelcomePage from "../pages/home/WelcomePage";
-import OrderRoutes from "../pages/order/OrderRoutes";
+import CreatePurchaseOrder from "../pages/order/pages/purchaseOrder/CreatePurchaseOrder";
+import EditPurchaseOrder from "../pages/order/pages/purchaseOrder/EditPurchaseOrder";
+import PurchaseOrderList from "../pages/order/pages/purchaseOrder/PurchaseOrderList";
+import ViewPurchaseOrder from "../pages/order/pages/purchaseOrder/viewPurchaseOrder";
+import CreateSaleOrder from "../pages/order/pages/saleOrder/CreateSaleOrder";
+import EditSaleOrder from "../pages/order/pages/saleOrder/EditSaleOrder";
+import SaleOrderList from "../pages/order/pages/saleOrder/SaleOrderList";
+import ViewSaleOrder from "../pages/order/pages/saleOrder/ViewSaleOrder";
 import ProductRoutes from "../pages/product/ProductRoutes";
-import ReportsRoutes from "../pages/reports/reportsRoutes";
+import ProviderList from "../pages/provider/pages/ProviderList";
+import ReportsPage from "../pages/reports/pages/ReportsPage";
 import { ProtectedRoute } from "./ProtectedRoute";
+import { ROUTES_MOCK } from "./RouteMocks";
 
 const PrivateRoutes: FC = () => {
   return (
@@ -22,13 +33,146 @@ const PrivateRoutes: FC = () => {
           {/* Página de bienvenida como ruta por defecto */}
           <Route index element={<WelcomePage />} />
 
-          {/* Otras rutas */}
-          <Route path="dashboard" element={<Home />} />
-          <Route path="product/*" element={<ProductRoutes />} />
-          <Route path="order/*" element={<OrderRoutes />} />
-          <Route path="client/*" element={<ClientRoutes />} />
-          <Route path="admin/*" element={<AdminRoutes />} />
-          <Route path="reports/*" element={<ReportsRoutes />} />
+          {/* inicio */}
+          <Route path={ROUTES_MOCK.DASHBOARD} element={<Home />} />
+
+          {/* inventario */}
+          <Route
+            path={`${ROUTES_MOCK.INVENTORY}/*`}
+            element={<ProductRoutes />}
+          />
+
+          {/* compras */}
+          <Route
+            path={`${ROUTES_MOCK.PURCHASE_ORDERS}`}
+            element={
+              <PermissionRoute permissions={["LIST_AND_CREATE_PURCHASE"]}>
+                <PurchaseOrderList />
+              </PermissionRoute>
+            }
+          />
+          <Route
+            path={`${ROUTES_MOCK.PURCHASE_ORDERS}${ROUTES_MOCK.NEW_PURCHASE_ORDER}`}
+            element={
+              <PermissionRoute permissions={["LIST_AND_CREATE_PURCHASE"]}>
+                <CreatePurchaseOrder />
+              </PermissionRoute>
+            }
+          />
+          <Route
+            path={`${ROUTES_MOCK.PURCHASE_ORDERS}${ROUTES_MOCK.EDIT_PURCHASE_ORDER}/:id`}
+            element={
+              <PermissionRoute permissions={["EDIT_PURCHASE"]}>
+                <EditPurchaseOrder />
+              </PermissionRoute>
+            }
+          />
+          <Route
+            path={`${ROUTES_MOCK.PURCHASE_ORDERS}/detalle/:id`}
+            element={
+              <PermissionRoute permissions={["DETAIL_PURCHASE"]}>
+                <ViewPurchaseOrder />
+              </PermissionRoute>
+            }
+          />
+
+          {/* proveedores */}
+          <Route
+            path={`${ROUTES_MOCK.PROVIDERS}`}
+            element={
+              <PermissionRoute permissions={["LIST_AND_CREATE_PROVIDER"]}>
+                <ProviderList />
+              </PermissionRoute>
+            }
+          />
+
+          {/* ventas */}
+          <Route
+            path={`${ROUTES_MOCK.SALE_ORDERS}`}
+            element={
+              <PermissionRoute permissions={["LIST_AND_CREATE_SALE"]}>
+                <SaleOrderList />
+              </PermissionRoute>
+            }
+          />
+          <Route
+            path={`${ROUTES_MOCK.SALE_ORDERS}${ROUTES_MOCK.NEW_SALE_ORDER}`}
+            element={
+              <PermissionRoute permissions={["LIST_AND_CREATE_SALE"]}>
+                <CreateSaleOrder />
+              </PermissionRoute>
+            }
+          />
+          <Route
+            path={`${ROUTES_MOCK.SALE_ORDERS}${ROUTES_MOCK.EDIT_SALE_ORDER}/:id`}
+            element={
+              <PermissionRoute permissions={["EDIT_SALE"]}>
+                <EditSaleOrder />
+              </PermissionRoute>
+            }
+          />
+          <Route
+            path={`${ROUTES_MOCK.SALE_ORDERS}/detalle/:id`}
+            element={
+              <PermissionRoute permissions={["DETAIL_SALE"]}>
+                <ViewSaleOrder />
+              </PermissionRoute>
+            }
+          />
+          <Route
+            path={`${ROUTES_MOCK.SALE_ORDERS}${ROUTES_MOCK.SALE_PAYMENT}/:id`}
+            element={
+              <PermissionRoute permissions={["LIST_AND_CREATE_PAYMENT"]}>
+                <ViewSaleOrder />
+              </PermissionRoute>
+            }
+          />
+
+          {/* clientes */}
+          <Route
+            path={`${ROUTES_MOCK.CLIENTS}`}
+            element={
+              <PermissionRoute permissions={["LIST_AND_CREATE_CLIENT"]}>
+                <ClientList />
+              </PermissionRoute>
+            }
+          />
+
+          {/* reportes */}
+          <Route
+            path={`${ROUTES_MOCK.REPORTS}`}
+            element={
+              <PermissionRoute
+                permissions={[
+                  "PRODUCT_REPORT",
+                  "PURCHASE_ORDER_REPORT",
+                  "SALE_ORDER_REPORT",
+                ]}
+              >
+                <ReportsPage />
+              </PermissionRoute>
+            }
+          />
+
+          {/* usuarios */}
+          <Route
+            path={`${ROUTES_MOCK.USERS}`}
+            element={
+              <PermissionRoute permissions={["USER_AND_ROLE"]}>
+                <UserList />
+              </PermissionRoute>
+            }
+          />
+
+          {/* roles */}
+          <Route
+            path={`${ROUTES_MOCK.ROLES}`}
+            element={
+              <PermissionRoute permissions={["USER_AND_ROLE"]}>
+                <RoleList />
+              </PermissionRoute>
+            }
+          />
         </Route>
       </Route>
     </Routes>

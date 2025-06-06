@@ -19,6 +19,7 @@ import { DataTableColumn } from "../../../utils/interfaces/Table";
 import { showToast } from "../../../utils/toastUtils";
 import useProviderList from "../hooks/useProviderList";
 import ProviderForm from "./ProviderForm";
+import { Card } from "primereact/card";
 
 const ProviderList = () => {
   const { listProvider, loadingListProvider } = useProviderList();
@@ -157,9 +158,7 @@ const ProviderList = () => {
   }
 
   return (
-    <div className="size-full">
-      {tableHeaderTemplate()}
-      
+    <Card className="py-2" header={tableHeaderTemplate}>
       <Table
         columns={columns}
         data={listProvider}
@@ -178,7 +177,7 @@ const ProviderList = () => {
       >
         <ProviderForm setVisibleForm={setVisibleForm} />
       </Dialog>
-    </div>
+    </Card>
   );
 };
 

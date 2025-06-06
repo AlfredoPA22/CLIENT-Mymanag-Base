@@ -3,10 +3,10 @@ import { Divider } from "primereact/divider";
 import { Image } from "primereact/image";
 import { Tag } from "primereact/tag";
 import { FC } from "react";
-import defaultProduct from "../../../assets/defaultProduct.jpg";
-import { currencySymbol } from "../../../utils/constants/currencyConstants";
-import { IProduct } from "../../../utils/interfaces/Product";
-import { getStatus } from "../../order/utils/getStatus";
+import defaultProduct from "../../../../assets/defaultProduct.jpg";
+import { currencySymbol } from "../../../../utils/constants/currencyConstants";
+import { IProduct } from "../../../../utils/interfaces/Product";
+import { getStatus } from "../../../order/utils/getStatus";
 
 interface ProductCardProps {
   productData: IProduct;

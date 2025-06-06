@@ -15,6 +15,7 @@ import { showToast } from "../../../../utils/toastUtils";
 import useRoleList from "../../hooks/useRoleList";
 import RoleDetail from "./RoleDetail";
 import RoleForm from "./RoleForm";
+import { Card } from "primereact/card";
 
 const RoleList = () => {
   const { listRole, loadingListRole } = useRoleList();
@@ -111,8 +112,7 @@ const RoleList = () => {
   }
 
   return (
-    <div className="size-full">
-      {tableHeaderTemplate()}
+    <Card className="py-2" header={tableHeaderTemplate}>
       <Table
         columns={columns}
         data={listRole}
@@ -140,7 +140,7 @@ const RoleList = () => {
       >
         {currentRole && <RoleDetail role={currentRole} />}
       </Dialog>
-    </div>
+    </Card>
   );
 };
 

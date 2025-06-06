@@ -27,6 +27,7 @@ import useSaleOrderList from "../../hooks/useSaleOrderList";
 import { generatePDF } from "../../utils/generateSaleOrderPDF";
 import { getDate } from "../../utils/getDate";
 import { getStatus } from "../../utils/getStatus";
+import { ROUTES_MOCK } from "../../../../routes/RouteMocks";
 
 const SaleOrderList = () => {
   const { listSaleOrder, loadingListSaleOrder } = useSaleOrderList();
@@ -91,7 +92,9 @@ const SaleOrderList = () => {
           severity="success"
           tooltip="Nueva venta"
           tooltipOptions={{ position: "left" }}
-          onClick={() => navigate("/order/newSaleOrder")}
+          onClick={() =>
+            navigate(`${ROUTES_MOCK.SALE_ORDERS}${ROUTES_MOCK.NEW_SALE_ORDER}`)
+          }
           raised
         />
       </div>
@@ -157,7 +160,11 @@ const SaleOrderList = () => {
               raised
               severity="info"
               aria-label="Cancel"
-              onClick={() => navigate(`/order/editSaleOrder/${rowData._id}`)}
+              onClick={() =>
+                navigate(
+                  `${ROUTES_MOCK.SALE_ORDERS}${ROUTES_MOCK.EDIT_SALE_ORDER}/${rowData._id}`
+                )
+              }
             />
 
             <Button
@@ -181,7 +188,11 @@ const SaleOrderList = () => {
               raised
               severity="info"
               aria-label="Cancel"
-              onClick={() => navigate(`/order/editSaleOrder/${rowData._id}`)}
+              onClick={() =>
+                navigate(
+                  `${ROUTES_MOCK.SALE_ORDERS}${ROUTES_MOCK.EDIT_SALE_ORDER}/${rowData._id}`
+                )
+              }
             />
             <Button
               tooltip="Imprimir venta"
@@ -216,7 +227,11 @@ const SaleOrderList = () => {
               raised
               severity="info"
               aria-label="Cancel"
-              onClick={() => navigate(`/order/salePayment/${rowData._id}`)}
+              onClick={() =>
+                navigate(
+                  `${ROUTES_MOCK.SALE_ORDERS}${ROUTES_MOCK.SALE_PAYMENT}/${rowData._id}`
+                )
+              }
             />
           )}
 
@@ -237,7 +252,7 @@ const SaleOrderList = () => {
   const handleSelectionChange = (
     e: DataTableSelectionSingleChangeEvent<ISaleOrder[]>
   ) => {
-    navigate(`/order/viewSaleOrder/${e.value._id}`);
+    navigate(`${ROUTES_MOCK.SALE_ORDERS}/detalle/${e.value._id}`);
   };
 
   const [columns] = useState<DataTableColumn<ISaleOrder>[]>([
@@ -294,12 +309,12 @@ const SaleOrderList = () => {
       style: { textAlign: "center" },
       body: (rowData) => {
         return rowData.is_paid ? (
-          <span style={{ color: 'green' }}>Pagada</span>
+          <span style={{ color: "green" }}>Pagada</span>
         ) : (
-          <span style={{ color: 'red' }}>Pendiente</span>
+          <span style={{ color: "red" }}>Pendiente</span>
         );
       },
-    }
+    },
   ]);
 
   const { filters, renderFilterInput } = useTableGlobalFilter(columns);

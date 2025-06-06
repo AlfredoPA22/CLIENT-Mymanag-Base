@@ -25,6 +25,8 @@ import usePurchaseOrderList from "../../hooks/usePurchaseOrderList";
 import { generatePDF } from "../../utils/generatePurchaseOrderPDF";
 import { getDate } from "../../utils/getDate";
 import { getStatus } from "../../utils/getStatus";
+import { Card } from "primereact/card";
+import { ROUTES_MOCK } from "../../../../routes/RouteMocks";
 
 const PurchaseOrderList = () => {
   const { listPurchaseOrder, loadingListPurchaseOrder } =
@@ -86,7 +88,11 @@ const PurchaseOrderList = () => {
           severity="success"
           tooltip="Nueva compra"
           tooltipOptions={{ position: "left" }}
-          onClick={() => navigate("/order/newPurchaseOrder")}
+          onClick={() =>
+            navigate(
+              `${ROUTES_MOCK.PURCHASE_ORDERS}${ROUTES_MOCK.NEW_PURCHASE_ORDER}`
+            )
+          }
           raised
         />
       </div>
@@ -151,7 +157,9 @@ const PurchaseOrderList = () => {
               severity="info"
               aria-label="Cancel"
               onClick={() =>
-                navigate(`/order/editPurchaseOrder/${rowData._id}`)
+                navigate(
+                  `${ROUTES_MOCK.PURCHASE_ORDERS}${ROUTES_MOCK.EDIT_PURCHASE_ORDER}/${rowData._id}`
+                )
               }
             />
 
@@ -177,7 +185,9 @@ const PurchaseOrderList = () => {
               severity="info"
               aria-label="Cancel"
               onClick={() =>
-                navigate(`/order/editPurchaseOrder/${rowData._id}`)
+                navigate(
+                  `${ROUTES_MOCK.PURCHASE_ORDERS}${ROUTES_MOCK.EDIT_PURCHASE_ORDER}/${rowData._id}`
+                )
               }
             />
 
@@ -223,7 +233,7 @@ const PurchaseOrderList = () => {
   const handleSelectionChange = (
     e: DataTableSelectionSingleChangeEvent<IPurchaseOrder[]>
   ) => {
-    navigate(`/order/viewPurchaseOrder/${e.value._id}`);
+    navigate(`${ROUTES_MOCK.PURCHASE_ORDERS}/detalle/${e.value._id}`);
   };
 
   const [columns] = useState<DataTableColumn<IPurchaseOrder>[]>([
@@ -276,9 +286,7 @@ const PurchaseOrderList = () => {
   }
 
   return (
-    <div className="size-full">
-      {tableHeaderTemplate()}
-
+    <Card className="py-2" header={tableHeaderTemplate}>
       <Table
         columns={columns}
         data={listPurchaseOrder}
@@ -289,7 +297,7 @@ const PurchaseOrderList = () => {
         tableHeader={renderFilterInput}
         onSelectionChange={handleSelectionChange}
       />
-    </div>
+    </Card>
   );
 };
 

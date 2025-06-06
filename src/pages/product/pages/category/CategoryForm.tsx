@@ -1,30 +1,28 @@
-import { useMutation } from "@apollo/client";
+import { ICategoryInput } from "../../../../utils/interfaces/Category";
+import { useFormikForm } from "../../../../hooks/useFormikForm";
+import { schemaFormCategory } from "../../validations/FormCategoryValidation";
+import FieldTextInput from "../../../../components/textInput/FieldTextInput";
+import FieldTextareaInput from "../../../../components/textAreaInput/FieldTextareaInput";
 import { Button } from "primereact/button";
+import { useMutation } from "@apollo/client";
+import { CREATE_CATEGORY } from "../../../../graphql/mutations/Category";
+import { LIST_CATEGORY } from "../../../../graphql/queries/Category";
 import { FC } from "react";
-import FieldTextareaInput from "../../../components/textAreaInput/FieldTextareaInput";
-import FieldTextInput from "../../../components/textInput/FieldTextInput";
-import { CREATE_WAREHOUSE } from "../../../graphql/mutations/Warehouse";
-import { LIST_WAREHOUSE } from "../../../graphql/queries/Warehouse";
-import { useFormikForm } from "../../../hooks/useFormikForm";
-import {
-    IWarehouseInput
-} from "../../../utils/interfaces/Warehouse";
-import { schemaFormWarehouse } from "../validations/FormWarehouseValidation";
 
-interface WarehouseFormProps {
+interface CategoryFormProps {
   setVisibleForm: (isVisible: boolean) => void;
 }
 
-const WarehouseForm: FC<WarehouseFormProps> = ({ setVisibleForm }) => {
-  const [createWarehouse] = useMutation(CREATE_WAREHOUSE, {
-    refetchQueries: [{ query: LIST_WAREHOUSE }],
+const CategoryForm: FC<CategoryFormProps> = ({ setVisibleForm }) => {
+  const [createCategory] = useMutation(CREATE_CATEGORY, {
+    refetchQueries: [{ query: LIST_CATEGORY }],
   });
-  const initialValues: IWarehouseInput = {
+  const initialValues: ICategoryInput = {
     name: "",
     description: "",
   };
   const onSubmit = async () => {
-    await createWarehouse({ variables: values });
+    await createCategory({ variables: values });
     setVisibleForm(false);
     resetForm();
   };
@@ -40,9 +38,9 @@ const WarehouseForm: FC<WarehouseFormProps> = ({ setVisibleForm }) => {
     isSubmitting,
   } = useFormikForm({
     initialValues: initialValues,
-    msgSuccess: "Almacén creado",
+    msgSuccess: "Categoria creada",
     handleSubmit: onSubmit,
-    validationSchema: schemaFormWarehouse,
+    validationSchema: schemaFormCategory,
   });
   return (
     <form onSubmit={handleSubmit} className="grid gap-4 justify-center">
@@ -73,6 +71,7 @@ const WarehouseForm: FC<WarehouseFormProps> = ({ setVisibleForm }) => {
 
       <section className="flex justify-center">
         <Button
+          role="submit-warehouse"
           type="submit"
           severity="success"
           label="Guardar"
@@ -83,4 +82,4 @@ const WarehouseForm: FC<WarehouseFormProps> = ({ setVisibleForm }) => {
   );
 };
 
-export default WarehouseForm;
+export default CategoryForm;
