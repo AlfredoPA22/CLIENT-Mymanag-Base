@@ -253,3 +253,52 @@ export const REPORT_PRODUCT = gql`
     }
   }
 `;
+
+export const LIST_SALE_ORDER_BY_PRODUCT = gql`
+  query ListSaleOrderByProduct($productId: ID!) {
+    listSaleOrderByProduct(productId: $productId) {
+      saleOrder {
+        _id
+        code
+        date
+        total
+        is_paid
+        status
+        client {
+          _id
+          fullName
+        }
+      }
+      saleOrderDetail {
+        _id
+        quantity
+        sale_price
+        subtotal
+      }
+    }
+  }
+`;
+
+export const LIST_PURCHASE_ORDER_BY_PRODUCT = gql`
+  query ListPurchaseOrderByProduct($productId: ID!) {
+    listPurchaseOrderByProduct(productId: $productId) {
+      purchaseOrder {
+        _id
+        code
+        date
+        total
+        status
+        provider {
+          _id
+          name
+        }
+      }
+      purchaseOrderDetail {
+        _id
+        quantity
+        purchase_price
+        subtotal
+      }
+    }
+  }
+`;

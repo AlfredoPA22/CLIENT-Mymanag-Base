@@ -41,3 +41,19 @@ export interface IFilterProductInput {
 export interface ISearchProductInput {
   serial: string;
 }
+
+export interface IPreviewProductImport {
+  row: number;
+  code: string;
+  name: string;
+  description: string;
+  sale_price: number;
+  brand: string;
+  category: string;
+  stock_type: string;
+  min_stock: number;
+  max_stock: number;
+  isValid: boolean;
+  errors: string[];
+}
+

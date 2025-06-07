@@ -21,6 +21,7 @@ import logo from "../../assets/LOGO.png";
 import useAuth from "../../pages/auth/hooks/useAuth";
 import { ROUTES_MOCK } from "../../routes/RouteMocks";
 import { SidebarMenuItem } from "./SideBarMenuItem";
+import { BiImport } from "react-icons/bi";
 
 type Props = {
   visible?: boolean;
@@ -70,6 +71,12 @@ const SidebarMenu = ({
               to: `${ROUTES_MOCK.INVENTORY}${ROUTES_MOCK.LOW_PRODUCTS}`,
               permission: ["LIST_AND_CREATE_PRODUCT"],
               icon: <BsBoxSeam />,
+            },
+            {
+              label: "Importar productos",
+              to: `${ROUTES_MOCK.INVENTORY}${ROUTES_MOCK.IMPORT_PRODUCTS}`,
+              permission: ["LIST_AND_CREATE_PRODUCT"],
+              icon: <BiImport />,
             },
           ],
         },

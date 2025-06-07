@@ -1,5 +1,5 @@
 import { IClient } from "./Client";
-import { ISaleOrderDetailToPDF } from "./SaleOrderDetail";
+import { ISaleOrderDetail, ISaleOrderDetailToPDF } from "./SaleOrderDetail";
 import { IUser } from "./User";
 
 export interface ISaleOrder {
@@ -28,6 +28,11 @@ export interface ISaleOrderToPDF {
 export interface ISaleOrderByYear {
   month: string;
   total: Number;
+}
+
+export interface ISaleOrderByProduct {
+  saleOrder: ISaleOrder;
+  saleOrderDetail: ISaleOrderDetail;
 }
 
 export interface IFilterSaleOrderInput {

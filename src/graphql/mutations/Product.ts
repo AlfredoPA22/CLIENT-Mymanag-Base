@@ -73,3 +73,11 @@ export const UPDATE_PRODUCT = gql`
     }
   }
 `;
+
+export const SAVE_IMPORT_PRODUCTS = gql`
+  mutation SaveImportProducts($importProducts: [PreviewProductImport!]!) {
+    saveImportProducts(importProducts: $importProducts) {
+      _id
+    }
+  }
+`;

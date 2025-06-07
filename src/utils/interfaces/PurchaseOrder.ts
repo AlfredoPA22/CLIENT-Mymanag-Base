@@ -1,5 +1,8 @@
 import { IProvider } from "./Provider";
-import { IPurchaseOrderDetailToPDF } from "./PurchaseOrderDetail";
+import {
+  IPurchaseOrderDetail,
+  IPurchaseOrderDetailToPDF,
+} from "./PurchaseOrderDetail";
 import { IUser } from "./User";
 
 export interface IPurchaseOrder {
@@ -25,6 +28,11 @@ export interface IPurchaseOrderToPDF {
 export interface IPurchaseOrderByYear {
   month: string;
   total: Number;
+}
+
+export interface IPurchaseOrderByProduct {
+  purchaseOrder: IPurchaseOrder;
+  purchaseOrderDetail: IPurchaseOrderDetail;
 }
 
 export interface IFilterPurchaseOrderInput {

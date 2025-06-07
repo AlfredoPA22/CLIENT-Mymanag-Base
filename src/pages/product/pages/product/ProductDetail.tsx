@@ -7,6 +7,8 @@ import { FIND_PRODUCT } from "../../../../graphql/queries/Product";
 import { ToastSeverity } from "../../../../utils/enums/toast.enum";
 import { showToast } from "../../../../utils/toastUtils";
 import ProductCard from "./ProductCard";
+import ListSaleOrderByProduct from "./ListSaleOrderByProduct";
+import ListPurchaseOrderByProduct from "./ListPurchaseOrderByProduct";
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -36,8 +38,14 @@ const ProductDetail = () => {
 
   return (
     <TabView className="size-full">
-      <TabPanel header="Informacion general">
+      <TabPanel header="Información general">
         <ProductCard productData={data.findProduct} />
+      </TabPanel>
+      <TabPanel header="Ventas">
+        <ListSaleOrderByProduct productId={productId} />
+      </TabPanel>
+      <TabPanel header="Compras">
+        <ListPurchaseOrderByProduct productId={productId} />
       </TabPanel>
     </TabView>
   );
