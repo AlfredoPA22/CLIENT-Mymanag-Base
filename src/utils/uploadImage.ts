@@ -1,7 +1,7 @@
 export const uploadImage = async (file: File) => {
   const data = new FormData();
   data.append("file", file);
-  data.append("upload_preset", "MyManag");
+  data.append("upload_preset", "Productos");
   try {
     const res = await fetch(
       `https://api.cloudinary.com/v1_1/${
