@@ -1,17 +1,18 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import { currencySymbol } from "../../../utils/constants/currencyConstants";
 import {
   IDetailSalePayment,
   ISalePayment,
 } from "../../../utils/interfaces/SalePayment";
 import { getDate } from "./getDate";
+import useAuth from "../../auth/hooks/useAuth";
 
 export const generateHistoryPDF = (
   data: ISalePayment[],
   detail: IDetailSalePayment
 ) => {
   const doc = new jsPDF();
+  const { currency } = useAuth();
 
   // Título del documento
   doc.setFontSize(20);
@@ -26,9 +27,9 @@ export const generateHistoryPDF = (
 
   doc.text(`Código de Venta: ${detail.sale_order.code}`, 14, 35);
   doc.text(`Cliente: ${detail.sale_order.client.fullName}`, 14, 43);
-  doc.text(`Total de Venta: ${detail.total_amount} ${currencySymbol}`, 14, 51);
-  doc.text(`Total Pagado: ${detail.total_paid} ${currencySymbol}`, 14, 59);
-  doc.text(`Saldo Restante: ${detail.total_pending} ${currencySymbol}`, 14, 67);
+  doc.text(`Total de Venta: ${detail.total_amount} ${currency}`, 14, 51);
+  doc.text(`Total Pagado: ${detail.total_paid} ${currency}`, 14, 59);
+  doc.text(`Saldo Restante: ${detail.total_pending} ${currency}`, 14, 67);
 
   // Línea divisoria
   doc.setLineWidth(0.5);
@@ -41,7 +42,7 @@ export const generateHistoryPDF = (
       getDate(payment.date),
       payment.note || "-",
       payment.payment_method,
-      `${payment.amount} ${currencySymbol}`,
+      `${payment.amount} ${currency}`,
       payment.created_by.user_name,
     ]),
     startY: 78,

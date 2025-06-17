@@ -14,13 +14,13 @@ import {
 } from "../../../../graphql/queries/PurchaseOrder";
 import { setIsBlocked } from "../../../../redux/slices/blockUISlice";
 import { ROUTES_MOCK } from "../../../../routes/RouteMocks";
-import { currencySymbol } from "../../../../utils/constants/currencyConstants";
 import { orderStatus } from "../../../../utils/enums/orderStatus.enum";
 import { ToastSeverity } from "../../../../utils/enums/toast.enum";
 import { showToast } from "../../../../utils/toastUtils";
 import { getDate } from "../../utils/getDate";
 import { getStatus } from "../../utils/getStatus";
 import SectionHeader from "../../../../components/sectionHeader/SectionHeader";
+import useAuth from "../../../auth/hooks/useAuth";
 
 interface PurchaseOrderDetailProps {
   purchaseOrderId: string;
@@ -40,6 +40,7 @@ const PurchaseOrderDetail: FC<PurchaseOrderDetailProps> = ({
 
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const { currency } = useAuth();
 
   const [approvePurchaseOrder] = useMutation(APPROVE_PURCHASE_ORDER, {
     refetchQueries: [{ query: LIST_PURCHASE_ORDER }, { query: LIST_PRODUCT }],
@@ -118,7 +119,7 @@ const PurchaseOrderDetail: FC<PurchaseOrderDetailProps> = ({
         <section className="flex flex-col items-center justify-center">
           <LabelInput name="total" label="Total de compra" />
           <span className="text-2xl font-semibold text-green-600">
-            {`${data?.findPurchaseOrder.total} ${currencySymbol}`}
+            {`${data?.findPurchaseOrder.total} ${currency}`}
           </span>
         </section>
 

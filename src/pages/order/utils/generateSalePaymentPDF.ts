@@ -1,14 +1,15 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import { currencySymbol } from "../../../utils/constants/currencyConstants";
 import {
   IDetailSalePayment,
   ISalePayment,
 } from "../../../utils/interfaces/SalePayment";
 import { getDate } from "./getDate";
+import useAuth from "../../auth/hooks/useAuth";
 
 export const generatePDF = (data: ISalePayment, detail: IDetailSalePayment) => {
   const doc = new jsPDF();
+  const { currency } = useAuth();
 
   // Título del documento
   doc.setFontSize(20);
@@ -23,8 +24,8 @@ export const generatePDF = (data: ISalePayment, detail: IDetailSalePayment) => {
 
   doc.text(`Código de Venta: ${detail.sale_order.code}`, 14, 35);
   doc.text(`Cliente: ${data.sale_order.client.fullName}`, 14, 43);
-  doc.text(`Total de Venta: ${detail.total_amount} ${currencySymbol}`, 14, 51);
-  doc.text(`Saldo Restante: ${detail.total_pending} ${currencySymbol}`, 14, 59);
+  doc.text(`Total de Venta: ${detail.total_amount} ${currency}`, 14, 51);
+  doc.text(`Saldo Restante: ${detail.total_pending} ${currency}`, 14, 59);
 
   doc.text(`Usuario: ${data.created_by.user_name}`, 150, 35);
 
@@ -40,7 +41,7 @@ export const generatePDF = (data: ISalePayment, detail: IDetailSalePayment) => {
         getDate(data.date),
         data.note || "-",
         data.payment_method,
-        `${data.amount} ${currencySymbol}`,
+        `${data.amount} ${currency}`,
       ],
     ],
     startY: 70,

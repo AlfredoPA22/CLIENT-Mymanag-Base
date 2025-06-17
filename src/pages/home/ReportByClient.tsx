@@ -13,9 +13,9 @@ import { useEffect } from "react";
 import { Bar } from "react-chartjs-2";
 import ReportByClientSkeleton from "../../components/skeleton/ReportByClientSkeleton";
 import { REPORT_SALE_ORDER_BY_CLIENT } from "../../graphql/queries/Home";
-import { currencySymbol } from "../../utils/constants/currencyConstants";
 import { ToastSeverity } from "../../utils/enums/toast.enum";
 import { showToast } from "../../utils/toastUtils";
+import useAuth from "../auth/hooks/useAuth";
 
 // Registrar los tipos de gráficos
 ChartJS.register(
@@ -42,6 +42,8 @@ const ReportByClient = () => {
     error: errorSale,
   } = useQuery(REPORT_SALE_ORDER_BY_CLIENT, { fetchPolicy: "network-only" });
 
+  const { currency } = useAuth();
+
   useEffect(() => {
     if (errorSale) {
       showToast({
@@ -67,7 +69,7 @@ const ReportByClient = () => {
     labels: clientNames,
     datasets: [
       {
-        label: `Ventas por cliente (${currencySymbol})`,
+        label: `Ventas por cliente (${currency})`,
         data: salesTotal,
         backgroundColor: backgroundColors, // Asignar los colores generados
         borderColor: backgroundColors.map((color: any) =>
@@ -92,7 +94,7 @@ const ReportByClient = () => {
         beginAtZero: true,
         ticks: {
           callback: (value: any) => {
-            return `${value} ${currencySymbol}`;
+            return `${value} ${currency}`;
           },
         },
       },

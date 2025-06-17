@@ -6,13 +6,13 @@ import Table from "../../../../components/datatable/Table";
 import LabelInput from "../../../../components/labelInput/LabelInput";
 import LoadingSpinner from "../../../../components/LoadingSpinner/LoadingSpinner";
 import useTableGlobalFilter from "../../../../hooks/useTableGlobalFilter";
-import { currencySymbol } from "../../../../utils/constants/currencyConstants";
 import { ICategory } from "../../../../utils/interfaces/Category";
 import { IProduct } from "../../../../utils/interfaces/Product";
 import { DataTableColumn } from "../../../../utils/interfaces/Table";
 import { getStatus } from "../../../order/utils/getStatus";
 import useProductListWithParams from "../../hooks/useProductListWithParams";
 import { ROUTES_MOCK } from "../../../../routes/RouteMocks";
+import useAuth from "../../../auth/hooks/useAuth";
 
 interface CategoryDetailProps {
   category: ICategory;
@@ -25,6 +25,8 @@ const CategoryDetail: FC<CategoryDetailProps> = ({ category }) => {
       categoryId: category._id,
       warehouseId: "",
     });
+
+  const { currency } = useAuth();
 
   const statusBodyTemplate = (rowData: IProduct) => {
     const status = getStatus(rowData.status);
@@ -70,7 +72,7 @@ const CategoryDetail: FC<CategoryDetailProps> = ({ category }) => {
       body: (rowData: IProduct) => (
         <LabelInput
           className="justify-center"
-          label={`${rowData.sale_price} ${currencySymbol}`}
+          label={`${rowData.sale_price} ${currency}`}
         />
       ),
     },

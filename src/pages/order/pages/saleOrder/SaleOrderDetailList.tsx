@@ -18,7 +18,6 @@ import { FIND_SALE_ORDER } from "../../../../graphql/queries/SaleOrder";
 import { LIST_SALE_ORDER_DETAIL } from "../../../../graphql/queries/SaleOrderDetail";
 import useTableGlobalFilter from "../../../../hooks/useTableGlobalFilter";
 import { setSaleOrder } from "../../../../redux/slices/saleOrderSlice";
-import { currencySymbol } from "../../../../utils/constants/currencyConstants";
 import { stockType } from "../../../../utils/enums/stockType.enum";
 import { ToastSeverity } from "../../../../utils/enums/toast.enum";
 import { ISaleOrderDetail } from "../../../../utils/interfaces/SaleOrderDetail";
@@ -26,6 +25,7 @@ import { DataTableColumn } from "../../../../utils/interfaces/Table";
 import { showToast } from "../../../../utils/toastUtils";
 import SerialToDetail from "./SerialToDetail";
 import { setIsBlocked } from "../../../../redux/slices/blockUISlice";
+import useAuth from "../../../auth/hooks/useAuth";
 
 interface SaleOrderDetailListProps {
   saleOrderId: string;
@@ -42,6 +42,7 @@ const SaleOrderDetailList: FC<SaleOrderDetailListProps> = ({
 
   const client = useApolloClient();
   const dispatch = useDispatch();
+  const { currency } = useAuth();
 
   const [deleteProductToSaleOrderDetail] = useMutation(
     DELETE_PRODUCT_TO_SALE_ORDER_DETAIL,
@@ -202,7 +203,7 @@ const SaleOrderDetailList: FC<SaleOrderDetailListProps> = ({
       body: (rowData: ISaleOrderDetail) => (
         <LabelInput
           className="justify-center"
-          label={`${rowData.sale_price} ${currencySymbol}`}
+          label={`${rowData.sale_price} ${currency}`}
         />
       ),
       fieldEditor: (options: ColumnEditorOptions) =>
@@ -223,7 +224,7 @@ const SaleOrderDetailList: FC<SaleOrderDetailListProps> = ({
       body: (rowData: ISaleOrderDetail) => (
         <LabelInput
           className="justify-center"
-          label={`${rowData.subtotal} ${currencySymbol}`}
+          label={`${rowData.subtotal} ${currency}`}
         />
       ),
     },

@@ -38,7 +38,7 @@ const SidebarMenu = ({
 }: Props) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { logout, userName, permissions } = useAuth();
+  const { logout, userName, permissions, companyName } = useAuth();
 
   const menuSections = [
     {
@@ -192,6 +192,9 @@ const SidebarMenu = ({
           className="w-16 h-16 rounded-full mb-2 shadow-md"
         />
         <span className="text-sm font-medium">{userName || "Usuario"}</span>
+        <span className="text-xs text-gray-500 mt-1">
+          {companyName || "Empresa"}
+        </span>
       </div>
 
       {/* Menú con scroll */}

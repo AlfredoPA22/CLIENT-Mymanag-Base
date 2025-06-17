@@ -16,7 +16,6 @@ import {
   LIST_SALE_ORDER,
 } from "../../../../graphql/queries/SaleOrder";
 import useTableGlobalFilter from "../../../../hooks/useTableGlobalFilter";
-import { currencySymbol } from "../../../../utils/constants/currencyConstants";
 import { orderStatus } from "../../../../utils/enums/orderStatus.enum";
 import { paymentMethod } from "../../../../utils/enums/paymentMethod.enum";
 import { ToastSeverity } from "../../../../utils/enums/toast.enum";
@@ -30,11 +29,13 @@ import { getStatus } from "../../utils/getStatus";
 import { ROUTES_MOCK } from "../../../../routes/RouteMocks";
 import { useDispatch } from "react-redux";
 import { setIsBlocked } from "../../../../redux/slices/blockUISlice";
+import useAuth from "../../../auth/hooks/useAuth";
 
 const SaleOrderList = () => {
   const { listSaleOrder, loadingListSaleOrder } = useSaleOrderList();
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const { currency } = useAuth();
 
   const client = useApolloClient();
 
@@ -300,7 +301,7 @@ const SaleOrderList = () => {
       body: (rowData: ISaleOrder) => (
         <LabelInput
           className="justify-center"
-          label={`${rowData.total} ${currencySymbol}`}
+          label={`${rowData.total} ${currency}`}
         />
       ),
     },

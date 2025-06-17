@@ -17,7 +17,6 @@ import { textEditor } from "../../../../components/textEditor/textEditor";
 import { DELETE_PRODUCT } from "../../../../graphql/mutations/Product";
 import { LIST_PRODUCT } from "../../../../graphql/queries/Product";
 import useTableGlobalFilter from "../../../../hooks/useTableGlobalFilter";
-import { currencySymbol } from "../../../../utils/constants/currencyConstants";
 import { stockType } from "../../../../utils/enums/stockType.enum";
 import { ToastSeverity } from "../../../../utils/enums/toast.enum";
 import { IProduct } from "../../../../utils/interfaces/Product";
@@ -32,6 +31,7 @@ import { Card } from "primereact/card";
 import { ROUTES_MOCK } from "../../../../routes/RouteMocks";
 import { useDispatch } from "react-redux";
 import { setIsBlocked } from "../../../../redux/slices/blockUISlice";
+import useAuth from "../../../auth/hooks/useAuth";
 
 const ProductList = () => {
   const { listProduct, loadingListProduct } = useProductList();
@@ -44,6 +44,7 @@ const ProductList = () => {
 
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const { currency } = useAuth();
 
   const [deleteProduct] = useMutation(DELETE_PRODUCT, {
     refetchQueries: [
@@ -227,7 +228,7 @@ const ProductList = () => {
       body: (rowData: IProduct) => (
         <LabelInput
           className="justify-center"
-          label={`${rowData.sale_price} ${currencySymbol}`}
+          label={`${rowData.sale_price} ${currency}`}
         />
       ),
       fieldEditor: (options: ColumnEditorOptions) =>

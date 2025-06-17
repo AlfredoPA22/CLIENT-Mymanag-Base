@@ -1,10 +1,11 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import { currencySymbol } from "../../../utils/constants/currencyConstants";
 import { ISaleOrderToPDF } from "../../../utils/interfaces/SaleOrder";
 import { getDate } from "./getDate";
+import useAuth from "../../auth/hooks/useAuth";
 
 export const generatePDF = (data: ISaleOrderToPDF) => {
+  const { currency } = useAuth();
   const doc = new jsPDF();
 
   // Título del documento
@@ -21,7 +22,7 @@ export const generatePDF = (data: ISaleOrderToPDF) => {
   // Ajustes de los datos de la orden de venta
   doc.text(`Código: ${data.saleOrder.code}`, 14, 35);
   doc.text(`Cliente: ${data.saleOrder.client.fullName}`, 14, 45);
-  doc.text(`Total: ${data.saleOrder.total} ${currencySymbol}`, 14, 55);
+  doc.text(`Total: ${data.saleOrder.total} ${currency}`, 14, 55);
   doc.text(`Fecha: ${getDate(data.saleOrder.date)}`, 150, 35);
   doc.text(`Estado: ${data.saleOrder.status}`, 150, 45);
 
@@ -42,8 +43,8 @@ export const generatePDF = (data: ISaleOrderToPDF) => {
       detail.saleOrderDetail.product.name,
       detail.saleOrderDetail.product.brand.name,
       detail.saleOrderDetail.quantity,
-      `${detail.saleOrderDetail.sale_price} ${currencySymbol}`,
-      `${detail.saleOrderDetail.subtotal} ${currencySymbol}`,
+      `${detail.saleOrderDetail.sale_price} ${currency}`,
+      `${detail.saleOrderDetail.subtotal} ${currency}`,
     ],
     [
       {

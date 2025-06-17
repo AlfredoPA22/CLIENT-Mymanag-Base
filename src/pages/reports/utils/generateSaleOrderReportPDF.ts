@@ -1,16 +1,17 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import { currencySymbol } from "../../../utils/constants/currencyConstants";
 import {
   IFilterSaleOrderInput,
   ISaleOrder,
 } from "../../../utils/interfaces/SaleOrder";
+import useAuth from "../../auth/hooks/useAuth";
 
 export const generateSaleOrderReportPDF = (
   data: ISaleOrder[],
   filters: IFilterSaleOrderInput
 ) => {
   const doc = new jsPDF({ orientation: "portrait" });
+  const { currency } = useAuth();
 
   // Título principal
   doc.setFontSize(20);
@@ -65,7 +66,7 @@ export const generateSaleOrderReportPDF = (
     new Date(Number(order.date)).toLocaleDateString(),
     order.client.fullName,
     order.status,
-    `${order.total} ${currencySymbol}`,
+    `${order.total} ${currency}`,
   ]);
 
   autoTable(doc, {

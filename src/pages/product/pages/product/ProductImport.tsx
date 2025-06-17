@@ -100,13 +100,14 @@ const ProductImport = () => {
   const confirmSaveImportProducts = async () => {
     confirmDialog({
       message:
-        "¿Está seguro que desea guardar estos productos importados? Si las marcas o categorías no existen, se crearán automáticamente.",
+        "¿Está seguro que desea guardar estos productos importados?\n\nSi las marcas o categorías no existen, se crearán automáticamente.\n\n⚠️ Este proceso puede demorar. No cierre ni recargue la página durante el proceso, ya que los productos no se guardarán.",
       header: "Confirmación de importación",
       icon: "pi pi-question-circle",
       defaultFocus: "reject",
       acceptClassName: "p-button-success",
       acceptLabel: "Continuar",
       accept: () => handleSaveImportProducts(),
+      className: "max-w-lg whitespace-pre-wrap", // 👈 Tailwind aplicado
     });
   };
 
@@ -223,7 +224,7 @@ const ProductImport = () => {
             className="p-button-sm"
             onClick={() => {
               window.open(
-                "https://res.cloudinary.com/dbt5vgimv/raw/upload/v1749315385/MyManag/assets/template_products.xlsx",
+                "https://res.cloudinary.com/dbt5vgimv/raw/upload/v1750122698/MyManag/assets/template_products.xlsx",
                 "_blank"
               );
             }}

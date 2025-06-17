@@ -15,7 +15,6 @@ import {
   LIST_PURCHASE_ORDER,
 } from "../../../../graphql/queries/PurchaseOrder";
 import useTableGlobalFilter from "../../../../hooks/useTableGlobalFilter";
-import { currencySymbol } from "../../../../utils/constants/currencyConstants";
 import { orderStatus } from "../../../../utils/enums/orderStatus.enum";
 import { ToastSeverity } from "../../../../utils/enums/toast.enum";
 import { IPurchaseOrder } from "../../../../utils/interfaces/PurchaseOrder";
@@ -29,12 +28,14 @@ import { Card } from "primereact/card";
 import { ROUTES_MOCK } from "../../../../routes/RouteMocks";
 import { useDispatch } from "react-redux";
 import { setIsBlocked } from "../../../../redux/slices/blockUISlice";
+import useAuth from "../../../auth/hooks/useAuth";
 
 const PurchaseOrderList = () => {
   const { listPurchaseOrder, loadingListPurchaseOrder } =
     usePurchaseOrderList();
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const { currency } = useAuth();
 
   const client = useApolloClient();
 
@@ -272,7 +273,7 @@ const PurchaseOrderList = () => {
       body: (rowData: IPurchaseOrder) => (
         <LabelInput
           className="justify-center"
-          label={`${rowData.total} ${currencySymbol}`}
+          label={`${rowData.total} ${currency}`}
         />
       ),
     },

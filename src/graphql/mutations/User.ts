@@ -63,3 +63,21 @@ export const DELETE_USER = gql`
     }
   }
 `;
+
+export const CHANGE_PASSWORD = gql`
+  mutation Mutation(
+    $userId: String!
+    $currentPassword: String!
+    $newPassword: String!
+  ) {
+    changePassword(
+      userId: $userId
+      changePasswordInput: {
+        currentPassword: $currentPassword
+        newPassword: $newPassword
+      }
+    ) {
+      _id
+    }
+  }
+`;

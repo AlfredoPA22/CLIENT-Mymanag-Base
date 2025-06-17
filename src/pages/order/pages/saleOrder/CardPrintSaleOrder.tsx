@@ -14,7 +14,6 @@ import {
 } from "../../../../graphql/queries/SaleOrder";
 import { LIST_SALE_ORDER_DETAIL } from "../../../../graphql/queries/SaleOrderDetail";
 import useTableGlobalFilter from "../../../../hooks/useTableGlobalFilter";
-import { currencySymbol } from "../../../../utils/constants/currencyConstants";
 import { orderStatus } from "../../../../utils/enums/orderStatus.enum";
 import { ToastSeverity } from "../../../../utils/enums/toast.enum";
 import { ISaleOrder } from "../../../../utils/interfaces/SaleOrder";
@@ -27,6 +26,7 @@ import { showToast } from "../../../../utils/toastUtils";
 import { generatePDF } from "../../utils/generateSaleOrderPDF";
 import { getDate } from "../../utils/getDate";
 import { getStatus } from "../../utils/getStatus";
+import useAuth from "../../../auth/hooks/useAuth";
 
 interface CardPrintSaleOrderDetailProps {
   saleOrderId: string;
@@ -49,6 +49,7 @@ const CardPrintSaleOrderDetail: FC<CardPrintSaleOrderDetailProps> = ({
     useState<ISaleOrderDetail[]>();
 
   const client = useApolloClient();
+  const { currency } = useAuth();
 
   const {
     data: { listSaleOrderDetail: listSaleOrderDetail } = [],
@@ -215,7 +216,7 @@ const CardPrintSaleOrderDetail: FC<CardPrintSaleOrderDetailProps> = ({
       header: "Precio de venta",
       sortable: true,
       body: (rowData: ISaleOrderDetail) => (
-        <LabelInput label={`${rowData.sale_price} ${currencySymbol}`} />
+        <LabelInput label={`${rowData.sale_price} ${currency}`} />
       ),
       fieldEditor: (options: ColumnEditorOptions) =>
         numberEditor(options, true),
@@ -235,7 +236,7 @@ const CardPrintSaleOrderDetail: FC<CardPrintSaleOrderDetailProps> = ({
       body: (rowData: ISaleOrderDetail) => (
         <LabelInput
           className="justify-center"
-          label={`${rowData.subtotal} ${currencySymbol}`}
+          label={`${rowData.subtotal} ${currency}`}
         />
       ),
     },
@@ -305,7 +306,7 @@ const CardPrintSaleOrderDetail: FC<CardPrintSaleOrderDetailProps> = ({
             <section className="flex flex-col justify-center items-center gap-2">
               <LabelInput name="date" label="Total de venta: " />
               <Tag
-                value={`${dataPrintSaleOrder?.total} ${currencySymbol}`}
+                value={`${dataPrintSaleOrder?.total} ${currency}`}
                 severity={"info"}
                 className="text-xl"
               />

@@ -1,15 +1,16 @@
 import { FC } from "react";
 import { Link } from "react-router-dom";
-import { currencySymbol } from "../../utils/constants/currencyConstants";
 import useGeneralData from "./hooks/useGeneralData";
 import HeaderHomeSkeleton from "../../components/skeleton/HeaderHomeSkeleton";
 import { ROUTES_MOCK } from "../../routes/RouteMocks";
+import useAuth from "../auth/hooks/useAuth";
 
 const cardBase =
   "rounded-2xl p-5 flex flex-col items-center justify-center text-center transition-all duration-200 transform hover:-translate-y-1 hover:shadow-2xl";
 
 const HeaderHome: FC = () => {
   const { generalData, loadingGeneralData } = useGeneralData();
+  const { currency } = useAuth();
 
   if (loadingGeneralData) {
     return <HeaderHomeSkeleton />;
@@ -36,7 +37,7 @@ const HeaderHome: FC = () => {
       >
         <div className="text-sm">Total de ventas</div>
         <div className="text-4xl font-bold">
-          {generalData.total_sales_value} {currencySymbol}
+          {generalData.total_sales_value} {currency}
         </div>
         <div className="bg-white/20 p-2 rounded-full mt-3">
           <i className="pi pi-dollar text-white text-xl" />

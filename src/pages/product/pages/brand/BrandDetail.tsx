@@ -7,18 +7,19 @@ import Table from "../../../../components/datatable/Table";
 import LabelInput from "../../../../components/labelInput/LabelInput";
 import useTableGlobalFilter from "../../../../hooks/useTableGlobalFilter";
 import { ROUTES_MOCK } from "../../../../routes/RouteMocks";
-import { currencySymbol } from "../../../../utils/constants/currencyConstants";
 import { IBrand } from "../../../../utils/interfaces/Brand";
 import { IProduct } from "../../../../utils/interfaces/Product";
 import { DataTableColumn } from "../../../../utils/interfaces/Table";
 import { getStatus } from "../../../order/utils/getStatus";
 import useProductListWithParams from "../../hooks/useProductListWithParams";
+import useAuth from "../../../auth/hooks/useAuth";
 
 interface BrandDetailProps {
   brand: IBrand;
 }
 
 const BrandDetail: FC<BrandDetailProps> = ({ brand }) => {
+  const { currency } = useAuth();
   const { listProductWithParams, loadingListProductWithParams } =
     useProductListWithParams({
       brandId: brand._id,
@@ -70,7 +71,7 @@ const BrandDetail: FC<BrandDetailProps> = ({ brand }) => {
       body: (rowData: IProduct) => (
         <LabelInput
           className="justify-center"
-          label={`${rowData.sale_price} ${currencySymbol}`}
+          label={`${rowData.sale_price} ${currency}`}
         />
       ),
     },

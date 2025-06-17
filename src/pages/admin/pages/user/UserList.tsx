@@ -24,10 +24,13 @@ import UserDetail from "./UserDetail";
 import { Card } from "primereact/card";
 import { useDispatch } from "react-redux";
 import { setIsBlocked } from "../../../../redux/slices/blockUISlice";
+import ChangePasswordForm from "./FormChangePassword";
 
 const UserList = () => {
   const { listUser, loadingListUser } = useUserList();
   const [visibleForm, setVisibleForm] = useState<boolean>(false);
+  const [visibleChangePassword, setVisibleChangePassword] =
+    useState<boolean>(false);
   const [visibleDetail, setVisibleDetail] = useState<boolean>(false);
   const [currentUser, setCurrentUser] = useState<IUser | null>();
 
@@ -190,6 +193,17 @@ const UserList = () => {
     return (
       <div className="flex justify-center items-center gap-2">
         <Button
+          icon="pi pi-lock"
+          className="p-button-rounded p-button-warning"
+          onClick={() => {
+            setCurrentUser(rowData);
+            setVisibleChangePassword(true);
+          }}
+          tooltip="Cambiar contraseña"
+          tooltipOptions={{ position: "left" }}
+        />
+
+        <Button
           icon="pi pi-pencil"
           className="p-button-rounded p-button-info"
           onClick={() => {
@@ -285,6 +299,16 @@ const UserList = () => {
         onHide={() => setVisibleForm(false)}
       >
         <UserForm setVisibleForm={setVisibleForm} userToEdit={currentUser} />
+      </Dialog>
+      <Dialog
+        header={currentUser && `Cambiar contraseña`}
+        visible={visibleChangePassword}
+        onHide={() => setVisibleChangePassword(false)}
+      >
+        <ChangePasswordForm
+          setVisibleForm={setVisibleChangePassword}
+          userToEdit={currentUser}
+        />
       </Dialog>
       <Dialog
         className="md:w-[90vw] w-[90vw]"

@@ -5,6 +5,8 @@ export interface AuthSliceState {
   token: string;
   userId: string;
   userName: string;
+  companyName: string;
+  currency: string;
   permissions: string[];
 }
 
@@ -13,6 +15,8 @@ const initialState: AuthSliceState = {
   token: "",
   userId: "",
   userName: "",
+  companyName: "",
+  currency: "",
   permissions: [],
 };
 
@@ -25,6 +29,8 @@ const authSlice = createSlice({
       token: action.payload.token,
       userId: action.payload.userId,
       userName: action.payload.userName,
+      currency: action.payload.currency,
+      companyName: action.payload.companyName,
       permissions: action.payload.permissions,
       isAuthenticated: action.payload.isAuthenticated,
     }),

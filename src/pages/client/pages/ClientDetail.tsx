@@ -8,7 +8,6 @@ import LoadingSpinner from "../../../components/LoadingSpinner/LoadingSpinner";
 import TextLink from "../../../components/TextLink/TextLink";
 import { LIST_SALE_ORDER_BY_CLIENT } from "../../../graphql/queries/Client";
 import useTableGlobalFilter from "../../../hooks/useTableGlobalFilter";
-import { currencySymbol } from "../../../utils/constants/currencyConstants";
 import { ToastSeverity } from "../../../utils/enums/toast.enum";
 import { IClient } from "../../../utils/interfaces/Client";
 import { ISaleOrder } from "../../../utils/interfaces/SaleOrder";
@@ -16,6 +15,7 @@ import { DataTableColumn } from "../../../utils/interfaces/Table";
 import { showToast } from "../../../utils/toastUtils";
 import { getStatus } from "../../order/utils/getStatus";
 import { ROUTES_MOCK } from "../../../routes/RouteMocks";
+import useAuth from "../../auth/hooks/useAuth";
 
 interface ClientDetailProps {
   client: IClient;
@@ -30,6 +30,8 @@ const ClientDetail: FC<ClientDetailProps> = ({ client }) => {
     variables: { clientId: client._id },
     fetchPolicy: "network-only",
   });
+
+  const { currency } = useAuth();
 
   const statusBodyTemplate = (rowData: ISaleOrder) => {
     const status = getStatus(rowData.status);
@@ -100,7 +102,7 @@ const ClientDetail: FC<ClientDetailProps> = ({ client }) => {
       body: (rowData: ISaleOrder) => (
         <LabelInput
           className="justify-center"
-          label={`${rowData.total} ${currencySymbol}`}
+          label={`${rowData.total} ${currency}`}
         />
       ),
     },
@@ -147,7 +149,7 @@ const ClientDetail: FC<ClientDetailProps> = ({ client }) => {
             size="small"
             dataFilters={filters}
             tableHeader={renderFilterInput}
-            footer={`Total vendido: ${listSaleOrderByClient.total} ${currencySymbol}`}
+            footer={`Total vendido: ${listSaleOrderByClient.total} ${currency}`}
           />
         </Card>
       )}

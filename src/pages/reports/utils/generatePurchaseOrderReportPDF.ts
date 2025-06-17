@@ -4,13 +4,14 @@ import {
   IPurchaseOrder,
   IFilterPurchaseOrderInput,
 } from "../../../utils/interfaces/PurchaseOrder";
-import { currencySymbol } from "../../../utils/constants/currencyConstants";
+import useAuth from "../../auth/hooks/useAuth";
 
 export const generatePurchaseOrderReportPDF = (
   data: IPurchaseOrder[],
   filters: IFilterPurchaseOrderInput
 ) => {
   const doc = new jsPDF({ orientation: "portrait" });
+  const { currency } = useAuth();
 
   // Título principal
   doc.setFontSize(20);
@@ -67,7 +68,7 @@ export const generatePurchaseOrderReportPDF = (
     new Date(Number(order.date)).toLocaleDateString(),
     order.provider.name,
     order.status,
-    `${order.total} ${currencySymbol}`,
+    `${order.total} ${currency}`,
   ]);
 
   autoTable(doc, {

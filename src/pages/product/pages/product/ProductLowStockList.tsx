@@ -18,7 +18,6 @@ import { DELETE_PRODUCT } from "../../../../graphql/mutations/Product";
 import { LIST_PRODUCT } from "../../../../graphql/queries/Product";
 import useTableGlobalFilter from "../../../../hooks/useTableGlobalFilter";
 import { ROUTES_MOCK } from "../../../../routes/RouteMocks";
-import { currencySymbol } from "../../../../utils/constants/currencyConstants";
 import { stockType } from "../../../../utils/enums/stockType.enum";
 import { ToastSeverity } from "../../../../utils/enums/toast.enum";
 import { IProduct } from "../../../../utils/interfaces/Product";
@@ -32,6 +31,7 @@ import ProductSerialList from "./ProductSerialList";
 import SearchProductForm from "./SearchProductForm";
 import { setIsBlocked } from "../../../../redux/slices/blockUISlice";
 import { useDispatch } from "react-redux";
+import useAuth from "../../../auth/hooks/useAuth";
 
 const ProductLowStockList = () => {
   const { listLowStockProduct, loadingListProduct } = useProductLowStockList();
@@ -44,6 +44,7 @@ const ProductLowStockList = () => {
 
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const { currency } = useAuth();
 
   const [deleteProduct] = useMutation(DELETE_PRODUCT, {
     refetchQueries: [
@@ -215,7 +216,7 @@ const ProductLowStockList = () => {
       body: (rowData: IProduct) => (
         <LabelInput
           className="justify-center"
-          label={`${rowData.sale_price} ${currencySymbol}`}
+          label={`${rowData.sale_price} ${currency}`}
         />
       ),
       fieldEditor: (options: ColumnEditorOptions) =>

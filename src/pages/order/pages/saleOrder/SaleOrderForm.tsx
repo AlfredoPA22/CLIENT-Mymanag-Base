@@ -24,7 +24,6 @@ import {
   setSaleOrderInitialized,
 } from "../../../../redux/slices/saleOrderSlice";
 import { RootState } from "../../../../redux/store";
-import { currencySymbol } from "../../../../utils/constants/currencyConstants";
 import { codeType } from "../../../../utils/enums/codeType.enum";
 import { ToastSeverity } from "../../../../utils/enums/toast.enum";
 import { ISaleOrderInput } from "../../../../utils/interfaces/SaleOrder";
@@ -38,6 +37,7 @@ import { saleOrderPaymentMethodOptions } from "../../utils/saleOrderPaymentMetho
 import { AutoCompleteChangeEvent } from "primereact/autocomplete";
 import { setIsBlocked } from "../../../../redux/slices/blockUISlice";
 import { ROUTES_MOCK } from "../../../../routes/RouteMocks";
+import useAuth from "../../../auth/hooks/useAuth";
 
 const SaleOrderForm = () => {
   const {
@@ -50,6 +50,7 @@ const SaleOrderForm = () => {
   });
 
   const { listClientSelect } = useClientList();
+  const { currency } = useAuth();
 
   const [selectedClient, setSelectedClient] = useState<IReactSelect | null>(
     null
@@ -269,7 +270,7 @@ const SaleOrderForm = () => {
             <section className="flex flex-col items-center justify-center">
               <LabelInput name="total" label="Total de venta" />
               <span className="text-2xl font-semibold text-green-600">
-                {`${saleOrderData?.total} ${currencySymbol}`}
+                {`${saleOrderData?.total} ${currency}`}
               </span>
             </section>
           )}

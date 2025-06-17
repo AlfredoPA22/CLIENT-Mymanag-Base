@@ -1,10 +1,11 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import { currencySymbol } from "../../../utils/constants/currencyConstants";
 import { IPurchaseOrderToPDF } from "../../../utils/interfaces/PurchaseOrder";
 import { getDate } from "./getDate";
+import useAuth from "../../auth/hooks/useAuth";
 
 export const generatePDF = (data: IPurchaseOrderToPDF) => {
+  const { currency } = useAuth();
   const doc = new jsPDF();
 
   // Título del documento
@@ -15,7 +16,7 @@ export const generatePDF = (data: IPurchaseOrderToPDF) => {
   doc.setFontSize(12);
   doc.text(`Código: ${data.purchaseOrder.code}`, 14, 30);
   doc.text(`Proveedor: ${data.purchaseOrder.provider.name}`, 14, 35);
-  doc.text(`Total: ${data.purchaseOrder.total} ${currencySymbol}`, 14, 40);
+  doc.text(`Total: ${data.purchaseOrder.total} ${currency}`, 14, 40);
   doc.text(`Fecha: ${getDate(data.purchaseOrder.date)}`, 150, 30);
   doc.text(`Estado: ${data.purchaseOrder.status}`, 150, 35);
 
@@ -36,8 +37,8 @@ export const generatePDF = (data: IPurchaseOrderToPDF) => {
     detail.purchaseOrderDetail.product.name,
     detail.purchaseOrderDetail.product.brand.name,
     detail.purchaseOrderDetail.quantity,
-    `${detail.purchaseOrderDetail.purchase_price} ${currencySymbol}`,
-    `${detail.purchaseOrderDetail.subtotal} ${currencySymbol}`,
+    `${detail.purchaseOrderDetail.purchase_price} ${currency}`,
+    `${detail.purchaseOrderDetail.subtotal} ${currency}`,
     detail.productSerial.map((serial) => serial.serial).join(", "),
   ]);
 

@@ -7,16 +7,17 @@ import Table, { DataTableColumn } from "../../components/datatable/Table";
 import LabelInput from "../../components/labelInput/LabelInput";
 import TableSkeleton from "../../components/skeleton/TableSkeleton";
 import useTableGlobalFilter from "../../hooks/useTableGlobalFilter";
-import { currencySymbol } from "../../utils/constants/currencyConstants";
 import { ISaleOrder } from "../../utils/interfaces/SaleOrder";
 import { getDate } from "../order/utils/getDate";
 import { getStatus } from "../order/utils/getStatus";
 import useReportByMonth from "./hooks/useReportByMonth";
 import { ROUTES_MOCK } from "../../routes/RouteMocks";
+import useAuth from "../auth/hooks/useAuth";
 
 const ReportByMonth = () => {
   const { listSaleOrder, loadingListSaleOrder } = useReportByMonth();
   const navigate = useNavigate();
+  const { currency } = useAuth();
 
   const statusBodyTemplate = (rowData: ISaleOrder) => {
     const status = getStatus(rowData.status);
@@ -87,7 +88,7 @@ const ReportByMonth = () => {
       body: (rowData: ISaleOrder) => (
         <LabelInput
           className="justify-center"
-          label={`${rowData.total} ${currencySymbol}`}
+          label={`${rowData.total} ${currency}`}
         />
       ),
     },

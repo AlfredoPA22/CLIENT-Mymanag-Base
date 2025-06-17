@@ -5,9 +5,9 @@ import { Chart } from "primereact/chart";
 import { useEffect } from "react";
 import ReportByCategorySkeleton from "../../components/skeleton/ReportByCategorySkeleton";
 import { REPORT_SALE_ORDER_BY_CATEGORY } from "../../graphql/queries/Home";
-import { currencySymbol } from "../../utils/constants/currencyConstants";
 import { ToastSeverity } from "../../utils/enums/toast.enum";
 import { showToast } from "../../utils/toastUtils";
+import useAuth from "../auth/hooks/useAuth";
 
 // Registrar PieChart
 ChartJS.register(ArcElement, Tooltip, Legend, Title);
@@ -18,6 +18,8 @@ const ReportByCategory = () => {
     loading: loadingSaleOrderByCategory,
     error: errorSale,
   } = useQuery(REPORT_SALE_ORDER_BY_CATEGORY, { fetchPolicy: "network-only" });
+
+  const { currency } = useAuth();
 
   useEffect(() => {
     if (errorSale) {
@@ -40,7 +42,7 @@ const ReportByCategory = () => {
     labels: categoryNames,
     datasets: [
       {
-        label: `Ventas por Categoría (${currencySymbol})`,
+        label: `Ventas por Categoría (${currency})`,
         data: salesTotal,
         borderWidth: 2,
       },

@@ -10,6 +10,8 @@ export interface DecodedToken extends JwtPayload {
   id: string;
   username: string;
   access: boolean;
+  currency: string;
+  company: string;
   permissions: string[];
 }
 
@@ -27,4 +29,9 @@ export interface IUserInput {
   password: string;
   role: string;
   is_global: boolean;
+}
+
+export interface IChangePasswordInput {
+  currentPassword: string;
+  newPassword: string;
 }

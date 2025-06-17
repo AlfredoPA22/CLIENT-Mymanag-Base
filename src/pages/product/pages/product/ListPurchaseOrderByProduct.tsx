@@ -4,7 +4,6 @@ import { FC, useState } from "react";
 import Table from "../../../../components/datatable/Table";
 import LabelInput from "../../../../components/labelInput/LabelInput";
 import TableSkeleton from "../../../../components/skeleton/TableSkeleton";
-import { currencySymbol } from "../../../../utils/constants/currencyConstants";
 import { DataTableColumn } from "../../../../utils/interfaces/Table";
 import { getDate } from "../../../order/utils/getDate";
 import { getStatus } from "../../../order/utils/getStatus";
@@ -13,6 +12,7 @@ import { DataTableSelectionSingleChangeEvent } from "primereact/datatable";
 import { useNavigate } from "react-router-dom";
 import { ROUTES_MOCK } from "../../../../routes/RouteMocks";
 import { IPurchaseOrderByProduct } from "../../../../utils/interfaces/PurchaseOrder";
+import useAuth from "../../../auth/hooks/useAuth";
 
 interface ListPurchaseOrderByProductProps {
   productId: string;
@@ -24,6 +24,7 @@ const ListPurchaseOrderByProduct: FC<ListPurchaseOrderByProductProps> = ({
   const { listPurchaseOrderByProduct, loadingListProduct } =
     useListPurchaseOrderByProduct(productId);
   const navigate = useNavigate();
+  const { currency } = useAuth();
 
   const handleSelectionChange = (
     e: DataTableSelectionSingleChangeEvent<IPurchaseOrderByProduct[]>
@@ -62,7 +63,7 @@ const ListPurchaseOrderByProduct: FC<ListPurchaseOrderByProductProps> = ({
       body: (rowData) => (
         <LabelInput
           className="justify-center"
-          label={`${rowData.purchaseOrderDetail.purchase_price} ${currencySymbol}`}
+          label={`${rowData.purchaseOrderDetail.purchase_price} ${currency}`}
         />
       ),
     },
@@ -73,7 +74,7 @@ const ListPurchaseOrderByProduct: FC<ListPurchaseOrderByProductProps> = ({
       body: (rowData) => (
         <LabelInput
           className="justify-center"
-          label={`${rowData.purchaseOrderDetail.subtotal} ${currencySymbol}`}
+          label={`${rowData.purchaseOrderDetail.subtotal} ${currency}`}
         />
       ),
     },

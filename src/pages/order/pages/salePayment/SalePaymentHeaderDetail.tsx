@@ -2,13 +2,13 @@ import { Tag } from "primereact/tag";
 import { FC } from "react";
 import LabelInput from "../../../../components/labelInput/LabelInput";
 import { PaymentSkeleton } from "../../../../components/skeleton/PaymentSkeleton";
-import { currencySymbol } from "../../../../utils/constants/currencyConstants";
 import { IDetailSalePayment } from "../../../../utils/interfaces/SalePayment";
 import { getStatus } from "../../utils/getStatus";
 import { Button } from "primereact/button";
 import { useNavigate } from "react-router-dom";
 import { ROUTES_MOCK } from "../../../../routes/RouteMocks";
 import SectionHeader from "../../../../components/sectionHeader/SectionHeader";
+import useAuth from "../../../auth/hooks/useAuth";
 
 interface SalePaymentHeaderDetailProps {
   detailSalePayment: IDetailSalePayment;
@@ -20,6 +20,7 @@ const SalePaymentHeaderDetail: FC<SalePaymentHeaderDetailProps> = ({
   loadingDetailSalePayment,
 }) => {
   const navigate = useNavigate();
+  const { currency } = useAuth();
 
   const goBackToSale = () => {
     navigate(
@@ -52,14 +53,14 @@ const SalePaymentHeaderDetail: FC<SalePaymentHeaderDetailProps> = ({
         <section className="flex flex-col items-center gap-2 p-4 border rounded-md shadow-sm">
           <LabelInput name="total_amount" label="Total a pagar" />
           <span className="text-xl font-semibold text-gray-700">
-            {`${detailSalePayment.total_amount} ${currencySymbol}`}
+            {`${detailSalePayment.total_amount} ${currency}`}
           </span>
         </section>
 
         <section className="flex flex-col items-center gap-2 p-4 border rounded-md shadow-sm">
           <LabelInput name="total_paid" label="Total pagado" />
           <span className="text-xl font-semibold text-green-600">
-            {`${detailSalePayment.total_paid} ${currencySymbol}`}
+            {`${detailSalePayment.total_paid} ${currency}`}
           </span>
         </section>
 
@@ -72,7 +73,7 @@ const SalePaymentHeaderDetail: FC<SalePaymentHeaderDetailProps> = ({
                 : "text-green-600"
             }`}
           >
-            {`${detailSalePayment.total_pending} ${currencySymbol}`}
+            {`${detailSalePayment.total_pending} ${currency}`}
           </span>
         </section>
       </div>

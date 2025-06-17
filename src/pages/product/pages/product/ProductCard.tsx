@@ -4,15 +4,16 @@ import { Image } from "primereact/image";
 import { Tag } from "primereact/tag";
 import { FC } from "react";
 import defaultProduct from "../../../../assets/defaultProduct.jpg";
-import { currencySymbol } from "../../../../utils/constants/currencyConstants";
 import { IProduct } from "../../../../utils/interfaces/Product";
 import { getStatus } from "../../../order/utils/getStatus";
+import useAuth from "../../../auth/hooks/useAuth";
 
 interface ProductCardProps {
   productData: IProduct;
 }
 
 const ProductCard: FC<ProductCardProps> = ({ productData }) => {
+  const { currency } = useAuth();
   const statusBodyTemplate = (rowData: IProduct) => {
     const status = getStatus(rowData.status);
     if (status) {
@@ -59,13 +60,13 @@ const ProductCard: FC<ProductCardProps> = ({ productData }) => {
         <div>
           <p className="text-gray-400">Precio de Venta:</p>
           <p className="font-semibold text-blue-500">
-            {currencySymbol} {productData.sale_price.toFixed(2)}
+            {currency} {productData.sale_price.toFixed(2)}
           </p>
         </div>
         <div>
           <p className="text-gray-400">Último Costo:</p>
           <p className="font-semibold text-gray-600">
-            {currencySymbol} {productData.last_cost_price.toFixed(2)}
+            {currency} {productData.last_cost_price.toFixed(2)}
           </p>
         </div>
         <div>

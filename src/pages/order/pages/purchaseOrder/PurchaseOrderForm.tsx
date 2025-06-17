@@ -24,7 +24,6 @@ import {
   setPurchaseOrderInitialized,
 } from "../../../../redux/slices/purchaseOrderSlice";
 import { RootState } from "../../../../redux/store";
-import { currencySymbol } from "../../../../utils/constants/currencyConstants";
 import { codeType } from "../../../../utils/enums/codeType.enum";
 import { ToastSeverity } from "../../../../utils/enums/toast.enum";
 import { IPurchaseOrderInput } from "../../../../utils/interfaces/PurchaseOrder";
@@ -35,6 +34,7 @@ import { getStatus } from "../../utils/getStatus";
 import { schemaFormPurchaseOrder } from "../../validations/FormPurchaseOrderValidation";
 import { setIsBlocked } from "../../../../redux/slices/blockUISlice";
 import { ROUTES_MOCK } from "../../../../routes/RouteMocks";
+import useAuth from "../../../auth/hooks/useAuth";
 
 const PurchaseOrderForm = () => {
   const {
@@ -47,6 +47,7 @@ const PurchaseOrderForm = () => {
   });
 
   const { listProviderSelect } = useProviderList();
+  const { currency } = useAuth();
 
   const [selectedProvider, setSelectedProvider] = useState<IReactSelect | null>(
     null
@@ -239,7 +240,7 @@ const PurchaseOrderForm = () => {
             <section className="flex flex-col items-center justify-center">
               <LabelInput name="total" label="Total de compra" />
               <span className="text-2xl font-semibold text-green-600">
-                {`${purchaseOrderData?.total} ${currencySymbol}`}
+                {`${purchaseOrderData?.total} ${currency}`}
               </span>
             </section>
           )}

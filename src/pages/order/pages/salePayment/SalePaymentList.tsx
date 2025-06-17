@@ -17,7 +17,6 @@ import {
 } from "../../../../graphql/queries/SalePayment";
 import useTableGlobalFilter from "../../../../hooks/useTableGlobalFilter";
 import { setIsBlocked } from "../../../../redux/slices/blockUISlice";
-import { currencySymbol } from "../../../../utils/constants/currencyConstants";
 import { ToastSeverity } from "../../../../utils/enums/toast.enum";
 import {
   IDetailSalePayment,
@@ -29,6 +28,7 @@ import { generateHistoryPDF } from "../../utils/generateSalePaymentHistoryPDF";
 import { generatePDF } from "../../utils/generateSalePaymentPDF";
 import { getDate } from "../../utils/getDate";
 import SalePaymentForm from "./SalePaymentForm";
+import useAuth from "../../../auth/hooks/useAuth";
 
 interface SalePaymentListProps {
   listSalePayment: ISalePayment[];
@@ -48,6 +48,7 @@ const SalePaymentList: FC<SalePaymentListProps> = ({
   const [visibleForm, setVisibleForm] = useState<boolean>(false);
 
   const dispatch = useDispatch();
+  const {currency}=useAuth();
 
   const [DeleteSalePayment] = useMutation(DELETE_SALE_PAYMENT, {
     refetchQueries: [
@@ -187,7 +188,7 @@ const SalePaymentList: FC<SalePaymentListProps> = ({
       body: (rowData: ISalePayment) => (
         <LabelInput
           className="justify-center"
-          label={`${rowData.amount} ${currencySymbol}`}
+          label={`${rowData.amount} ${currency}`}
         />
       ),
       style: { width: "20%", textAlign: "center" },

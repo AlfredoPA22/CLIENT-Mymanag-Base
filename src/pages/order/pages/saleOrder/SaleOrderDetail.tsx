@@ -13,7 +13,6 @@ import {
   LIST_SALE_ORDER,
 } from "../../../../graphql/queries/SaleOrder";
 import { setIsBlocked } from "../../../../redux/slices/blockUISlice";
-import { currencySymbol } from "../../../../utils/constants/currencyConstants";
 import { orderStatus } from "../../../../utils/enums/orderStatus.enum";
 import { ToastSeverity } from "../../../../utils/enums/toast.enum";
 import { showToast } from "../../../../utils/toastUtils";
@@ -21,6 +20,7 @@ import { getDate } from "../../utils/getDate";
 import { getStatus } from "../../utils/getStatus";
 import { ROUTES_MOCK } from "../../../../routes/RouteMocks";
 import SectionHeader from "../../../../components/sectionHeader/SectionHeader";
+import useAuth from "../../../auth/hooks/useAuth";
 
 interface SaleOrderDetailProps {
   saleOrderId: string;
@@ -38,6 +38,7 @@ const SaleOrderDetail: FC<SaleOrderDetailProps> = ({ saleOrderId }) => {
 
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const { currency } = useAuth();
 
   const [approveSaleOrder] = useMutation(APPROVE_SALE_ORDER, {
     refetchQueries: [{ query: LIST_SALE_ORDER }, { query: LIST_PRODUCT }],
@@ -124,7 +125,7 @@ const SaleOrderDetail: FC<SaleOrderDetailProps> = ({ saleOrderId }) => {
         <section className="flex flex-col items-center justify-center">
           <LabelInput name="total" label="Total de compra" />
           <span className="text-2xl font-semibold text-green-600">
-            {`${data?.findSaleOrder.total} ${currencySymbol}`}
+            {`${data?.findSaleOrder.total} ${currency}`}
           </span>
         </section>
 

@@ -23,9 +23,15 @@ const useAuth = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const { token, userName, userId, isAuthenticated, permissions } = useSelector(
-    (state: RootState) => state.authSlice
-  );
+  const {
+    token,
+    userName,
+    userId,
+    isAuthenticated,
+    permissions,
+    companyName,
+    currency,
+  } = useSelector((state: RootState) => state.authSlice);
   const [loadingLogin, setLoadingLogin] = useState<boolean>(false);
   const [loginMutation] = useMutation(LOGIN);
 
@@ -44,6 +50,8 @@ const useAuth = () => {
             userId: decoded.id as string,
             userName: decoded.username ? decoded.username : "",
             permissions: decoded.permissions,
+            currency: decoded.currency,
+            companyName: decoded.company,
           })
         );
         navigate("/");
@@ -118,6 +126,8 @@ const useAuth = () => {
   return {
     userId,
     userName,
+    companyName,
+    currency,
     permissions,
     loadingLogin,
     isAuthenticated,

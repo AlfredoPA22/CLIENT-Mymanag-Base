@@ -4,7 +4,6 @@ import { FC, useState } from "react";
 import Table from "../../../../components/datatable/Table";
 import LabelInput from "../../../../components/labelInput/LabelInput";
 import TableSkeleton from "../../../../components/skeleton/TableSkeleton";
-import { currencySymbol } from "../../../../utils/constants/currencyConstants";
 import { ISaleOrderByProduct } from "../../../../utils/interfaces/SaleOrder";
 import { DataTableColumn } from "../../../../utils/interfaces/Table";
 import { getDate } from "../../../order/utils/getDate";
@@ -13,6 +12,7 @@ import useListSaleOrderByProduct from "../../hooks/useListSaleOrderByProduct";
 import { DataTableSelectionSingleChangeEvent } from "primereact/datatable";
 import { useNavigate } from "react-router-dom";
 import { ROUTES_MOCK } from "../../../../routes/RouteMocks";
+import useAuth from "../../../auth/hooks/useAuth";
 
 interface ListSaleOrderByProductProps {
   productId: string;
@@ -24,6 +24,7 @@ const ListSaleOrderByProduct: FC<ListSaleOrderByProductProps> = ({
   const { listSaleOrderByProduct, loadingListProduct } =
     useListSaleOrderByProduct(productId);
   const navigate = useNavigate();
+  const { currency } = useAuth();
 
   const handleSelectionChange = (
     e: DataTableSelectionSingleChangeEvent<ISaleOrderByProduct[]>
@@ -60,7 +61,7 @@ const ListSaleOrderByProduct: FC<ListSaleOrderByProductProps> = ({
       body: (rowData) => (
         <LabelInput
           className="justify-center"
-          label={`${rowData.saleOrderDetail.sale_price} ${currencySymbol}`}
+          label={`${rowData.saleOrderDetail.sale_price} ${currency}`}
         />
       ),
     },
@@ -71,7 +72,7 @@ const ListSaleOrderByProduct: FC<ListSaleOrderByProductProps> = ({
       body: (rowData) => (
         <LabelInput
           className="justify-center"
-          label={`${rowData.saleOrderDetail.subtotal} ${currencySymbol}`}
+          label={`${rowData.saleOrderDetail.subtotal} ${currency}`}
         />
       ),
     },

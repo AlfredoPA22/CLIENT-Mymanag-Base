@@ -4,12 +4,13 @@ import {
   IFilterProductInput,
   IProduct,
 } from "../../../utils/interfaces/Product";
-import { currencySymbol } from "../../../utils/constants/currencyConstants";
+import useAuth from "../../auth/hooks/useAuth";
 
 export const generateProductReportPDF = (
   data: IProduct[],
   filters: IFilterProductInput
 ) => {
+  const { currency } = useAuth();
   const doc = new jsPDF({ orientation: "landscape" });
 
   // Título
@@ -52,7 +53,7 @@ export const generateProductReportPDF = (
     product.name,
     product.category.name,
     product.brand.name,
-    `${product.sale_price} ${currencySymbol}`,
+    `${product.sale_price} ${currency}`,
     product.stock,
     product.status,
   ]);

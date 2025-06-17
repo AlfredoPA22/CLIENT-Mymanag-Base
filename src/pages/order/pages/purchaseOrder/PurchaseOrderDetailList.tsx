@@ -19,13 +19,13 @@ import { LIST_PURCHASE_ORDER_DETAIL } from "../../../../graphql/queries/Purchase
 import useTableGlobalFilter from "../../../../hooks/useTableGlobalFilter";
 import { setIsBlocked } from "../../../../redux/slices/blockUISlice";
 import { setPurchaseOrder } from "../../../../redux/slices/purchaseOrderSlice";
-import { currencySymbol } from "../../../../utils/constants/currencyConstants";
 import { stockType } from "../../../../utils/enums/stockType.enum";
 import { ToastSeverity } from "../../../../utils/enums/toast.enum";
 import { IPurchaseOrderDetail } from "../../../../utils/interfaces/PurchaseOrderDetail";
 import { DataTableColumn } from "../../../../utils/interfaces/Table";
 import { showToast } from "../../../../utils/toastUtils";
 import SerialToDetail from "./SerialToDetail";
+import useAuth from "../../../auth/hooks/useAuth";
 
 interface PurchaseOrderDetailListProps {
   purchaseOrderId: string;
@@ -42,6 +42,7 @@ const PurchaseOrderDetailList: FC<PurchaseOrderDetailListProps> = ({
 
   const client = useApolloClient();
   const dispatch = useDispatch();
+  const { currency } = useAuth();
 
   const [deleteProductToPurchaseOrderDetail] = useMutation(
     DELETE_PRODUCT_TO_PURCHASE_ORDER_DETAIL,
@@ -204,7 +205,7 @@ const PurchaseOrderDetailList: FC<PurchaseOrderDetailListProps> = ({
       body: (rowData: IPurchaseOrderDetail) => (
         <LabelInput
           className="justify-center"
-          label={`${rowData.purchase_price} ${currencySymbol}`}
+          label={`${rowData.purchase_price} ${currency}`}
         />
       ),
       fieldEditor: (options: ColumnEditorOptions) =>
@@ -225,7 +226,7 @@ const PurchaseOrderDetailList: FC<PurchaseOrderDetailListProps> = ({
       body: (rowData: IPurchaseOrderDetail) => (
         <LabelInput
           className="justify-center"
-          label={`${rowData.subtotal} ${currencySymbol}`}
+          label={`${rowData.subtotal} ${currency}`}
         />
       ),
     },
