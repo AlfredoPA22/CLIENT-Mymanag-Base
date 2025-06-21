@@ -1,7 +1,6 @@
 import { Button } from "primereact/button";
 import { InputText } from "primereact/inputtext";
 import { Password } from "primereact/password";
-import logo from "../../../assets/LOGO.png";
 import { useFormikForm } from "../../../hooks/useFormikForm";
 import { ILoginInput } from "../../../utils/interfaces/User";
 import useAuth from "../hooks/useAuth";
@@ -34,12 +33,12 @@ const Login = () => {
   });
 
   return (
-    <div className="surface-ground flex items-center justify-center min-h-screen min-w-screen overflow-hidden px-4">
+    <div className="surface-ground flex items-center justify-center min-h-screen min-w-screen overflow-hidden px-4 bg-[#F9FAFB]">
       <div className="flex flex-col items-center justify-center w-full max-w-md">
         <img
-          src={logo}
+          src="https://res.cloudinary.com/dyyd4no6j/image/upload/v1750462264/icono_inventasys_ca6zei.png"
           alt="logo"
-          className="mb-5 w-24 h-24 rounded-full shadow-md"
+          className="mb-5 w-24 h-24 rounded-full shadow-lg border-4 border-[#A0C82E]"
         />
 
         <div
@@ -47,19 +46,19 @@ const Login = () => {
             borderRadius: "56px",
             padding: "0.3rem",
             background:
-              "linear-gradient(180deg, var(--primary-color) 10%, rgba(33, 150, 243, 0) 30%)",
+              "linear-gradient(180deg, #A0C82E 10%, rgba(160, 200, 46, 0.1) 90%)",
           }}
           className="w-full"
         >
           <div
-            className="bg-white py-8 px-5 sm:px-8"
+            className="bg-white py-10 px-6 sm:px-10"
             style={{ borderRadius: "53px" }}
           >
-            <div className="text-center mb-5">
-              <div className="text-gray-900 text-2xl font-medium mb-2">
+            <div className="text-center mb-6">
+              <div className="text-[#103953] text-2xl font-bold mb-2">
                 Bienvenido
               </div>
-              <p className="text-gray-500 font-medium">
+              <p className="text-[#103953]/70 font-medium">
                 Inicia sesión para continuar
               </p>
             </div>
@@ -68,14 +67,14 @@ const Login = () => {
               <div>
                 <label
                   htmlFor="user_name"
-                  className="block text-gray-900 text-lg font-medium mb-2"
+                  className="block text-[#103953] text-lg font-medium mb-2"
                 >
                   Usuario
                 </label>
                 <InputText
                   id="user_name"
                   name="user_name"
-                  className="w-full p-3 bg-gray-100 border border-gray-300 text-gray-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full p-3 bg-gray-100 border border-gray-300 text-[#103953] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#A0C82E]"
                   placeholder="Usuario"
                   value={values.user_name}
                   onChange={handleChange}
@@ -88,15 +87,16 @@ const Login = () => {
                   )}
                 </div>
               </div>
+
               <div>
                 <label
                   htmlFor="password"
-                  className="block text-gray-900 text-lg font-medium mb-2"
+                  className="block text-[#103953] text-lg font-medium mb-2"
                 >
                   Contraseña
                 </label>
                 <Password
-                  inputClassName="sm:w-[350px] w-full p-3 bg-gray-100 border border-gray-300 text-gray-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  inputClassName="sm:w-[340px] w-full p-3 bg-gray-100 border border-gray-300 text-[#103953] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#A0C82E]"
                   inputId="password"
                   name="password"
                   value={values.password}
@@ -116,7 +116,7 @@ const Login = () => {
               </div>
 
               <Button
-                className="w-full p-3 text-white bg-blue-600 border-none rounded-xl hover:bg-blue-700 transition-all text-lg"
+                className="w-full p-3 text-white bg-[#103953] border-none rounded-xl hover:bg-[#0b2a3f] transition-all text-lg"
                 role="submit-login"
                 type="submit"
                 label="Ingresar"

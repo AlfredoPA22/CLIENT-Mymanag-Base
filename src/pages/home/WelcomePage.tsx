@@ -1,7 +1,6 @@
 import { FC } from "react";
 import { AiOutlineArrowRight } from "react-icons/ai";
 import { Link } from "react-router-dom";
-import logo from "../../assets/LOGO.png";
 import { ROUTES_MOCK } from "../../routes/RouteMocks";
 
 const WelcomePage: FC = () => {
@@ -9,7 +8,7 @@ const WelcomePage: FC = () => {
     <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 px-4">
       <div className="bg-white shadow-xl rounded-2xl p-8 max-w-3xl w-full text-center">
         <img
-          src={logo}
+          src="https://res.cloudinary.com/dyyd4no6j/image/upload/v1750462264/icono_inventasys_ca6zei.png"
           alt="MYMANAG Logo"
           className="w-24 h-24 mx-auto mb-4 rounded-full shadow"
         />

@@ -1,6 +1,5 @@
 import { HiMenuAlt2 } from "react-icons/hi";
 import { Link } from "react-router-dom";
-import logo from "../../assets/LOGO.png";
 
 type Props = {
   onToggleSidebar: () => void;
@@ -19,7 +18,11 @@ const Navbar = ({ onToggleSidebar }: Props) => {
 
       {/* Logo */}
       <Link to="/">
-        <img src={logo} alt="Logo" className="h-10 w-auto" />
+        <img
+          src="https://res.cloudinary.com/dyyd4no6j/image/upload/v1750478279/logo_OFICIAL_p6zujx.png"
+          alt="Logo"
+          className="h-10 w-auto"
+        />
       </Link>
     </div>
   );

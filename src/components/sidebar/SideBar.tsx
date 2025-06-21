@@ -4,6 +4,7 @@ import {
   AiOutlineTags,
   AiOutlineUser,
 } from "react-icons/ai";
+import { BiImport } from "react-icons/bi";
 import { BsBoxSeam } from "react-icons/bs";
 import { FiPackage, FiTruck } from "react-icons/fi";
 import { HiOutlineUsers } from "react-icons/hi";
@@ -17,11 +18,9 @@ import {
 import { PiSignOut, PiUsersThree } from "react-icons/pi";
 import { RiStore3Line } from "react-icons/ri";
 import { useLocation, useNavigate } from "react-router-dom";
-import logo from "../../assets/LOGO.png";
 import useAuth from "../../pages/auth/hooks/useAuth";
 import { ROUTES_MOCK } from "../../routes/RouteMocks";
 import { SidebarMenuItem } from "./SideBarMenuItem";
-import { BiImport } from "react-icons/bi";
 
 type Props = {
   visible?: boolean;
@@ -187,7 +186,7 @@ const SidebarMenu = ({
       {/* Logo y Usuario */}
       <div className="flex flex-col items-center py-6 border-b border-gray-200">
         <img
-          src={logo}
+          src="https://res.cloudinary.com/dyyd4no6j/image/upload/v1750462264/icono_inventasys_ca6zei.png"
           alt="logo"
           className="w-16 h-16 rounded-full mb-2 shadow-md"
         />
