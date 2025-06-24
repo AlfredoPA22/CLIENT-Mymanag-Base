@@ -15,7 +15,10 @@ import LoadingSpinner from "../../../../components/LoadingSpinner/LoadingSpinner
 import { numberEditor } from "../../../../components/numberEditor/numberEditor";
 import { textEditor } from "../../../../components/textEditor/textEditor";
 import { DELETE_PRODUCT } from "../../../../graphql/mutations/Product";
-import { LIST_PRODUCT } from "../../../../graphql/queries/Product";
+import {
+  LIST_LOW_STOCK_PRODUCT,
+  LIST_PRODUCT,
+} from "../../../../graphql/queries/Product";
 import useTableGlobalFilter from "../../../../hooks/useTableGlobalFilter";
 import { ROUTES_MOCK } from "../../../../routes/RouteMocks";
 import { stockType } from "../../../../utils/enums/stockType.enum";
@@ -50,6 +53,9 @@ const ProductLowStockList = () => {
     refetchQueries: [
       {
         query: LIST_PRODUCT,
+      },
+      {
+        query: LIST_LOW_STOCK_PRODUCT,
       },
     ],
   });
