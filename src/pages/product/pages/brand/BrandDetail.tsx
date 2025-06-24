@@ -98,13 +98,13 @@ const BrandDetail: FC<BrandDetailProps> = ({ brand }) => {
 
   return (
     <div className="flex flex-col gap-2">
-      <Card className="bg-white shadow-lg rounded-lg p-4">
+      <Card className="bg-white shadow-lg rounded-lg">
         <h2 className="text-xl font-semibold text-gray-800">{brand.name}</h2>
         <p className="text-gray-600 mt-2">{brand.description}</p>
       </Card>
 
       {listProductWithParams && (
-        <Card className="bg-white shadow-lg rounded-lg p-4">
+        <Card className="bg-white shadow-lg rounded-lg">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-medium text-gray-800">
               Productos Asociados ({listProductWithParams.length})

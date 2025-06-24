@@ -12,6 +12,7 @@ import { purchaseOrderStatusOptions } from "../../order/utils/purchaseOrderStatu
 import useProviderList from "../../provider/hooks/useProviderList";
 import { generatePurchaseOrderReportPDF } from "../utils/generatePurchaseOrderReportPDF";
 import SingleCalendarInput from "../../../components/SingleCalendarInput/SingleCalendarInput";
+import useAuth from "../../auth/hooks/useAuth";
 
 interface PurchaseOrderReportFilterProps {
   setVisiblePurchaseOrderFilter: (isVisible: boolean) => void;
@@ -21,6 +22,7 @@ const PurchaseOrderReportFilter: FC<PurchaseOrderReportFilterProps> = ({
   setVisiblePurchaseOrderFilter,
 }) => {
   const { listProvider, loadingListProvider } = useProviderList();
+  const {currency}=useAuth();
 
   const client = useApolloClient();
 
@@ -50,7 +52,7 @@ const PurchaseOrderReportFilter: FC<PurchaseOrderReportFilterProps> = ({
         endDate: values.endDate,
         status: values.status,
       };
-      generatePurchaseOrderReportPDF(data.purchaseOrderReport, reportFilters);
+      generatePurchaseOrderReportPDF(data.purchaseOrderReport,currency, reportFilters);
       setVisiblePurchaseOrderFilter(false);
       resetForm();
     }

@@ -12,6 +12,7 @@ import { IFilterSaleOrderInput } from "../../../utils/interfaces/SaleOrder";
 import useClientList from "../../client/hooks/useClientList";
 import { saleOrderStatusOptions } from "../../order/utils/saleOrderStatusMock";
 import { generateSaleOrderReportPDF } from "../utils/generateSaleOrderReportPDF";
+import useAuth from "../../auth/hooks/useAuth";
 
 interface SaleOrderReportFilterProps {
   setVisibleSaleOrderFilter: (isVisible: boolean) => void;
@@ -21,6 +22,7 @@ const SaleOrderReportFilter: FC<SaleOrderReportFilterProps> = ({
   setVisibleSaleOrderFilter,
 }) => {
   const { listClient, loadingListClient } = useClientList();
+  const {currency}=useAuth();
 
   const client = useApolloClient();
 
@@ -49,7 +51,7 @@ const SaleOrderReportFilter: FC<SaleOrderReportFilterProps> = ({
         status: values.status,
       };
 
-      generateSaleOrderReportPDF(data.saleOrderReport, reportFilters);
+      generateSaleOrderReportPDF(data.saleOrderReport,currency, reportFilters);
       setVisibleSaleOrderFilter(false);
       resetForm();
     }

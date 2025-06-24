@@ -2,10 +2,8 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { IPurchaseOrderToPDF } from "../../../utils/interfaces/PurchaseOrder";
 import { getDate } from "./getDate";
-import useAuth from "../../auth/hooks/useAuth";
 
-export const generatePDF = (data: IPurchaseOrderToPDF) => {
-  const { currency } = useAuth();
+export const generatePDF = (data: IPurchaseOrderToPDF, currency:string) => {
   const doc = new jsPDF();
 
   // Título del documento

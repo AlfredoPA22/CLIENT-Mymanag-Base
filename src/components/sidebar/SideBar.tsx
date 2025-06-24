@@ -184,7 +184,7 @@ const SidebarMenu = ({
   const SidebarLayout = (
     <div className="h-full flex flex-col bg-gradient-to-b from-gray-100 via-white to-white text-gray-800 shadow-lg w-full">
       {/* Logo y Usuario */}
-      <div className="flex flex-col items-center py-6 border-b border-gray-200">
+      <div className="flex flex-col items-center py-3 border-b border-gray-200">
         <img
           src="https://res.cloudinary.com/dyyd4no6j/image/upload/v1750462264/icono_inventasys_ca6zei.png"
           alt="logo"
@@ -197,7 +197,7 @@ const SidebarMenu = ({
       </div>
 
       {/* Menú con scroll */}
-      <div className="flex-grow overflow-y-auto px-4 py-6 space-y-2">
+      <div className="flex-grow overflow-y-auto px-4 py-2 space-y-2">
         <nav className="flex flex-col gap-1">
           {menuSections.map((section, i) => {
             const visibleItems = section.items.filter(
@@ -210,7 +210,7 @@ const SidebarMenu = ({
 
             return (
               <div key={i}>
-                <div className="uppercase text-[10px] text-gray-500 font-semibold mt-6 mb-2 tracking-wider">
+                <div className="uppercase text-[10px] text-[#A0C82E] font-semibold mt-6 mb-2 tracking-wider">
                   {section.title}
                 </div>
 

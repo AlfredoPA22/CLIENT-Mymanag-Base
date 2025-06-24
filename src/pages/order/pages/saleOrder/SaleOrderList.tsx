@@ -150,7 +150,7 @@ const SaleOrderList = () => {
         fetchPolicy: "network-only",
       });
 
-      generatePDF(data.findSaleOrderToPDF);
+      generatePDF(data.findSaleOrderToPDF, currency);
     } catch (error: any) {
       showToast({ detail: error.message, severity: ToastSeverity.Error });
     } finally {

@@ -1,17 +1,16 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import {
-  IPurchaseOrder,
   IFilterPurchaseOrderInput,
+  IPurchaseOrder,
 } from "../../../utils/interfaces/PurchaseOrder";
-import useAuth from "../../auth/hooks/useAuth";
 
 export const generatePurchaseOrderReportPDF = (
   data: IPurchaseOrder[],
+  currency: string,
   filters: IFilterPurchaseOrderInput
 ) => {
   const doc = new jsPDF({ orientation: "portrait" });
-  const { currency } = useAuth();
 
   // Título principal
   doc.setFontSize(20);

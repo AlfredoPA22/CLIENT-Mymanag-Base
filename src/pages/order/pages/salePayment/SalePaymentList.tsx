@@ -48,7 +48,7 @@ const SalePaymentList: FC<SalePaymentListProps> = ({
   const [visibleForm, setVisibleForm] = useState<boolean>(false);
 
   const dispatch = useDispatch();
-  const {currency}=useAuth();
+  const { currency } = useAuth();
 
   const [DeleteSalePayment] = useMutation(DELETE_SALE_PAYMENT, {
     refetchQueries: [
@@ -87,7 +87,7 @@ const SalePaymentList: FC<SalePaymentListProps> = ({
             severity="warning"
             aria-label="Cancel"
             onClick={() =>
-              generateHistoryPDF(listSalePayment, detailSalePayment)
+              generateHistoryPDF(listSalePayment, currency, detailSalePayment)
             }
           />
         </section>
@@ -147,7 +147,7 @@ const SalePaymentList: FC<SalePaymentListProps> = ({
           raised
           severity="warning"
           aria-label="Cancel"
-          onClick={() => generatePDF(rowData, detailSalePayment)}
+          onClick={() => generatePDF(rowData, currency, detailSalePayment)}
         />
 
         <Button

@@ -237,7 +237,7 @@ const CategoryList = () => {
         <CategoryForm setVisibleForm={setVisibleForm} />
       </Dialog>
       <Dialog
-        className="md:w-[90vw] w-[90vw]"
+        className="md:w-[90vw] w-[95vw]"
         visible={visibleDetail}
         header={currentCategory && `Detalle de categoria`}
         onHide={() => setVisibleDetail(false)}

@@ -5,14 +5,13 @@ import {
   ISalePayment,
 } from "../../../utils/interfaces/SalePayment";
 import { getDate } from "./getDate";
-import useAuth from "../../auth/hooks/useAuth";
 
 export const generateHistoryPDF = (
   data: ISalePayment[],
+  currency: string,
   detail: IDetailSalePayment
 ) => {
   const doc = new jsPDF();
-  const { currency } = useAuth();
 
   // Título del documento
   doc.setFontSize(20);

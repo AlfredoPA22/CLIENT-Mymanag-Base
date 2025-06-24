@@ -145,7 +145,7 @@ const PurchaseOrderList = () => {
         fetchPolicy: "network-only",
       });
 
-      generatePDF(data.findPurchaseOrderToPDF);
+      generatePDF(data.findPurchaseOrderToPDF, currency);
     } catch (error: any) {
       showToast({ detail: error.message, severity: ToastSeverity.Error });
     }

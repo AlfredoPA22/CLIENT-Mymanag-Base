@@ -4,14 +4,13 @@ import {
   IFilterSaleOrderInput,
   ISaleOrder,
 } from "../../../utils/interfaces/SaleOrder";
-import useAuth from "../../auth/hooks/useAuth";
 
 export const generateSaleOrderReportPDF = (
   data: ISaleOrder[],
+  currency: string,
   filters: IFilterSaleOrderInput
 ) => {
   const doc = new jsPDF({ orientation: "portrait" });
-  const { currency } = useAuth();
 
   // Título principal
   doc.setFontSize(20);

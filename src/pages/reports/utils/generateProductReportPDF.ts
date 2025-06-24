@@ -4,13 +4,12 @@ import {
   IFilterProductInput,
   IProduct,
 } from "../../../utils/interfaces/Product";
-import useAuth from "../../auth/hooks/useAuth";
 
 export const generateProductReportPDF = (
   data: IProduct[],
+  currency: string,
   filters: IFilterProductInput
 ) => {
-  const { currency } = useAuth();
   const doc = new jsPDF({ orientation: "landscape" });
 
   // Título

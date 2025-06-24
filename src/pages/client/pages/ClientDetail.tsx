@@ -135,7 +135,7 @@ const ClientDetail: FC<ClientDetailProps> = ({ client }) => {
       <Card header={header} className="shadow-lg rounded-2xl border-none p-4" />
 
       {listSaleOrderByClient && (
-        <Card className="bg-white shadow-lg rounded-lg p-4">
+        <Card className="bg-white shadow-lg rounded-lg">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-medium text-gray-800">
               Lista de ventas ({listSaleOrderByClient.saleOrder.length})

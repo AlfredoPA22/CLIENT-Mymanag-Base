@@ -13,6 +13,7 @@ import useBrandList from "../../product/hooks/useBrandList";
 import useCategoryList from "../../product/hooks/useCategoryList";
 import { productStatusOptions } from "../../product/utils/productStatusMock";
 import { generateProductReportPDF } from "../utils/generateProductReportPDF";
+import useAuth from "../../auth/hooks/useAuth";
 
 interface ProductReportFilterProps {
   setVisibleProductFilter: (isVisible: boolean) => void;
@@ -23,6 +24,7 @@ const ProductReportFilter: FC<ProductReportFilterProps> = ({
 }) => {
   const { listBrand, loadingListBrand } = useBrandList();
   const { listCategory, loadingListCategory } = useCategoryList();
+  const { currency } = useAuth();
 
   const client = useApolloClient();
 
@@ -51,7 +53,7 @@ const ProductReportFilter: FC<ProductReportFilterProps> = ({
         category: selectedCategory?.name || "Todos",
         status: values.status,
       };
-      generateProductReportPDF(data.productReport, reportFilters);
+      generateProductReportPDF(data.productReport, currency, reportFilters);
       setVisibleProductFilter(false);
       resetForm();
     }
