@@ -1,10 +1,44 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { ICompany } from "../../../utils/interfaces/Company";
 import { ISaleOrderToPDF } from "../../../utils/interfaces/SaleOrder";
 import { getDate } from "./getDate";
 
-export const generatePDF = (data: ISaleOrderToPDF, currency: string) => {
+export const generatePDF = async (
+  data: ISaleOrderToPDF,
+  dataCompany: ICompany,
+  currency: string
+) => {
+  const toBase64 = (url: string): Promise<string> =>
+    fetch(url)
+      .then((res) => res.blob())
+      .then(
+        (blob) =>
+          new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result as string);
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+          })
+      );
+
   const doc = new jsPDF();
+
+  const defaultLogo: string =
+    "https://res.cloudinary.com/dyyd4no6j/image/upload/v1750462281/Logo_Inventasys_1_tp7nlz.png";
+
+  const logoUrl: string =
+    dataCompany.image && dataCompany.image.trim() !== ""
+      ? dataCompany.image
+      : defaultLogo;
+
+  try {
+    const imgData = await toBase64(logoUrl);
+    // (x, y, width, height)
+    doc.addImage(imgData, "JPEG", 14, 10, 25, 25);
+  } catch (error) {
+    console.warn("⚠️ No se pudo cargar el logo:", error);
+  }
 
   // Título del documento
   doc.setFontSize(24); // Título más grande
@@ -18,11 +52,12 @@ export const generatePDF = (data: ISaleOrderToPDF, currency: string) => {
   doc.setFont("helvetica", "normal"); // Fuente normal
 
   // Ajustes de los datos de la orden de venta
-  doc.text(`Código: ${data.saleOrder.code}`, 14, 35);
-  doc.text(`Cliente: ${data.saleOrder.client.fullName}`, 14, 45);
-  doc.text(`Total: ${data.saleOrder.total} ${currency}`, 14, 55);
-  doc.text(`Fecha: ${getDate(data.saleOrder.date)}`, 150, 35);
-  doc.text(`Estado: ${data.saleOrder.status}`, 150, 45);
+doc.text(`Código: ${data.saleOrder.code}`, 14, 45);
+doc.text(`Cliente: ${data.saleOrder.client.fullName}`, 14, 55);
+doc.text(`Total: ${data.saleOrder.total} ${currency}`, 14, 65);
+doc.text(`Fecha: ${getDate(data.saleOrder.date)}`, 150, 45);
+doc.text(`Estado: ${data.saleOrder.status}`, 150, 55);
+
 
   // Cabeceras para la tabla
   const columns = [
@@ -57,10 +92,15 @@ export const generatePDF = (data: ISaleOrderToPDF, currency: string) => {
   // Añadir la tabla al documento
   autoTable(doc, {
     head: [columns],
-    headStyles: { fillColor: "#2d66ea" },
     body: rows,
-    startY: 60,
-    theme: "grid",
+    startY: 80,
+    theme: "plain",
+    styles: {
+      lineWidth: 0,
+      lineColor: [0, 0, 0],
+    },
+    tableLineWidth: 0.4,
+    tableLineColor: [45, 102, 234],
     columnStyles: {
       0: { cellWidth: 25 },
       1: { cellWidth: 55 },

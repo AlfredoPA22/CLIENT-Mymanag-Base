@@ -5,31 +5,32 @@ import { confirmDialog } from "primereact/confirmdialog";
 import { DataTableSelectionSingleChangeEvent } from "primereact/datatable";
 import { Tag } from "primereact/tag";
 import { useState } from "react";
+import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import Table from "../../../../components/datatable/Table";
 import LabelInput from "../../../../components/labelInput/LabelInput";
 import LoadingSpinner from "../../../../components/LoadingSpinner/LoadingSpinner";
 import { DELETE_SALE_ORDER } from "../../../../graphql/mutations/SaleOrder";
+import { DETAIL_COMPANY } from "../../../../graphql/queries/Company";
 import { LIST_PRODUCT } from "../../../../graphql/queries/Product";
 import {
   FIND_SALE_ORDER_TO_PDF,
   LIST_SALE_ORDER,
 } from "../../../../graphql/queries/SaleOrder";
 import useTableGlobalFilter from "../../../../hooks/useTableGlobalFilter";
+import { setIsBlocked } from "../../../../redux/slices/blockUISlice";
+import { ROUTES_MOCK } from "../../../../routes/RouteMocks";
 import { orderStatus } from "../../../../utils/enums/orderStatus.enum";
 import { paymentMethod } from "../../../../utils/enums/paymentMethod.enum";
 import { ToastSeverity } from "../../../../utils/enums/toast.enum";
 import { ISaleOrder } from "../../../../utils/interfaces/SaleOrder";
 import { DataTableColumn } from "../../../../utils/interfaces/Table";
 import { showToast } from "../../../../utils/toastUtils";
+import useAuth from "../../../auth/hooks/useAuth";
 import useSaleOrderList from "../../hooks/useSaleOrderList";
 import { generatePDF } from "../../utils/generateSaleOrderPDF";
 import { getDate } from "../../utils/getDate";
 import { getStatus } from "../../utils/getStatus";
-import { ROUTES_MOCK } from "../../../../routes/RouteMocks";
-import { useDispatch } from "react-redux";
-import { setIsBlocked } from "../../../../redux/slices/blockUISlice";
-import useAuth from "../../../auth/hooks/useAuth";
 
 const SaleOrderList = () => {
   const { listSaleOrder, loadingListSaleOrder } = useSaleOrderList();
@@ -150,7 +151,12 @@ const SaleOrderList = () => {
         fetchPolicy: "network-only",
       });
 
-      generatePDF(data.findSaleOrderToPDF, currency);
+      const { data: dataCompany } = await client.query({
+        query: DETAIL_COMPANY,
+        fetchPolicy: "network-only",
+      });
+
+      generatePDF(data.findSaleOrderToPDF, dataCompany.detailCompany, currency);
     } catch (error: any) {
       showToast({ detail: error.message, severity: ToastSeverity.Error });
     } finally {
