@@ -18,6 +18,7 @@ import { ToastSeverity } from "../../../utils/enums/toast.enum";
 import { resetNavbar } from "../../../redux/slices/navbarSlice";
 import { resetPurchaseOrder } from "../../../redux/slices/purchaseOrderSlice";
 import { resetSaleOrder } from "../../../redux/slices/saleOrderSlice";
+import { resetProductTransfer } from "../../../redux/slices/productTransferSlice";
 
 const useAuth = () => {
   const navigate = useNavigate();
@@ -73,6 +74,7 @@ const useAuth = () => {
     dispatch(resetNavbar());
     dispatch(resetPurchaseOrder());
     dispatch(resetSaleOrder());
+    dispatch(resetProductTransfer());
     localStorage.clear();
     navigate("/login");
   };

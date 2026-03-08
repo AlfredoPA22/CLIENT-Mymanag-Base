@@ -5,12 +5,17 @@ import SidebarMenu from "../sidebar/SideBar";
 
 const Dashboard = () => {
   const [visibleSidebar, setVisibleSidebar] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
 
   return (
     <div className="flex h-screen">
       {/* Sidebar fijo en pantallas medianas en adelante */}
-      <div className="hidden md:block">
-        <SidebarMenu fixed />
+      <div className="hidden md:flex">
+        <SidebarMenu
+          fixed
+          collapsed={collapsed}
+          onToggleCollapse={() => setCollapsed((c) => !c)}
+        />
       </div>
 
       {/* Sidebar tipo overlay en móviles */}
@@ -21,7 +26,7 @@ const Dashboard = () => {
       />
 
       {/* Contenido principal */}
-      <div className="flex-1 flex flex-col overflow-auto">
+      <div className="flex-1 flex flex-col overflow-auto min-w-0">
         {/* Navbar solo en móviles */}
         <div className="block md:hidden">
           <Navbar onToggleSidebar={() => setVisibleSidebar(true)} />

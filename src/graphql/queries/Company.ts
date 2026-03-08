@@ -13,6 +13,8 @@ export const DETAIL_COMPANY = gql`
       country
       image
       currency
+      plan
+      status
     }
   }
 `;

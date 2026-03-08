@@ -10,3 +10,9 @@ export const LIST_ROLE = gql`
     }
   }
 `;
+
+export const LIST_PERMISSIONS_BY_ROLE = gql`
+  query ListPermissionsByRole($roleId: String!) {
+    listPermissionsByRole(roleId: $roleId)
+  }
+`;

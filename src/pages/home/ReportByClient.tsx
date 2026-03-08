@@ -27,13 +27,16 @@ ChartJS.register(
   Legend
 );
 
-// Función para generar un color aleatorio en formato RGBA
-const getRandomColor = () => {
-  const r = Math.floor(Math.random() * 256);
-  const g = Math.floor(Math.random() * 256);
-  const b = Math.floor(Math.random() * 256);
-  return `rgba(${r}, ${g}, ${b}, 0.6)`; // Color con opacidad
-};
+const PALETTE = [
+  "rgba(16, 185, 129, 0.75)",
+  "rgba(99, 102, 241, 0.75)",
+  "rgba(245, 158, 11, 0.75)",
+  "rgba(14, 165, 233, 0.75)",
+  "rgba(160, 200, 46, 0.75)",
+  "rgba(239, 68, 68, 0.75)",
+  "rgba(168, 85, 247, 0.75)",
+  "rgba(249, 115, 22, 0.75)",
+];
 
 const ReportByClient = () => {
   const {
@@ -61,8 +64,9 @@ const ReportByClient = () => {
   const clientNames = listReport.map((item: any) => item.client);
   const salesTotal = listReport.map((item: any) => item.total);
 
-  // Generar un color único para cada cliente
-  const backgroundColors = listReport.map(() => getRandomColor());
+  const backgroundColors = listReport.map(
+    (_: any, i: number) => PALETTE[i % PALETTE.length]
+  );
 
   // Datos y opciones para el gráfico
   const data = {
@@ -71,10 +75,8 @@ const ReportByClient = () => {
       {
         label: `Ventas por cliente (${currency})`,
         data: salesTotal,
-        backgroundColor: backgroundColors, // Asignar los colores generados
-        borderColor: backgroundColors.map((color: any) =>
-          color.replace("0.6", "1")
-        ), // Usar el mismo color con opacidad 1 para el borde
+        backgroundColor: backgroundColors,
+        borderColor: backgroundColors.map((c: string) => c.replace("0.75", "1")),
         borderWidth: 1,
       },
     ],

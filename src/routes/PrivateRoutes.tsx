@@ -23,6 +23,11 @@ import ReportsPage from "../pages/reports/pages/ReportsPage";
 import { ProtectedRoute } from "./ProtectedRoute";
 import { ROUTES_MOCK } from "./RouteMocks";
 import SalePayment from "../pages/order/pages/salePayment/SalePayment";
+import CompanySettings from "../pages/settings/CompanySettings";
+import ProductTransferList from "../pages/transfer/ProductTransferList";
+import CreateProductTransfer from "../pages/transfer/CreateProductTransfer";
+import EditProductTransfer from "../pages/transfer/EditProductTransfer";
+import ViewProductTransfer from "../pages/transfer/ViewProductTransfer";
 
 const PrivateRoutes: FC = () => {
   return (
@@ -173,6 +178,48 @@ const PrivateRoutes: FC = () => {
                 <RoleList />
               </PermissionRoute>
             }
+          />
+
+          {/* transferencias */}
+          <Route
+            path={`${ROUTES_MOCK.TRANSFERS}`}
+            element={
+              <PermissionRoute
+                permissions={["LIST_AND_CREATE_TRANSFER", "DETAIL_TRANSFER"]}
+              >
+                <ProductTransferList />
+              </PermissionRoute>
+            }
+          />
+          <Route
+            path={`${ROUTES_MOCK.TRANSFERS}${ROUTES_MOCK.NEW_TRANSFER}`}
+            element={
+              <PermissionRoute permissions={["LIST_AND_CREATE_TRANSFER"]}>
+                <CreateProductTransfer />
+              </PermissionRoute>
+            }
+          />
+          <Route
+            path={`${ROUTES_MOCK.TRANSFERS}${ROUTES_MOCK.EDIT_TRANSFER}/:id`}
+            element={
+              <PermissionRoute permissions={["EDIT_TRANSFER"]}>
+                <EditProductTransfer />
+              </PermissionRoute>
+            }
+          />
+          <Route
+            path={`${ROUTES_MOCK.TRANSFERS}/detalle/:id`}
+            element={
+              <PermissionRoute permissions={["DETAIL_TRANSFER"]}>
+                <ViewProductTransfer />
+              </PermissionRoute>
+            }
+          />
+
+          {/* configuración de empresa */}
+          <Route
+            path={`${ROUTES_MOCK.SETTINGS}`}
+            element={<CompanySettings />}
           />
         </Route>
       </Route>

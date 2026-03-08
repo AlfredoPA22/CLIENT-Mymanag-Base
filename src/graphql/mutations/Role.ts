@@ -28,3 +28,13 @@ export const DELETE_ROLE = gql`
     }
   }
 `;
+
+export const UPDATE_ROLE_PERMISSIONS = gql`
+  mutation UpdateRolePermissions($roleId: String!, $permissions: [String!]!) {
+    updateRolePermissions(roleId: $roleId, permissions: $permissions) {
+      _id
+      name
+      permission
+    }
+  }
+`;

@@ -14,6 +14,7 @@ import {
   FIND_PURCHASE_ORDER_TO_PDF,
   LIST_PURCHASE_ORDER,
 } from "../../../../graphql/queries/PurchaseOrder";
+import { DETAIL_COMPANY } from "../../../../graphql/queries/Company";
 import useTableGlobalFilter from "../../../../hooks/useTableGlobalFilter";
 import { orderStatus } from "../../../../utils/enums/orderStatus.enum";
 import { ToastSeverity } from "../../../../utils/enums/toast.enum";
@@ -137,17 +138,23 @@ const PurchaseOrderList = () => {
 
   const handleGeneratePDF = async (purchaseOrderId: string) => {
     try {
-      const { data } = await client.query({
-        query: FIND_PURCHASE_ORDER_TO_PDF,
-        variables: {
-          purchaseOrderId,
-        },
-        fetchPolicy: "network-only",
-      });
-
-      generatePDF(data.findPurchaseOrderToPDF, currency);
+      dispatch(setIsBlocked(true));
+      const [{ data }, { data: dataCompany }] = await Promise.all([
+        client.query({
+          query: FIND_PURCHASE_ORDER_TO_PDF,
+          variables: { purchaseOrderId },
+          fetchPolicy: "network-only",
+        }),
+        client.query({
+          query: DETAIL_COMPANY,
+          fetchPolicy: "network-only",
+        }),
+      ]);
+      await generatePDF(data.findPurchaseOrderToPDF, dataCompany.detailCompany, currency);
     } catch (error: any) {
       showToast({ detail: error.message, severity: ToastSeverity.Error });
+    } finally {
+      dispatch(setIsBlocked(false));
     }
   };
 

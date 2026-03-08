@@ -16,6 +16,7 @@ import purchaseOrderSlice from "./slices/purchaseOrderSlice";
 import saleOrderSlice from "./slices/saleOrderSlice";
 import authSlice from "./slices/authSlice";
 import blockUISlice from "./slices/blockUISlice";
+import productTransferSlice from "./slices/productTransferSlice";
 
 const persistConfig = {
   key: "root",
@@ -27,6 +28,7 @@ const rootReducer = combineReducers({
   navbarSlice: navbarSlice.reducer,
   purchaseOrderSlice: purchaseOrderSlice.reducer,
   saleOrderSlice: saleOrderSlice.reducer,
+  productTransferSlice: productTransferSlice.reducer,
   authSlice: authSlice.reducer,
   blockUISlice: blockUISlice.reducer,
 });

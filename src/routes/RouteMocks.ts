@@ -20,4 +20,8 @@ export const ROUTES_MOCK = {
   USERS: "/usuarios",
   ROLES: "/roles",
   DASHBOARD: "/dashboard",
+  SETTINGS: "/configuracion",
+  TRANSFERS: "/transferencias",
+  NEW_TRANSFER: "/nueva-transferencia",
+  EDIT_TRANSFER: "/editar-transferencia",
 };

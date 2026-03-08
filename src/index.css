@@ -36,3 +36,18 @@
 body{
   background-color: #F2F4F6;
 }
+
+/* Sidebar custom scrollbar */
+.sidebar-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+.sidebar-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.sidebar-scroll::-webkit-scrollbar-thumb {
+  background: rgba(160, 200, 46, 0.25);
+  border-radius: 99px;
+}
+.sidebar-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(160, 200, 46, 0.5);
+}

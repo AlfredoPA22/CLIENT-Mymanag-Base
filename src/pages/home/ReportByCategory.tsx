@@ -34,7 +34,17 @@ const ReportByCategory = () => {
     return <ReportByCategorySkeleton />;
   }
 
-  // Preparar datos
+  const PALETTE = [
+    "rgba(16, 185, 129, 0.8)",
+    "rgba(99, 102, 241, 0.8)",
+    "rgba(245, 158, 11, 0.8)",
+    "rgba(14, 165, 233, 0.8)",
+    "rgba(160, 200, 46, 0.8)",
+    "rgba(239, 68, 68, 0.8)",
+    "rgba(168, 85, 247, 0.8)",
+    "rgba(249, 115, 22, 0.8)",
+  ];
+
   const categoryNames = listReport.map((item: any) => item.category);
   const salesTotal = listReport.map((item: any) => item.total);
 
@@ -44,6 +54,8 @@ const ReportByCategory = () => {
       {
         label: `Ventas por Categoría (${currency})`,
         data: salesTotal,
+        backgroundColor: listReport.map((_: any, i: number) => PALETTE[i % PALETTE.length]),
+        borderColor: listReport.map((_: any, i: number) => PALETTE[i % PALETTE.length].replace("0.8", "1")),
         borderWidth: 2,
       },
     ],

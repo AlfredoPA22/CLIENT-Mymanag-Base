@@ -38,10 +38,23 @@ const authSlice = createSlice({
       ...state,
       isAuthenticated: action.payload,
     }),
+    setCompanyInfo: (
+      state,
+      action: PayloadAction<{ companyName?: string; currency?: string }>
+    ) => ({
+      ...state,
+      ...(action.payload.companyName !== undefined && {
+        companyName: action.payload.companyName,
+      }),
+      ...(action.payload.currency !== undefined && {
+        currency: action.payload.currency,
+      }),
+    }),
     resetAuth: () => initialState,
   },
 });
 
-export const { setLogin, setIsAuthenticated, resetAuth } = authSlice.actions;
+export const { setLogin, setIsAuthenticated, setCompanyInfo, resetAuth } =
+  authSlice.actions;
 
 export default authSlice;

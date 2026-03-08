@@ -15,13 +15,16 @@ import { showToast } from "../../../../utils/toastUtils";
 import useRoleList from "../../hooks/useRoleList";
 import RoleDetail from "./RoleDetail";
 import RoleForm from "./RoleForm";
+import RolePermissionsForm from "./RolePermissionsForm";
 import { Card } from "primereact/card";
 
 const RoleList = () => {
   const { listRole, loadingListRole } = useRoleList();
   const [visibleForm, setVisibleForm] = useState<boolean>(false);
   const [visibleDetail, setVisibleDetail] = useState<boolean>(false);
+  const [visiblePermissions, setVisiblePermissions] = useState<boolean>(false);
   const [currentRole, setCurrentRole] = useState<IRole>();
+  const [permissionsRole, setPermissionsRole] = useState<IRole>();
 
   const [deleteRole] = useMutation(DELETE_ROLE, {
     refetchQueries: [
@@ -77,6 +80,17 @@ const RoleList = () => {
   const actionBodyTemplate = (rowData: IRole) => {
     return (
       <div className="flex justify-center gap-2">
+        <Button
+          tooltip="Editar permisos"
+          tooltipOptions={{ position: "left" }}
+          icon="pi pi-lock"
+          raised
+          severity="info"
+          onClick={() => {
+            setPermissionsRole(rowData);
+            setVisiblePermissions(true);
+          }}
+        />
         <Button
           tooltip="Eliminar rol"
           tooltipOptions={{ position: "left" }}
@@ -139,6 +153,20 @@ const RoleList = () => {
         onHide={() => setVisibleDetail(false)}
       >
         {currentRole && <RoleDetail role={currentRole} />}
+      </Dialog>
+
+      <Dialog
+        className="w-[95vw] md:w-[700px]"
+        visible={visiblePermissions}
+        header={permissionsRole ? `Permisos — ${permissionsRole.name}` : "Permisos"}
+        onHide={() => setVisiblePermissions(false)}
+      >
+        {permissionsRole && (
+          <RolePermissionsForm
+            role={permissionsRole}
+            onClose={() => setVisiblePermissions(false)}
+          />
+        )}
       </Dialog>
     </Card>
   );
