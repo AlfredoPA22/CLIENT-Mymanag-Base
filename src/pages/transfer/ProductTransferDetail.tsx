@@ -44,7 +44,6 @@ const ProductTransferDetail: FC<ProductTransferDetailProps> = ({
     data,
     loading,
     error,
-    refetch,
   } = useQuery(FIND_PRODUCT_TRANSFER, {
     variables: { transferId },
     fetchPolicy: "network-only",

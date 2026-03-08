@@ -148,7 +148,7 @@ const ProductTransferForm: FC<ProductTransferFormProps> = ({
     }
   };
 
-  const handleOriginChange = (
+  const handleOriginChange = async (
     event: SingleValue<IReactSelect>,
     action: ActionMeta<IReactSelect>
   ) => {
@@ -156,7 +156,7 @@ const ProductTransferForm: FC<ProductTransferFormProps> = ({
     setFieldValue(action.name || "", event ? event.value : "");
   };
 
-  const handleDestinationChange = (
+  const handleDestinationChange = async (
     event: SingleValue<IReactSelect>,
     action: ActionMeta<IReactSelect>
   ) => {

@@ -111,7 +111,7 @@ const ProductTransferDetailForm: FC<ProductTransferDetailFormProps> = ({
             name="quantity"
             mandatory
             placeholder="Cantidad"
-            value={values.quantity}
+            value={String(values.quantity)}
             error={errors.quantity ? String(errors.quantity) : ""}
             onChange={handleChange}
           />
