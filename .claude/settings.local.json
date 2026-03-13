@@ -3,7 +3,9 @@
     "allow": [
       "Bash(npm install framer-motion)",
       "Bash(node -e \"require\\(''./node_modules/framer-motion''\\)\")",
-      "Bash(npx tsc --noEmit)"
+      "Bash(npx tsc --noEmit)",
+      "Bash(npm install:*)",
+      "Bash(npm list:*)"
     ]
   }
 }

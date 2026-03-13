@@ -84,7 +84,7 @@ const ProductTransferDetailForm: FC<ProductTransferDetailFormProps> = ({
   if (loadingListProduct) return <OrderDetailFormSkeleton />;
 
   return (
-    <Card className="mb-2">
+    <Card id="transfer-detail-form" className="mb-2">
       <form
         onSubmit={handleSubmit}
         className="flex flex-col md:flex-row justify-center items-center gap-2"

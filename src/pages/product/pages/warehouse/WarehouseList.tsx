@@ -92,6 +92,7 @@ const WarehouseList = () => {
       <div className="flex justify-between items-center m-2 px-5">
         <h1 className="text-2xl font-bold">{`Lista de almacenes (${listWarehouse.length})`}</h1>
         <Button
+          id="btn-new-warehouse"
           icon="pi pi-plus"
           severity="success"
           tooltip="Nuevo almacén"
@@ -208,7 +209,7 @@ const WarehouseList = () => {
     return <LoadingSpinner />;
   }
   return (
-    <Card className="py-2" header={tableHeaderTemplate}>
+    <Card id="warehouse-list-table" className="py-2" header={tableHeaderTemplate}>
       <Table
         columns={columns}
         data={listWarehouse}

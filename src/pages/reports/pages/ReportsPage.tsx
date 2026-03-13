@@ -19,7 +19,7 @@ const ReportsPage = () => {
     permissions.includes(required);
 
   return (
-    <Card title="Reportes">
+    <Card id="reports-main" title="Reportes">
       <div className="flex lg:flex-row flex-col gap-2">
         {canAccess(permissions, "PRODUCT_REPORT") && (
           <Button

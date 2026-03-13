@@ -1,11 +1,15 @@
 import { useState } from "react";
 import { Outlet } from "react-router-dom";
+import ChatBot from "../chatbot/ChatBot";
+import { useFullProcessTour } from "../../hooks/useFullProcessTour";
 import Navbar from "../navbar/NavBar";
 import SidebarMenu from "../sidebar/SideBar";
+import TourFab from "../tour/TourFab";
 
 const Dashboard = () => {
   const [visibleSidebar, setVisibleSidebar] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+  useFullProcessTour();
 
   return (
     <div className="flex h-screen">
@@ -34,6 +38,8 @@ const Dashboard = () => {
 
         <main className="p-2 flex-1 overflow-auto">
           <Outlet />
+          <TourFab />
+          <ChatBot />
         </main>
       </div>
     </div>

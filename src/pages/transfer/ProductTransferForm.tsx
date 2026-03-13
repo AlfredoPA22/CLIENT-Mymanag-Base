@@ -182,6 +182,7 @@ const ProductTransferForm: FC<ProductTransferFormProps> = ({
 
   return (
     <form
+      id="transfer-form"
       onSubmit={handleSubmit}
       className="p-5 shadow-lg rounded-lg border border-gray-200 bg-white mb-2"
     >

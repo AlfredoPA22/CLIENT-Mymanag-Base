@@ -57,6 +57,7 @@ const ClientList = () => {
         <h1 className="text-2xl font-bold">{`Lista de clientes (${listClient.length})`}</h1>
 
         <Button
+          id="btn-new-client"
           icon="pi pi-plus"
           severity="success"
           tooltip="Nuevo cliente"
@@ -188,7 +189,7 @@ const ClientList = () => {
   }
 
   return (
-    <Card className="py-2" header={tableHeaderTemplate}>
+    <Card id="client-list-table" className="py-2" header={tableHeaderTemplate}>
       <Table
         columns={columns}
         data={listClient}

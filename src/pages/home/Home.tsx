@@ -1,6 +1,7 @@
 import { FC } from "react";
 import { PermissionGuard } from "../auth/pages/PermissionGuard";
 import useAuth from "../auth/hooks/useAuth";
+import GuidesSection from "./GuidesSection";
 import HeaderHome from "./HeaderHome";
 import SalesSection from "./SalesSection";
 import SearchSection from "./SearchSection";
@@ -23,7 +24,7 @@ const Home: FC = () => {
   });
 
   return (
-    <div className="flex flex-col gap-4 w-full">
+    <div id="dashboard-main" className="flex flex-col gap-4 w-full">
       {/* Greeting */}
       <div className="flex items-center justify-between">
         <div>
@@ -36,13 +37,14 @@ const Home: FC = () => {
           <p className="text-sm text-slate-400 mt-0.5 capitalize">{dateLabel}</p>
         </div>
       </div>
-
       <PermissionGuard permissions={["GENERAL_DATA"]}>
         <HeaderHome />
       </PermissionGuard>
+      <GuidesSection />
       <PermissionGuard permissions={["SEARCH_PRODUCT"]}>
         <SearchSection />
       </PermissionGuard>
+
       <SalesSection />
     </div>
   );

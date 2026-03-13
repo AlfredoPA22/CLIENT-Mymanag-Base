@@ -163,7 +163,7 @@ const ProductTransferDetailList: FC<ProductTransferDetailListProps> = ({
   if (loading) return <TableSkeleton />;
 
   return (
-    <Card title={`Productos (${listDetails?.length ?? 0})`}>
+    <Card id="transfer-detail-table" title={`Productos (${listDetails?.length ?? 0})`}>
       <Table
         columns={columns}
         data={listDetails ?? []}

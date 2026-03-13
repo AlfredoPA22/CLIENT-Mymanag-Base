@@ -40,6 +40,7 @@ const RoleList = () => {
         <h1 className="text-2xl font-bold">{`Lista de roles (${listRole.length})`}</h1>
 
         <Button
+          id="btn-new-role"
           icon="pi pi-plus"
           severity="success"
           tooltip="Nuevo rol"
@@ -126,7 +127,7 @@ const RoleList = () => {
   }
 
   return (
-    <Card className="py-2" header={tableHeaderTemplate}>
+    <Card id="roles-list-table" className="py-2" header={tableHeaderTemplate}>
       <Table
         columns={columns}
         data={listRole}

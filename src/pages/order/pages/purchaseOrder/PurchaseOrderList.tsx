@@ -89,6 +89,7 @@ const PurchaseOrderList = () => {
         <h1 className="text-2xl font-bold">{`Lista de compras (${listPurchaseOrder.length})`}</h1>
 
         <Button
+          id="btn-new-purchase"
           icon="pi pi-plus"
           severity="success"
           tooltip="Nueva compra"
@@ -300,7 +301,7 @@ const PurchaseOrderList = () => {
   }
 
   return (
-    <Card className="py-2" header={tableHeaderTemplate}>
+    <Card id="purchase-list-table" className="py-2" header={tableHeaderTemplate}>
       <Table
         columns={columns}
         data={listPurchaseOrder}

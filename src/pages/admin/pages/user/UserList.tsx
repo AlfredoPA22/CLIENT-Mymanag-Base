@@ -126,6 +126,7 @@ const UserList = () => {
         <h1 className="text-2xl font-bold">{`Lista de usuarios (${listUser.length})`}</h1>
 
         <Button
+          id="btn-new-user"
           icon="pi pi-plus"
           severity="success"
           tooltip="Nuevo usuario"
@@ -281,7 +282,7 @@ const UserList = () => {
     return <LoadingSpinner />;
   }
   return (
-    <Card className="py-2" header={tableHeaderTemplate}>
+    <Card id="users-list-table" className="py-2" header={tableHeaderTemplate}>
       <Table
         columns={columns}
         data={listUser}

@@ -106,6 +106,7 @@ const ProductList = () => {
 
         <div className="flex gap-2">
           <Button
+            id="btn-search-product"
             icon="pi pi-search"
             severity="info"
             tooltip="Buscar producto"
@@ -115,6 +116,7 @@ const ProductList = () => {
           />
 
           <Button
+            id="btn-new-product"
             icon="pi pi-plus"
             severity="success"
             tooltip="Nuevo producto"
@@ -269,7 +271,7 @@ const ProductList = () => {
   }
 
   return (
-    <Card className="py-2" header={tableHeaderTemplate}>
+    <Card id="product-list-table" className="py-2" header={tableHeaderTemplate}>
       <Table
         columns={columns}
         data={listProduct}

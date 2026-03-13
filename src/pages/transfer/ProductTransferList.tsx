@@ -127,6 +127,7 @@ const ProductTransferList = () => {
       <h1 className="text-2xl font-bold">{`Transferencias (${listProductTransfer?.length ?? 0})`}</h1>
       {canCreate && (
         <Button
+          id="btn-new-transfer"
           icon="pi pi-plus"
           severity="success"
           tooltip="Nueva transferencia"
@@ -169,7 +170,7 @@ const ProductTransferList = () => {
   }
 
   return (
-    <Card className="py-2" header={tableHeaderTemplate}>
+    <Card id="transfer-list-table" className="py-2" header={tableHeaderTemplate}>
       <Table
         columns={columns}
         data={listProductTransfer ?? []}

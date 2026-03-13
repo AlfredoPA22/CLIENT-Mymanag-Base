@@ -44,7 +44,6 @@ const SidebarMenu = ({
   const navigate = useNavigate();
   const location = useLocation();
   const { logout, userName, permissions, companyName } = useAuth();
-
   const menuSections = [
     {
       title: "Inicio",
@@ -213,7 +212,7 @@ const SidebarMenu = ({
       .toUpperCase() || "U";
 
   const SidebarLayout = (
-    <div className="h-full flex flex-col bg-slate-900 text-slate-100 w-full overflow-hidden">
+    <div id="sidebar-menu" className="h-full flex flex-col bg-slate-900 text-slate-100 w-full overflow-hidden">
       {/* Header */}
       <div
         className={`flex flex-col items-center gap-3 pt-5 pb-4 border-b border-white/10 transition-all duration-300 ${

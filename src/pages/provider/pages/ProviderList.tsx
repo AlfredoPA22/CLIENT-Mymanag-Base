@@ -51,6 +51,7 @@ const ProviderList = () => {
         <h1 className="text-2xl font-bold">{`Lista de proveedores (${listProvider.length})`}</h1>
 
         <Button
+          id="btn-new-provider"
           icon="pi pi-plus"
           severity="success"
           tooltip="Nuevo proveedor"
@@ -168,7 +169,7 @@ const ProviderList = () => {
   }
 
   return (
-    <Card className="py-2" header={tableHeaderTemplate}>
+    <Card id="provider-list-table" className="py-2" header={tableHeaderTemplate}>
       <Table
         columns={columns}
         data={listProvider}

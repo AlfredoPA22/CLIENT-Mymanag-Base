@@ -257,7 +257,7 @@ const ProductLowStockList = () => {
   }
 
   return (
-    <Card className="py-2" header={tableHeaderTemplate}>
+    <Card id="low-stock-table" className="py-2" header={tableHeaderTemplate}>
       <Table
         columns={columns}
         data={listLowStockProduct}

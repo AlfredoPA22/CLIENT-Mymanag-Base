@@ -37,6 +37,30 @@ body{
   background-color: #F2F4F6;
 }
 
+/* Driver.js tour custom styles */
+.mymanag-tour-popover .driver-popover-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1e293b;
+}
+.mymanag-tour-popover .driver-popover-description {
+  font-size: 13px;
+  color: #475569;
+  line-height: 1.5;
+}
+.mymanag-tour-popover .driver-popover-next-btn {
+  background: #A0C82E !important;
+  border-color: #A0C82E !important;
+  color: #fff !important;
+}
+.mymanag-tour-popover .driver-popover-next-btn:hover {
+  background: #8db026 !important;
+}
+.mymanag-tour-popover .driver-popover-prev-btn {
+  color: #475569 !important;
+  border-color: #cbd5e1 !important;
+}
+
 /* Sidebar custom scrollbar */
 .sidebar-scroll::-webkit-scrollbar {
   width: 4px;

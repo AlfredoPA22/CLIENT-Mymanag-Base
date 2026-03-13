@@ -92,6 +92,7 @@ const BrandList = () => {
       <div className="flex justify-between items-center m-2 px-5">
         <h1 className="text-2xl font-bold">{`Lista de marcas (${listBrand.length})`}</h1>
         <Button
+          id="btn-new-brand"
           icon="pi pi-plus"
           severity="success"
           tooltip="Nueva marca"
@@ -214,7 +215,7 @@ const BrandList = () => {
     return <LoadingSpinner />;
   }
   return (
-    <Card className="py-2" header={tableHeaderTemplate}>
+    <Card id="brand-list-table" className="py-2" header={tableHeaderTemplate}>
       <Table
         columns={columns}
         data={listBrand}
