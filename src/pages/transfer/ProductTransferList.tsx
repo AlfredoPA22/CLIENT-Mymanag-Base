@@ -31,7 +31,7 @@ const ProductTransferList = () => {
   const dispatch = useDispatch();
   const { permissions } = useAuth();
 
-  const canCreate = permissions.includes("LIST_AND_CREATE_TRANSFER");
+  const canCreate = permissions.includes("CREATE_TRANSFER");
   const canDelete = permissions.includes("DELETE_TRANSFER");
   const canEdit = permissions.includes("EDIT_TRANSFER");
 

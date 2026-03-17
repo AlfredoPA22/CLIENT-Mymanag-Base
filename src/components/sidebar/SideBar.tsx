@@ -20,6 +20,8 @@ import {
 import { PiSignOut, PiUsersThree } from "react-icons/pi";
 import { RiStore3Line } from "react-icons/ri";
 import { useLocation, useNavigate } from "react-router-dom";
+import { canDoAny } from "../../casl/ability";
+import { useAbility } from "../../casl/AbilityContext";
 import useAuth from "../../pages/auth/hooks/useAuth";
 import { ROUTES_MOCK } from "../../routes/RouteMocks";
 import { SidebarMenuItem } from "./SideBarMenuItem";
@@ -43,7 +45,8 @@ const SidebarMenu = ({
 }: Props) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { logout, userName, permissions, companyName } = useAuth();
+  const { logout, userName, companyName } = useAuth();
+  const ability = useAbility();
   const menuSections = [
     {
       title: "Inicio",
@@ -62,24 +65,24 @@ const SidebarMenu = ({
         {
           label: "Productos",
           icon: <FiPackage />,
-          permission: ["LIST_AND_CREATE_PRODUCT"],
+          permission: ["LIST_PRODUCT", "CREATE_PRODUCT"],
           items: [
             {
               label: "Gestión de productos",
               to: `${ROUTES_MOCK.INVENTORY}${ROUTES_MOCK.PRODUCTS}`,
-              permission: ["LIST_AND_CREATE_PRODUCT"],
+              permission: ["LIST_PRODUCT"],
               icon: <MdInventory />,
             },
             {
               label: "Bajo stock",
               to: `${ROUTES_MOCK.INVENTORY}${ROUTES_MOCK.LOW_PRODUCTS}`,
-              permission: ["LIST_AND_CREATE_PRODUCT"],
+              permission: ["LIST_PRODUCT"],
               icon: <BsBoxSeam />,
             },
             {
               label: "Importar productos",
               to: `${ROUTES_MOCK.INVENTORY}${ROUTES_MOCK.IMPORT_PRODUCTS}`,
-              permission: ["LIST_AND_CREATE_PRODUCT"],
+              permission: ["CREATE_PRODUCT"],
               icon: <BiImport />,
             },
           ],
@@ -88,25 +91,25 @@ const SidebarMenu = ({
           label: "Marcas",
           icon: <AiOutlineTags />,
           to: `${ROUTES_MOCK.INVENTORY}${ROUTES_MOCK.BRANDS}`,
-          permission: ["LIST_AND_CREATE_BRAND"],
+          permission: ["LIST_BRAND"],
         },
         {
           label: "Categorías",
           icon: <MdCategory />,
           to: `${ROUTES_MOCK.INVENTORY}${ROUTES_MOCK.CATEGORIES}`,
-          permission: ["LIST_AND_CREATE_CATEGORY"],
+          permission: ["LIST_CATEGORY"],
         },
         {
           label: "Almacenes",
           icon: <MdWarehouse />,
           to: `${ROUTES_MOCK.INVENTORY}${ROUTES_MOCK.WAREHOUSES}`,
-          permission: ["LIST_AND_CREATE_WAREHOUSE"],
+          permission: ["LIST_WAREHOUSE"],
         },
         {
           label: "Transferencias",
           icon: <BiTransfer />,
           to: ROUTES_MOCK.TRANSFERS,
-          permission: ["LIST_AND_CREATE_TRANSFER", "DETAIL_TRANSFER"],
+          permission: ["LIST_TRANSFER", "DETAIL_TRANSFER"],
         },
       ],
     },
@@ -117,13 +120,13 @@ const SidebarMenu = ({
           label: "Órdenes de compra",
           icon: <AiOutlineShoppingCart />,
           to: ROUTES_MOCK.PURCHASE_ORDERS,
-          permission: ["LIST_AND_CREATE_PURCHASE"],
+          permission: ["LIST_PURCHASE"],
         },
         {
           label: "Proveedores",
           icon: <FiTruck />,
           to: ROUTES_MOCK.PROVIDERS,
-          permission: ["LIST_AND_CREATE_PROVIDER"],
+          permission: ["LIST_PROVIDER"],
         },
       ],
     },
@@ -134,13 +137,13 @@ const SidebarMenu = ({
           label: "Órdenes de venta",
           icon: <RiStore3Line />,
           to: ROUTES_MOCK.SALE_ORDERS,
-          permission: ["LIST_AND_CREATE_SALE"],
+          permission: ["LIST_SALE"],
         },
         {
           label: "Clientes",
           icon: <HiOutlineUsers />,
           to: ROUTES_MOCK.CLIENTS,
-          permission: ["LIST_AND_CREATE_CLIENT"],
+          permission: ["LIST_CLIENT"],
         },
       ],
     },
@@ -200,8 +203,7 @@ const SidebarMenu = ({
   };
 
   const hasPermission = (requiredPermissions: string[] = []) =>
-    requiredPermissions.length === 0 ||
-    requiredPermissions.some((p) => permissions.includes(p));
+    requiredPermissions.length === 0 || canDoAny(ability, requiredPermissions);
 
   const initials =
     (userName ?? "")

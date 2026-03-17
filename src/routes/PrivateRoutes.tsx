@@ -52,7 +52,7 @@ const PrivateRoutes: FC = () => {
           <Route
             path={`${ROUTES_MOCK.PURCHASE_ORDERS}`}
             element={
-              <PermissionRoute permissions={["LIST_AND_CREATE_PURCHASE"]}>
+              <PermissionRoute permissions={["LIST_PURCHASE"]}>
                 <PurchaseOrderList />
               </PermissionRoute>
             }
@@ -60,7 +60,7 @@ const PrivateRoutes: FC = () => {
           <Route
             path={`${ROUTES_MOCK.PURCHASE_ORDERS}${ROUTES_MOCK.NEW_PURCHASE_ORDER}`}
             element={
-              <PermissionRoute permissions={["LIST_AND_CREATE_PURCHASE"]}>
+              <PermissionRoute permissions={["CREATE_PURCHASE"]}>
                 <CreatePurchaseOrder />
               </PermissionRoute>
             }
@@ -86,7 +86,7 @@ const PrivateRoutes: FC = () => {
           <Route
             path={`${ROUTES_MOCK.PROVIDERS}`}
             element={
-              <PermissionRoute permissions={["LIST_AND_CREATE_PROVIDER"]}>
+              <PermissionRoute permissions={["LIST_PROVIDER"]}>
                 <ProviderList />
               </PermissionRoute>
             }
@@ -96,7 +96,7 @@ const PrivateRoutes: FC = () => {
           <Route
             path={`${ROUTES_MOCK.SALE_ORDERS}`}
             element={
-              <PermissionRoute permissions={["LIST_AND_CREATE_SALE"]}>
+              <PermissionRoute permissions={["LIST_SALE"]}>
                 <SaleOrderList />
               </PermissionRoute>
             }
@@ -104,7 +104,7 @@ const PrivateRoutes: FC = () => {
           <Route
             path={`${ROUTES_MOCK.SALE_ORDERS}${ROUTES_MOCK.NEW_SALE_ORDER}`}
             element={
-              <PermissionRoute permissions={["LIST_AND_CREATE_SALE"]}>
+              <PermissionRoute permissions={["CREATE_SALE"]}>
                 <CreateSaleOrder />
               </PermissionRoute>
             }
@@ -128,7 +128,7 @@ const PrivateRoutes: FC = () => {
           <Route
             path={`${ROUTES_MOCK.SALE_ORDERS}${ROUTES_MOCK.SALE_PAYMENT}/:id`}
             element={
-              <PermissionRoute permissions={["LIST_AND_CREATE_PAYMENT"]}>
+              <PermissionRoute permissions={["LIST_PAYMENT"]}>
                 <SalePayment />
               </PermissionRoute>
             }
@@ -138,7 +138,7 @@ const PrivateRoutes: FC = () => {
           <Route
             path={`${ROUTES_MOCK.CLIENTS}`}
             element={
-              <PermissionRoute permissions={["LIST_AND_CREATE_CLIENT"]}>
+              <PermissionRoute permissions={["LIST_CLIENT"]}>
                 <ClientList />
               </PermissionRoute>
             }
@@ -184,9 +184,7 @@ const PrivateRoutes: FC = () => {
           <Route
             path={`${ROUTES_MOCK.TRANSFERS}`}
             element={
-              <PermissionRoute
-                permissions={["LIST_AND_CREATE_TRANSFER", "DETAIL_TRANSFER"]}
-              >
+              <PermissionRoute permissions={["LIST_TRANSFER"]}>
                 <ProductTransferList />
               </PermissionRoute>
             }
@@ -194,7 +192,7 @@ const PrivateRoutes: FC = () => {
           <Route
             path={`${ROUTES_MOCK.TRANSFERS}${ROUTES_MOCK.NEW_TRANSFER}`}
             element={
-              <PermissionRoute permissions={["LIST_AND_CREATE_TRANSFER"]}>
+              <PermissionRoute permissions={["CREATE_TRANSFER"]}>
                 <CreateProductTransfer />
               </PermissionRoute>
             }
@@ -219,7 +217,11 @@ const PrivateRoutes: FC = () => {
           {/* configuración de empresa */}
           <Route
             path={`${ROUTES_MOCK.SETTINGS}`}
-            element={<CompanySettings />}
+            element={
+              <PermissionRoute permissions={["UPDATE_COMPANY"]}>
+                <CompanySettings />
+              </PermissionRoute>
+            }
           />
         </Route>
       </Route>

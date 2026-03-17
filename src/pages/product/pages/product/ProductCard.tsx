@@ -7,6 +7,7 @@ import defaultProduct from "../../../../assets/defaultProduct.jpg";
 import { IProduct } from "../../../../utils/interfaces/Product";
 import { getStatus } from "../../../order/utils/getStatus";
 import useAuth from "../../../auth/hooks/useAuth";
+import { PermissionGuard } from "../../../auth/pages/PermissionGuard";
 
 interface ProductCardProps {
   productData: IProduct;
@@ -73,12 +74,14 @@ const ProductCard: FC<ProductCardProps> = ({ productData }) => {
                 {currency} {productData.sale_price.toFixed(2)}
               </p>
             </div>
-            <div>
-              <p className="text-gray-400">Último Costo:</p>
-              <p className="font-semibold text-gray-600">
-                {currency} {productData.last_cost_price.toFixed(2)}
-              </p>
-            </div>
+            <PermissionGuard permissions={["VIEW_PRODUCT_COST"]}>
+              <div>
+                <p className="text-gray-400">Último Costo:</p>
+                <p className="font-semibold text-gray-600">
+                  {currency} {productData.last_cost_price.toFixed(2)}
+                </p>
+              </div>
+            </PermissionGuard>
             <div>
               <p className="text-gray-400">Marca:</p>
               <p className="font-semibold">{productData.brand?.name}</p>

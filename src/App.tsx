@@ -11,10 +11,11 @@ import ToastGlobal from "./components/toast/ToastGlobal";
 import { getIsBlocked } from "./redux/accessors/blockUI.accessor";
 
 import AppRoutes from "./routes/AppRoutes";
+import { AbilityProvider } from "./casl/AbilityContext";
 
 function App() {
   return (
-    <>
+    <AbilityProvider>
       <BlockUI
         blocked={useSelector(getIsBlocked)}
         template={<LoadingSpinner />}
@@ -23,7 +24,7 @@ function App() {
       <ToastGlobal />
       <ConfirmDialog />
       <AppRoutes />
-    </>
+    </AbilityProvider>
   );
 }
 

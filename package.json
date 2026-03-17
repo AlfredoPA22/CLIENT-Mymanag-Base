@@ -11,6 +11,8 @@
   },
   "dependencies": {
     "@apollo/client": "^3.9.4",
+    "@casl/ability": "^6.8.0",
+    "@casl/react": "^5.0.1",
     "@reduxjs/toolkit": "^2.1.0",
     "chart.js": "^4.4.4",
     "dotenv": "^16.4.5",

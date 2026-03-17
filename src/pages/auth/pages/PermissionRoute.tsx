@@ -1,6 +1,7 @@
-import { Navigate } from "react-router-dom";
-import { ReactNode } from "react";
-import useAuth from "../hooks/useAuth";
+import { Navigate } from 'react-router-dom';
+import { ReactNode } from 'react';
+import { useAbility } from '../../../casl/AbilityContext';
+import { canDoAny } from '../../../casl/ability';
 
 type Props = {
   children: ReactNode;
@@ -8,11 +9,8 @@ type Props = {
 };
 
 export const PermissionRoute = ({ children, permissions }: Props) => {
-  const { permissions: userPermissions } = useAuth();
-
-  const hasPermission = permissions.some((p) => userPermissions.includes(p));
-
+  const ability = useAbility();
+  const hasPermission = canDoAny(ability, permissions);
   if (!hasPermission) return <Navigate to="/unauthorized" replace />;
-
   return <>{children}</>;
 };

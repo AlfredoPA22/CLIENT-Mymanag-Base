@@ -8,7 +8,7 @@ const ClientRoutes = () => {
       <Route
         path="/"
         element={
-          <PermissionRoute permissions={["LIST_AND_CREATE_CLIENT"]}>
+          <PermissionRoute permissions={["LIST_CLIENT"]}>
             <ClientList />
           </PermissionRoute>
         }

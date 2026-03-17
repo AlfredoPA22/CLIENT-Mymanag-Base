@@ -15,7 +15,7 @@ const ProductRoutes = () => {
       <Route
         path={ROUTES_MOCK.PRODUCTS}
         element={
-          <PermissionRoute permissions={["LIST_AND_CREATE_PRODUCT"]}>
+          <PermissionRoute permissions={["LIST_PRODUCT"]}>
             <ProductList />
           </PermissionRoute>
         }
@@ -23,7 +23,7 @@ const ProductRoutes = () => {
       <Route
         path={ROUTES_MOCK.LOW_PRODUCTS}
         element={
-          <PermissionRoute permissions={["LIST_AND_CREATE_PRODUCT"]}>
+          <PermissionRoute permissions={["LIST_PRODUCT"]}>
             <ProductLowStockList />
           </PermissionRoute>
         }
@@ -31,7 +31,7 @@ const ProductRoutes = () => {
       <Route
         path={ROUTES_MOCK.IMPORT_PRODUCTS}
         element={
-          <PermissionRoute permissions={["LIST_AND_CREATE_PRODUCT"]}>
+          <PermissionRoute permissions={["CREATE_PRODUCT"]}>
             <ProductImport />
           </PermissionRoute>
         }
@@ -47,7 +47,7 @@ const ProductRoutes = () => {
       <Route
         path={ROUTES_MOCK.BRANDS}
         element={
-          <PermissionRoute permissions={["LIST_AND_CREATE_BRAND"]}>
+          <PermissionRoute permissions={["LIST_BRAND"]}>
             <BrandList />
           </PermissionRoute>
         }
@@ -55,7 +55,7 @@ const ProductRoutes = () => {
       <Route
         path={ROUTES_MOCK.CATEGORIES}
         element={
-          <PermissionRoute permissions={["LIST_AND_CREATE_CATEGORY"]}>
+          <PermissionRoute permissions={["LIST_CATEGORY"]}>
             <CategoryList />
           </PermissionRoute>
         }
@@ -63,7 +63,7 @@ const ProductRoutes = () => {
       <Route
         path={ROUTES_MOCK.WAREHOUSES}
         element={
-          <PermissionRoute permissions={["LIST_AND_CREATE_WAREHOUSE"]}>
+          <PermissionRoute permissions={["LIST_WAREHOUSE"]}>
             <WarehouseList />
           </PermissionRoute>
         }
