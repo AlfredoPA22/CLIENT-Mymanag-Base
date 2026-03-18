@@ -130,18 +130,36 @@ export const generatePDF = async (
     "Cant.",
     `P. Compra (${currency})`,
     `Subtotal (${currency})`,
-    "Seriales",
   ];
 
-  const rows = data.purchaseOrderDetail.map((detail) => [
-    detail.purchaseOrderDetail.product.code,
-    detail.purchaseOrderDetail.product.name,
-    detail.purchaseOrderDetail.product.brand.name,
-    detail.purchaseOrderDetail.quantity,
-    detail.purchaseOrderDetail.purchase_price,
-    detail.purchaseOrderDetail.subtotal,
-    detail.productSerial.map((s) => s.serial).join("   ·   ") || "—",
-  ]);
+  const rows = data.purchaseOrderDetail.flatMap((detail) => {
+    const mainRow = [
+      detail.purchaseOrderDetail.product.code,
+      detail.purchaseOrderDetail.product.name,
+      detail.purchaseOrderDetail.product.brand.name,
+      detail.purchaseOrderDetail.quantity,
+      detail.purchaseOrderDetail.purchase_price,
+      detail.purchaseOrderDetail.subtotal,
+    ];
+
+    const serials = detail.productSerial.map((s) => s.serial);
+    if (serials.length === 0) return [mainRow];
+
+    const serialRow = [
+      {
+        content: `Seriales: ${serials.join("   ·   ")}`,
+        colSpan: 6,
+        styles: {
+          fillColor: [248, 250, 252] as [number, number, number],
+          textColor: INK_LIGHT,
+          fontSize: 6.5,
+          fontStyle: "italic" as const,
+          cellPadding: { top: 2, right: 4, bottom: 2, left: 8 },
+        },
+      },
+    ];
+    return [mainRow, serialRow];
+  });
 
   autoTable(doc, {
     head: [columns],
@@ -159,13 +177,12 @@ export const generatePDF = async (
     startY: infoY + 30,
     theme: "plain",
     columnStyles: {
-      0: { cellWidth: 22, halign: "center" },
-      1: { cellWidth: 46 },
-      2: { cellWidth: 20 },
-      3: { cellWidth: 12, halign: "center" },
-      4: { cellWidth: 26, halign: "right" },
-      5: { cellWidth: 24, halign: "right" },
-      6: { cellWidth: 32 },
+      0: { cellWidth: 24, halign: "center" },
+      1: { cellWidth: 52 },
+      2: { cellWidth: 24 },
+      3: { cellWidth: 14, halign: "center" },
+      4: { cellWidth: 30, halign: "right" },
+      5: { cellWidth: 28, halign: "right" },
     },
     tableLineColor: RULE,
     tableLineWidth: 0.3,

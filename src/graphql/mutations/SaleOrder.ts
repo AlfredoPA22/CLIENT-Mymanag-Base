@@ -5,12 +5,14 @@ export const CREATE_SALE_ORDER = gql`
     $date: String!
     $client: String!
     $payment_method: String!
+    $contado_payment_method: String
   ) {
     createSaleOrder(
       saleOrderInput: {
         date: $date
         client: $client
         payment_method: $payment_method
+        contado_payment_method: $contado_payment_method
       }
     ) {
       _id

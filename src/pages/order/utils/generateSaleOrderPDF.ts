@@ -96,6 +96,12 @@ export const generatePDF = async (
   // ── INFO FIELDS ──────────────────────────────────────────
   const infoY = 40;
 
+  // Método de pago a mostrar
+  const paymentDisplay =
+    data.saleOrder.payment_method === "Contado"
+      ? `${data.saleOrder.payment_method}  ·  ${data.saleOrder.contado_payment_method ?? "—"}`
+      : data.saleOrder.payment_method ?? "—";
+
   // Left column
   doc.setFont("helvetica", "bold");
   doc.setFontSize(7);
@@ -115,6 +121,15 @@ export const generatePDF = async (
   doc.setTextColor(...INK);
   doc.text(data.saleOrder.status, MARGIN, infoY + 19);
 
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(7);
+  doc.setTextColor(...INK_MID);
+  doc.text("MÉTODO DE PAGO", MARGIN, infoY + 26);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  doc.setTextColor(...INK);
+  doc.text(paymentDisplay, MARGIN, infoY + 32);
+
   // Right column — total
   doc.setFont("helvetica", "bold");
   doc.setFontSize(7);
@@ -126,7 +141,7 @@ export const generatePDF = async (
   doc.text(`${data.saleOrder.total} ${currency}`, PAGE_W - MARGIN, infoY + 9, { align: "right" });
 
   // ── SECTION RULE ─────────────────────────────────────────
-  drawRule(doc, infoY + 25);
+  drawRule(doc, infoY + 38);
 
   // ── TABLE ────────────────────────────────────────────────
   const columns = [
@@ -180,7 +195,7 @@ export const generatePDF = async (
     body: rows,
     bodyStyles: { fontSize: 8, textColor: INK, cellPadding: 3 },
     alternateRowStyles: { fillColor: ROW_ALT },
-    startY: infoY + 30,
+    startY: infoY + 43,
     theme: "plain",
     columnStyles: {
       0: { cellWidth: 24, halign: "center" },

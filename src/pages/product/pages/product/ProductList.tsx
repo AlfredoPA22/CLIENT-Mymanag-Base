@@ -6,7 +6,8 @@ import { Button } from "primereact/button";
 import { ColumnEditorOptions } from "primereact/column";
 import { DataTableSelectionSingleChangeEvent } from "primereact/datatable";
 import { Dialog } from "primereact/dialog";
-import { useState } from "react";
+import { Dropdown } from "primereact/dropdown";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import defaultProduct from "../../../../assets/defaultProduct.jpg";
 import Table from "../../../../components/datatable/Table";
@@ -20,6 +21,7 @@ import {
   LIST_PRODUCT,
 } from "../../../../graphql/queries/Product";
 import useTableGlobalFilter from "../../../../hooks/useTableGlobalFilter";
+import { productStatus } from "../../../../utils/enums/productStatus";
 import { stockType } from "../../../../utils/enums/stockType.enum";
 import { ToastSeverity } from "../../../../utils/enums/toast.enum";
 import { IProduct } from "../../../../utils/interfaces/Product";
@@ -36,8 +38,59 @@ import { useDispatch } from "react-redux";
 import { setIsBlocked } from "../../../../redux/slices/blockUISlice";
 import useAuth from "../../../auth/hooks/useAuth";
 
+const STOCK_TYPE_OPTIONS = [
+  { label: "Serializado", value: stockType.SERIALIZADO },
+  { label: "Individual", value: stockType.INDIVIDUAL },
+];
+
+const STATUS_OPTIONS = [
+  { label: "Disponible", value: productStatus.DISPONIBLE },
+  { label: "Sin stock", value: productStatus.SIN_STOCK },
+];
+
 const ProductList = () => {
   const { listProduct, loadingListProduct } = useProductList();
+
+  // ── Filter state ──────────────────────────────────────────────
+  const [brandFilter, setBrandFilter] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("");
+  const [stockTypeFilter, setStockTypeFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+
+  const hasActiveFilter = !!brandFilter || !!categoryFilter || !!stockTypeFilter || !!statusFilter;
+
+  const clearFilters = () => {
+    setBrandFilter("");
+    setCategoryFilter("");
+    setStockTypeFilter("");
+    setStatusFilter("");
+  };
+
+  const brandOptions = useMemo(() => {
+    const names = [...new Set(
+      (listProduct ?? []).map((p: IProduct) => p.brand?.name).filter(Boolean)
+    )];
+    return names.sort().map((n) => ({ label: n, value: n }));
+  }, [listProduct]);
+
+  const categoryOptions = useMemo(() => {
+    const names = [...new Set(
+      (listProduct ?? []).map((p: IProduct) => p.category?.name).filter(Boolean)
+    )];
+    return names.sort().map((n) => ({ label: n, value: n }));
+  }, [listProduct]);
+
+  const filteredData = useMemo(() => {
+    if (!listProduct) return [];
+    return listProduct.filter((p: IProduct) => {
+      if (brandFilter && p.brand?.name !== brandFilter) return false;
+      if (categoryFilter && p.category?.name !== categoryFilter) return false;
+      if (stockTypeFilter && p.stock_type !== stockTypeFilter) return false;
+      if (statusFilter && p.status !== statusFilter) return false;
+      return true;
+    });
+  }, [listProduct, brandFilter, categoryFilter, stockTypeFilter, statusFilter]);
+
   const [visibleForm, setVisibleForm] = useState<boolean>(false);
   const [visibleSearch, setVisibleSearch] = useState<boolean>(false);
   const [visibleListSerial, setVisibleListSerial] = useState<boolean>(false);
@@ -102,7 +155,7 @@ const ProductList = () => {
   const tableHeaderTemplate = () => {
     return (
       <div className="flex justify-between items-center m-2 px-5">
-        <h1 className="text-2xl font-bold">{`Lista de productos (${listProduct.length})`}</h1>
+        <h1 className="text-2xl font-bold">{`Lista de productos (${filteredData.length})`}</h1>
 
         <div className="flex gap-2">
           <Button
@@ -271,10 +324,90 @@ const ProductList = () => {
   }
 
   return (
+    <div className="flex flex-col gap-3">
+      {/* ── Filter panel ──────────────────────────────────────── */}
+      <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4">
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+            <i className="pi pi-filter text-slate-500" />
+            Filtros
+            {hasActiveFilter && (
+              <Tag severity="info" className="text-xs">{filteredData.length} resultado{filteredData.length !== 1 ? "s" : ""}</Tag>
+            )}
+          </span>
+          {hasActiveFilter && (
+            <Button
+              label="Limpiar filtros"
+              icon="pi pi-times"
+              size="small"
+              severity="secondary"
+              outlined
+              onClick={clearFilters}
+            />
+          )}
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {/* Marca */}
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-medium text-slate-500">Marca</label>
+            <Dropdown
+              value={brandFilter}
+              options={brandOptions}
+              onChange={(e) => setBrandFilter(e.value)}
+              placeholder="Todas"
+              showClear
+              filter
+              className="w-full text-sm"
+            />
+          </div>
+
+          {/* Categoría */}
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-medium text-slate-500">Categoría</label>
+            <Dropdown
+              value={categoryFilter}
+              options={categoryOptions}
+              onChange={(e) => setCategoryFilter(e.value)}
+              placeholder="Todas"
+              showClear
+              filter
+              className="w-full text-sm"
+            />
+          </div>
+
+          {/* Tipo de stock */}
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-medium text-slate-500">Tipo de stock</label>
+            <Dropdown
+              value={stockTypeFilter}
+              options={STOCK_TYPE_OPTIONS}
+              onChange={(e) => setStockTypeFilter(e.value)}
+              placeholder="Todos"
+              showClear
+              className="w-full text-sm"
+            />
+          </div>
+
+          {/* Estado */}
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-medium text-slate-500">Estado</label>
+            <Dropdown
+              value={statusFilter}
+              options={STATUS_OPTIONS}
+              onChange={(e) => setStatusFilter(e.value)}
+              placeholder="Todos"
+              showClear
+              className="w-full text-sm"
+            />
+          </div>
+        </div>
+      </div>
+
     <Card id="product-list-table" className="py-2" header={tableHeaderTemplate}>
       <Table
         columns={columns}
-        data={listProduct}
+        data={filteredData}
         emptyMessage="Sin productos."
         size="small"
         actionBodyTemplate={actionBodyTemplate}
@@ -324,6 +457,7 @@ const ProductList = () => {
         <SearchProductForm />
       </Dialog>
     </Card>
+    </div>
   );
 };
 

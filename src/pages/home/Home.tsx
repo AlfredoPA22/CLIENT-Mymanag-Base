@@ -5,6 +5,7 @@ import GuidesSection from "./GuidesSection";
 import HeaderHome from "./HeaderHome";
 import SalesSection from "./SalesSection";
 import SearchSection from "./SearchSection";
+import TopRankingsSection from "./TopRankingsSection";
 
 const getGreeting = () => {
   const h = new Date().getHours();
@@ -44,6 +45,8 @@ const Home: FC = () => {
       <PermissionGuard permissions={["SEARCH_PRODUCT"]}>
         <SearchSection />
       </PermissionGuard>
+
+      <TopRankingsSection />
 
       <SalesSection />
     </div>

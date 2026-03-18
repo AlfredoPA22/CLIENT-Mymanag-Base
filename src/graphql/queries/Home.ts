@@ -21,9 +21,18 @@ export const GENERAL_DATA = gql`
 `;
 
 export const REPORT_SALE_ORDER_BY_CLIENT = gql`
-  query ReportSaleOrderByClient {
-    reportSaleOrderByClient {
+  query ReportSaleOrderByClient($startDate: Date, $endDate: Date) {
+    reportSaleOrderByClient(startDate: $startDate, endDate: $endDate) {
       client
+      total
+    }
+  }
+`;
+
+export const REPORT_SALE_ORDER_BY_SELLER = gql`
+  query ReportSaleOrderBySeller($startDate: Date, $endDate: Date) {
+    reportSaleOrderBySeller(startDate: $startDate, endDate: $endDate) {
+      seller
       total
     }
   }

@@ -39,6 +39,7 @@ export const FIND_SALE_ORDER = gql`
       status
       total
       payment_method
+      contado_payment_method
     }
   }
 `;
@@ -58,6 +59,8 @@ export const FIND_SALE_ORDER_TO_PDF = gql`
         date
         status
         total
+        payment_method
+        contado_payment_method
       }
       saleOrderDetail {
         productSerial {

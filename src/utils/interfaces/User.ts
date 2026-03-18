@@ -13,6 +13,7 @@ export interface DecodedToken extends JwtPayload {
   currency: string;
   company: string;
   permissions: string[];
+  is_global: boolean;
 }
 
 export interface IUser {

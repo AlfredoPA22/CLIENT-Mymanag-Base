@@ -8,6 +8,7 @@ export interface AuthSliceState {
   companyName: string;
   currency: string;
   permissions: string[];
+  isGlobal: boolean;
 }
 
 const initialState: AuthSliceState = {
@@ -18,6 +19,7 @@ const initialState: AuthSliceState = {
   companyName: "",
   currency: "",
   permissions: [],
+  isGlobal: false,
 };
 
 const authSlice = createSlice({
@@ -33,6 +35,7 @@ const authSlice = createSlice({
       companyName: action.payload.companyName,
       permissions: action.payload.permissions,
       isAuthenticated: action.payload.isAuthenticated,
+      isGlobal: action.payload.isGlobal,
     }),
     setIsAuthenticated: (state, action: PayloadAction<boolean>) => ({
       ...state,

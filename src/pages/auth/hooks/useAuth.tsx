@@ -32,6 +32,7 @@ const useAuth = () => {
     permissions,
     companyName,
     currency,
+    isGlobal,
   } = useSelector((state: RootState) => state.authSlice);
   const [loadingLogin, setLoadingLogin] = useState<boolean>(false);
   const [loginMutation] = useMutation(LOGIN);
@@ -53,6 +54,7 @@ const useAuth = () => {
             permissions: decoded.permissions,
             currency: decoded.currency,
             companyName: decoded.company,
+            isGlobal: decoded.is_global ?? false,
           })
         );
         navigate("/");
@@ -131,6 +133,7 @@ const useAuth = () => {
     companyName,
     currency,
     permissions,
+    isGlobal,
     loadingLogin,
     isAuthenticated,
     login,

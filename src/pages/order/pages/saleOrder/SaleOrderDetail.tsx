@@ -106,10 +106,15 @@ const SaleOrderDetail: FC<SaleOrderDetailProps> = ({ saleOrderId }) => {
               <span className="text-lg font-medium text-gray-700">{date}</span>
             </div>
             <div className="flex flex-col">
-              <LabelInput name="date" label="Metodo de pago" />
+              <LabelInput name="payment_method" label="Condición de pago" />
               <span className="text-lg font-medium text-gray-700">
                 {data?.findSaleOrder.payment_method}
               </span>
+              {data?.findSaleOrder.payment_method === "Contado" && (
+                <span className="text-sm text-gray-500 mt-0.5">
+                  {data?.findSaleOrder.contado_payment_method ?? "No especificado"}
+                </span>
+              )}
             </div>
           </div>
 

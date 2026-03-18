@@ -11,7 +11,7 @@ import {
 import { useEffect } from "react";
 import { Bar } from "react-chartjs-2";
 import ReportByClientSkeleton from "../../components/skeleton/ReportByClientSkeleton";
-import { REPORT_SALE_ORDER_BY_CLIENT } from "../../graphql/queries/Home";
+import { REPORT_SALE_ORDER_BY_SELLER } from "../../graphql/queries/Home";
 import { ToastSeverity } from "../../utils/enums/toast.enum";
 import { showToast } from "../../utils/toastUtils";
 import useAuth from "../auth/hooks/useAuth";
@@ -19,31 +19,31 @@ import useAuth from "../auth/hooks/useAuth";
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 const PALETTE = [
-  "rgba(16, 185, 129, 0.75)",
   "rgba(99, 102, 241, 0.75)",
-  "rgba(245, 158, 11, 0.75)",
+  "rgba(16, 185, 129, 0.75)",
   "rgba(14, 165, 233, 0.75)",
-  "rgba(160, 200, 46, 0.75)",
-  "rgba(239, 68, 68, 0.75)",
+  "rgba(245, 158, 11, 0.75)",
   "rgba(168, 85, 247, 0.75)",
+  "rgba(160, 200, 46, 0.75)",
   "rgba(249, 115, 22, 0.75)",
-  "rgba(236, 72, 153, 0.75)",
+  "rgba(239, 68, 68, 0.75)",
   "rgba(20, 184, 166, 0.75)",
+  "rgba(236, 72, 153, 0.75)",
 ];
 
-interface ReportByClientProps {
+interface ReportBySellerProps {
   startDate: Date;
   endDate: Date;
 }
 
-const ReportByClient = ({ startDate, endDate }: ReportByClientProps) => {
+const ReportBySeller = ({ startDate, endDate }: ReportBySellerProps) => {
   const { currency } = useAuth();
 
   const {
-    data: { reportSaleOrderByClient: listReport } = { reportSaleOrderByClient: [] },
+    data: { reportSaleOrderBySeller: listReport } = { reportSaleOrderBySeller: [] },
     loading,
     error,
-  } = useQuery(REPORT_SALE_ORDER_BY_CLIENT, {
+  } = useQuery(REPORT_SALE_ORDER_BY_SELLER, {
     variables: { startDate, endDate },
     fetchPolicy: "network-only",
   });
@@ -56,12 +56,12 @@ const ReportByClient = ({ startDate, endDate }: ReportByClientProps) => {
 
   if (loading) return <ReportByClientSkeleton />;
 
-  const clientNames = listReport.map((item: any) => item.client);
+  const sellerNames = listReport.map((item: any) => item.seller);
   const salesTotal = listReport.map((item: any) => item.total);
   const backgroundColors = listReport.map((_: any, i: number) => PALETTE[i % PALETTE.length]);
 
   const chartData = {
-    labels: clientNames,
+    labels: sellerNames,
     datasets: [
       {
         label: `Ventas (${currency})`,
@@ -87,7 +87,7 @@ const ReportByClient = ({ startDate, endDate }: ReportByClientProps) => {
 
   return (
     <div className="p-5 shadow-sm rounded-lg border border-gray-200 bg-white flex flex-col gap-3">
-      <h2 className="text-base font-semibold text-slate-800">Top 10 clientes</h2>
+      <h2 className="text-base font-semibold text-slate-800">Top 10 vendedores</h2>
       {listReport.length === 0 ? (
         <p className="text-sm text-slate-400">Sin datos en el período seleccionado.</p>
       ) : (
@@ -97,4 +97,4 @@ const ReportByClient = ({ startDate, endDate }: ReportByClientProps) => {
   );
 };
 
-export default ReportByClient;
+export default ReportBySeller;

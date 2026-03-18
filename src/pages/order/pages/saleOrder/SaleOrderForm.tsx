@@ -34,6 +34,7 @@ import { getStatus } from "../../utils/getStatus";
 import { schemaFormSaleOrder } from "../../validations/FormSaleOrderValidation";
 import DropdownInput from "../../../../components/dropdownInput/DropdownInput";
 import { saleOrderPaymentMethodOptions } from "../../utils/saleOrderPaymentMethodMock";
+import { salePaymentMethodOptions } from "../../utils/salePaymentMethodMock";
 import { AutoCompleteChangeEvent } from "primereact/autocomplete";
 import { setIsBlocked } from "../../../../redux/slices/blockUISlice";
 import { ROUTES_MOCK } from "../../../../routes/RouteMocks";
@@ -56,6 +57,8 @@ const SaleOrderForm = () => {
     null
   );
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("Contado");
+  const [selectedContadoPaymentMethod, setSelectedContadoPaymentMethod] =
+    useState("Efectivo");
 
   const navigate = useNavigate();
 
@@ -81,6 +84,7 @@ const SaleOrderForm = () => {
     date: new Date(),
     client: "",
     payment_method: "Contado",
+    contado_payment_method: "Efectivo",
   };
 
   useEffect(() => {
@@ -97,6 +101,10 @@ const SaleOrderForm = () => {
       date: values.date,
       client: values.client,
       payment_method: values.payment_method,
+      contado_payment_method:
+        values.payment_method === "Contado"
+          ? values.contado_payment_method
+          : undefined,
     };
 
     const { data } = await createSaleOrder({ variables: order });
@@ -110,6 +118,7 @@ const SaleOrderForm = () => {
     dispatch(resetSaleOrder());
     setSelectedClient(null);
     setSelectedPaymentMethod("Contado");
+    setSelectedContadoPaymentMethod("Efectivo");
     await refetchCodeOrder();
     resetForm();
   };
@@ -184,6 +193,15 @@ const SaleOrderForm = () => {
     setFieldValue(e.target.name, e.target.value);
   };
 
+  const handleContadoPaymentMethodChange = async (
+    e: AutoCompleteChangeEvent
+  ) => {
+    const { value } = e.target;
+    setSelectedContadoPaymentMethod(value ? value : "");
+    e.target.value = value ? value : "";
+    setFieldValue(e.target.name, e.target.value);
+  };
+
   const {
     handleChange,
     handleSubmit,
@@ -215,7 +233,7 @@ const SaleOrderForm = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
-        {/* Información del proveedor y fecha */}
+        {/* Información del cliente y fecha */}
         <section className="flex flex-col gap-3 border-r md:border-r-gray-300 md:pr-6">
           <div className="grid xl:grid-cols-2 gap-5">
             <div>
@@ -230,10 +248,10 @@ const SaleOrderForm = () => {
             </div>
 
             <DropdownInput
-              label="Metodo de pago"
+              label="Condición de pago"
               name="payment_method"
               optionLabel="label"
-              placeholder="Seleccionar metodo de pago"
+              placeholder="Seleccionar condición"
               mandatory
               options={saleOrderPaymentMethodOptions}
               value={selectedPaymentMethod}
@@ -242,6 +260,27 @@ const SaleOrderForm = () => {
               disabled={saleOrderInitialized}
             />
           </div>
+
+          {/* Método de pago — solo visible cuando es Contado */}
+          {values.payment_method === "Contado" && (
+            <DropdownInput
+              label="Método de pago"
+              name="contado_payment_method"
+              optionLabel="label"
+              placeholder="¿Cómo paga?"
+              mandatory
+              options={salePaymentMethodOptions}
+              value={selectedContadoPaymentMethod}
+              error={
+                errors.contado_payment_method
+                  ? errors.contado_payment_method
+                  : ""
+              }
+              onChange={handleContadoPaymentMethodChange}
+              disabled={saleOrderInitialized}
+            />
+          )}
+
           <div className="flex flex-col">
             <SelectInput
               label="Cliente"
