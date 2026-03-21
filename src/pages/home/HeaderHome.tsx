@@ -17,7 +17,7 @@ const HeaderHome: FC = () => {
   }
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-3">
+    <div className="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-8 gap-3">
       {/* Ventas del mes */}
       <Link to={ROUTES_MOCK.SALE_ORDERS} className={card}>
         <div className="w-11 h-11 rounded-xl bg-teal-50 group-hover:bg-teal-100 flex items-center justify-center transition-colors">
@@ -102,6 +102,39 @@ const HeaderHome: FC = () => {
           </p>
           <p className="text-[10px] text-slate-400 mt-0.5 font-semibold uppercase tracking-wide">
             Bajo stock
+          </p>
+        </div>
+      </Link>
+
+      {/* Cuentas por cobrar - monto */}
+      <Link to={ROUTES_MOCK.SALE_ORDERS} className={card}>
+        <div className="w-11 h-11 rounded-xl bg-rose-50 group-hover:bg-rose-100 flex items-center justify-center transition-colors">
+          <i className="pi pi-credit-card text-rose-500 text-lg" />
+        </div>
+        <div>
+          <p className="text-2xl font-bold text-rose-600">
+            {generalData.total_credit_pending ?? 0}
+            <span className="text-sm font-medium text-slate-400 ml-1">
+              {currency}
+            </span>
+          </p>
+          <p className="text-[10px] text-slate-400 mt-0.5 font-semibold uppercase tracking-wide">
+            Por cobrar
+          </p>
+        </div>
+      </Link>
+
+      {/* Cuentas por cobrar - cantidad */}
+      <Link to={ROUTES_MOCK.SALE_ORDERS} className={card}>
+        <div className="w-11 h-11 rounded-xl bg-rose-50 group-hover:bg-rose-100 flex items-center justify-center transition-colors">
+          <i className="pi pi-file text-rose-400 text-lg" />
+        </div>
+        <div>
+          <p className="text-2xl font-bold text-rose-600">
+            {generalData.total_credit_pending_count ?? 0}
+          </p>
+          <p className="text-[10px] text-slate-400 mt-0.5 font-semibold uppercase tracking-wide">
+            Facturas pendientes
           </p>
         </div>
       </Link>

@@ -1,9 +1,11 @@
 import { useState } from "react";
-import { Button } from "primereact/button";
 import { Calendar } from "primereact/calendar";
 import { PermissionGuard } from "../auth/pages/PermissionGuard";
 import ReportByClient from "./ReportByClient";
 import ReportBySeller from "./ReportBySeller";
+import ReportByProduct from "./ReportByProduct";
+import ReportMonthlySales from "./ReportMonthlySales";
+import ReportByCategory from "./ReportByCategory";
 
 const getDefaultRange = (): [Date, Date] => {
   const now = new Date();
@@ -14,60 +16,57 @@ const getDefaultRange = (): [Date, Date] => {
 
 const TopRankingsSection = () => {
   const [defaultStart, defaultEnd] = getDefaultRange();
+  const [dateRange, setDateRange] = useState<(Date | null)[]>([defaultStart, defaultEnd]);
+  const [appliedRange, setAppliedRange] = useState<[Date, Date]>([defaultStart, defaultEnd]);
 
-  // Picker state (what the user is editing)
-  const [pickerStart, setPickerStart] = useState<Date>(defaultStart);
-  const [pickerEnd, setPickerEnd] = useState<Date>(defaultEnd);
-
-  // Applied state (what the charts actually use — only changes on "Aplicar")
-  const [appliedStart, setAppliedStart] = useState<Date>(defaultStart);
-  const [appliedEnd, setAppliedEnd] = useState<Date>(defaultEnd);
-
-  const handleApply = () => {
-    setAppliedStart(pickerStart);
-    setAppliedEnd(pickerEnd);
+  const handleDateChange = (value: Date | (Date | null)[] | null) => {
+    if (Array.isArray(value)) {
+      setDateRange(value);
+      if (value[0] && value[1]) {
+        setAppliedRange([value[0], value[1]]);
+      }
+    }
   };
+
+  const [appliedStart, appliedEnd] = appliedRange;
 
   return (
     <PermissionGuard permissions={["REPORT_SALE_ORDER_BY_CLIENT"]}>
       <div className="flex flex-col gap-3">
-        {/* Date range filter */}
-        <div className="flex flex-wrap items-center gap-3 p-4 bg-white border border-gray-200 rounded-lg shadow-sm">
-          <span className="text-sm font-medium text-slate-600">Período:</span>
-          <div className="flex flex-wrap items-center gap-2">
-            <Calendar
-              value={pickerStart}
-              onChange={(e) => e.value && setPickerStart(e.value as Date)}
-              dateFormat="dd/mm/yy"
-              placeholder="Desde"
-              showIcon
-              inputClassName="text-sm"
-              className="w-40"
-            />
-            <span className="text-slate-400 text-sm">—</span>
-            <Calendar
-              value={pickerEnd}
-              onChange={(e) => e.value && setPickerEnd(e.value as Date)}
-              dateFormat="dd/mm/yy"
-              placeholder="Hasta"
-              showIcon
-              inputClassName="text-sm"
-              className="w-40"
-            />
-            <Button
-              label="Aplicar"
-              icon="pi pi-search"
-              size="small"
-              onClick={handleApply}
-            />
+
+        {/* ── Fila 1: Tendencia mensual (2/3) + Categorías (1/3) ── */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+          <div className="lg:col-span-2">
+            <ReportMonthlySales />
           </div>
+          <PermissionGuard permissions={["REPORT_SALE_ORDER_BY_CATEGORY"]}>
+            <ReportByCategory />
+          </PermissionGuard>
         </div>
 
-        {/* Charts side by side */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+        {/* ── Selector de período (range en un solo picker) ── */}
+        <div className="flex flex-wrap items-center gap-3 p-3 bg-white border border-gray-200 rounded-lg shadow-sm">
+          <span className="text-sm font-medium text-slate-600">Período:</span>
+          <Calendar
+            value={dateRange as Date[]}
+            onChange={(e) => handleDateChange(e.value as (Date | null)[] | null)}
+            selectionMode="range"
+            dateFormat="dd/mm/yy"
+            placeholder="Seleccionar período"
+            showIcon
+            showButtonBar
+            inputClassName="text-sm"
+            className="w-64"
+          />
+        </div>
+
+        {/* ── Fila 2: Top 10 Clientes + Vendedores + Productos (3 cols) ── */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
           <ReportByClient startDate={appliedStart} endDate={appliedEnd} />
           <ReportBySeller startDate={appliedStart} endDate={appliedEnd} />
+          <ReportByProduct startDate={appliedStart} endDate={appliedEnd} />
         </div>
+
       </div>
     </PermissionGuard>
   );

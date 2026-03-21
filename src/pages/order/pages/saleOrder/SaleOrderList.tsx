@@ -64,11 +64,12 @@ const SaleOrderList = () => {
   const [sellerFilter, setSellerFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [paymentMethodFilter, setPaymentMethodFilter] = useState("");
+  const [contadoPaymentMethodFilter, setContadoPaymentMethodFilter] = useState("");
   const [isPaidFilter, setIsPaidFilter] = useState("");
 
   const hasActiveFilter =
     !!startDate || !!endDate || !!clientFilter || !!sellerFilter ||
-    !!statusFilter || !!paymentMethodFilter || !!isPaidFilter;
+    !!statusFilter || !!paymentMethodFilter || !!contadoPaymentMethodFilter || !!isPaidFilter;
 
   const clearFilters = () => {
     setStartDate(null);
@@ -77,6 +78,7 @@ const SaleOrderList = () => {
     setSellerFilter("");
     setStatusFilter("");
     setPaymentMethodFilter("");
+    setContadoPaymentMethodFilter("");
     setIsPaidFilter("");
   };
 
@@ -86,6 +88,16 @@ const SaleOrderList = () => {
       (listSaleOrder ?? []).map((o: ISaleOrder) => o.client?.fullName).filter(Boolean)
     )];
     return names.sort().map((n) => ({ label: n, value: n }));
+  }, [listSaleOrder]);
+
+  // Unique contado payment methods for dropdown
+  const contadoPaymentMethodOptions = useMemo(() => {
+    const values = [...new Set(
+      (listSaleOrder ?? [])
+        .map((o: ISaleOrder) => o.contado_payment_method)
+        .filter(Boolean)
+    )];
+    return values.sort().map((v) => ({ label: v, value: v }));
   }, [listSaleOrder]);
 
   // Unique sellers for dropdown
@@ -116,6 +128,7 @@ const SaleOrderList = () => {
       if (sellerFilter && order.created_by?.user_name !== sellerFilter) return false;
       if (statusFilter && order.status !== statusFilter) return false;
       if (paymentMethodFilter && order.payment_method !== paymentMethodFilter) return false;
+      if (contadoPaymentMethodFilter && order.contado_payment_method !== contadoPaymentMethodFilter) return false;
       if (isPaidFilter) {
         if (order.status !== orderStatus.APROBADO) return false;
         if (isPaidFilter === "Pagada" && !order.is_paid) return false;
@@ -123,7 +136,7 @@ const SaleOrderList = () => {
       }
       return true;
     });
-  }, [listSaleOrder, startDate, endDate, clientFilter, sellerFilter, statusFilter, paymentMethodFilter, isPaidFilter]);
+  }, [listSaleOrder, startDate, endDate, clientFilter, sellerFilter, statusFilter, paymentMethodFilter, contadoPaymentMethodFilter, isPaidFilter]);
 
   // ── Mutations ─────────────────────────────────────────────────
   const [DeleteSaleOrder] = useMutation(DELETE_SALE_ORDER, {
@@ -235,6 +248,13 @@ const SaleOrderList = () => {
     { field: "client.firstName", header: "Cliente", sortable: true, body: clientBodyTemplate },
     { field: "created_by.user_name", header: "Vendedor", sortable: true },
     { field: "payment_method", header: "Metodo de pago", sortable: true },
+    {
+      field: "contado_payment_method", header: "Forma de pago", sortable: true, style: { textAlign: "center" },
+      body: (rowData: ISaleOrder) =>
+        rowData.payment_method === paymentMethod.CONTADO && rowData.contado_payment_method
+          ? <Tag severity="secondary">{rowData.contado_payment_method}</Tag>
+          : <span style={{ color: "#6B7280" }}>-</span>,
+    },
     {
       field: "total", header: "Total", sortable: true, style: { textAlign: "center" },
       body: (rowData: ISaleOrder) => (
@@ -357,6 +377,19 @@ const SaleOrderList = () => {
               options={PAYMENT_METHOD_OPTIONS}
               onChange={(e) => setPaymentMethodFilter(e.value)}
               placeholder="Todos"
+              showClear
+              className="w-full text-sm"
+            />
+          </div>
+
+          {/* Forma de pago (contado) */}
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-medium text-slate-500">Forma de pago</label>
+            <Dropdown
+              value={contadoPaymentMethodFilter}
+              options={contadoPaymentMethodOptions}
+              onChange={(e) => setContadoPaymentMethodFilter(e.value)}
+              placeholder="Todas"
               showClear
               className="w-full text-sm"
             />

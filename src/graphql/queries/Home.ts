@@ -16,6 +16,8 @@ export const GENERAL_DATA = gql`
         image
       }
       best_product_sales_number
+      total_credit_pending
+      total_credit_pending_count
     }
   }
 `;
@@ -42,6 +44,24 @@ export const REPORT_SALE_ORDER_BY_CATEGORY = gql`
   query ReportSaleOrderByCategory {
     reportSaleOrderByCategory {
       category
+      total
+    }
+  }
+`;
+
+export const REPORT_SALE_ORDER_BY_PRODUCT = gql`
+  query ReportSaleOrderByProduct($startDate: Date, $endDate: Date) {
+    reportSaleOrderByProduct(startDate: $startDate, endDate: $endDate) {
+      product
+      total
+    }
+  }
+`;
+
+export const REPORT_MONTHLY_SALES = gql`
+  query ReportMonthlySales {
+    reportMonthlySales {
+      month
       total
     }
   }

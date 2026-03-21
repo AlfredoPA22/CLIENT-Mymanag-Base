@@ -16,6 +16,7 @@ export const LIST_SALE_ORDER = gql`
         user_name
       }
       payment_method
+      contado_payment_method
       is_paid
       date
       status
@@ -91,6 +92,24 @@ export const REPORT_SALE_ORDER_BY_YEAR = gql`
     reportSaleOrderByYear {
       month
       total
+    }
+  }
+`;
+
+export const REPORT_CUENTAS_COBRAR = gql`
+  query ReportCuentasCobrar($startDate: Date, $endDate: Date) {
+    reportCuentasCobrar(startDate: $startDate, endDate: $endDate) {
+      _id
+      code
+      date
+      client {
+        _id
+        fullName
+      }
+      total
+      status
+      payment_method
+      is_paid
     }
   }
 `;
