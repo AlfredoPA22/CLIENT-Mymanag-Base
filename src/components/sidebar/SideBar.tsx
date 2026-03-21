@@ -6,7 +6,6 @@ import {
   AiOutlineUser,
 } from "react-icons/ai";
 import { BiImport, BiTransfer } from "react-icons/bi";
-import { BsBoxSeam } from "react-icons/bs";
 import { FiChevronLeft, FiPackage, FiTruck } from "react-icons/fi";
 import { HiOutlineUsers } from "react-icons/hi";
 import {
@@ -72,12 +71,6 @@ const SidebarMenu = ({
               to: `${ROUTES_MOCK.INVENTORY}${ROUTES_MOCK.PRODUCTS}`,
               permission: ["LIST_PRODUCT"],
               icon: <MdInventory />,
-            },
-            {
-              label: "Bajo stock",
-              to: `${ROUTES_MOCK.INVENTORY}${ROUTES_MOCK.LOW_PRODUCTS}`,
-              permission: ["LIST_PRODUCT"],
-              icon: <BsBoxSeam />,
             },
             {
               label: "Importar productos",

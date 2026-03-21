@@ -6,7 +6,6 @@ import ProductDetail from "./pages/product/ProductDetail";
 import ProductList from "./pages/product/ProductList";
 import WarehouseList from "./pages/warehouse/WarehouseList";
 import { ROUTES_MOCK } from "../../routes/RouteMocks";
-import ProductLowStockList from "./pages/product/ProductLowStockList";
 import ProductImport from "./pages/product/ProductImport";
 
 const ProductRoutes = () => {
@@ -17,14 +16,6 @@ const ProductRoutes = () => {
         element={
           <PermissionRoute permissions={["LIST_PRODUCT"]}>
             <ProductList />
-          </PermissionRoute>
-        }
-      />
-      <Route
-        path={ROUTES_MOCK.LOW_PRODUCTS}
-        element={
-          <PermissionRoute permissions={["LIST_PRODUCT"]}>
-            <ProductLowStockList />
           </PermissionRoute>
         }
       />

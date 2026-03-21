@@ -90,7 +90,7 @@ const HeaderHome: FC = () => {
 
       {/* Bajo stock */}
       <Link
-        to={`${ROUTES_MOCK.INVENTORY}${ROUTES_MOCK.LOW_PRODUCTS}`}
+        to={`${ROUTES_MOCK.INVENTORY}${ROUTES_MOCK.PRODUCTS}`}
         className={card}
       >
         <div className="w-11 h-11 rounded-xl bg-orange-50 group-hover:bg-orange-100 flex items-center justify-center transition-colors">

@@ -11,8 +11,8 @@ import PurchaseOrderReportFilter from "./PurchaseOrderReportFilter";
 import SaleOrderReportFilter from "./SaleOrderReportFilter";
 import InventoryValueReportFilter from "./InventoryValueReportFilter";
 import CuentasCobrarReportFilter from "./CuentasCobrarReportFilter";
-import { generateLowStockReportPDF } from "../utils/generateLowStockReportPDF";
 import { generateClientReportPDF } from "../utils/generateClientReportPDF";
+import { generateLowStockReportPDF } from "../utils/generateLowStockReportPDF";
 
 const ReportsPage = () => {
   const [visibleProductFilter, setVisibleProductFilter] = useState(false);
@@ -20,8 +20,8 @@ const ReportsPage = () => {
   const [visibleSaleOrderFilter, setVisibleSaleOrderFilter] = useState(false);
   const [visibleInventoryValue, setVisibleInventoryValue] = useState(false);
   const [visibleCuentasCobrar, setVisibleCuentasCobrar] = useState(false);
-  const [loadingLowStock, setLoadingLowStock] = useState(false);
   const [loadingClients, setLoadingClients] = useState(false);
+  const [loadingLowStock, setLoadingLowStock] = useState(false);
 
   const { permissions } = useAuth();
   const apolloClient = useApolloClient();
