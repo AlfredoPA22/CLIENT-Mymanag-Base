@@ -95,13 +95,9 @@ const Table: FC<TableProps<any>> = ({
           if (selected.length > 0) return;
           onSelectionChange(e);
         }}
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         pt={{
-          bodyRow: {
-            onDragStart: (e: React.DragEvent) => e.preventDefault(),
-          },
-          bodyCell: {
-            onDragStart: (e: React.DragEvent) => e.preventDefault(),
-          },
+          bodyRow: { onDragStart: (e: any) => e.preventDefault() },
         }}
       >
         {columns.map((column) => (
