@@ -4,5 +4,7 @@ export const severityStatus = {
   reservado : "warning",
   vendido: "info",
   sin_stock: "danger",
-  aprobado: "success"
+  aprobado: "success",
+  cancelado: "danger",
+  devuelto: "warning"
 };

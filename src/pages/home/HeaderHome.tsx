@@ -4,19 +4,31 @@ import useGeneralData from "./hooks/useGeneralData";
 import HeaderHomeSkeleton from "../../components/skeleton/HeaderHomeSkeleton";
 import { ROUTES_MOCK } from "../../routes/RouteMocks";
 import useAuth from "../auth/hooks/useAuth";
+import { formatDateRange } from "../../utils/dateUtils";
 
 const card =
   "bg-white rounded-2xl border border-slate-100 shadow-sm p-4 flex flex-col items-center justify-center text-center gap-3 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 group";
 
-const HeaderHome: FC = () => {
-  const { generalData, loadingGeneralData } = useGeneralData();
+interface HeaderHomeProps {
+  startDate: Date;
+  endDate: Date;
+}
+
+const HeaderHome: FC<HeaderHomeProps> = ({ startDate, endDate }) => {
+  const { generalData, loadingGeneralData } = useGeneralData(startDate, endDate);
   const { currency } = useAuth();
+  const rangeLabel = formatDateRange(startDate, endDate);
 
   if (loadingGeneralData) {
     return <HeaderHomeSkeleton />;
   }
 
   return (
+    <div className="flex flex-col gap-2">
+    <p className="text-xs text-slate-400 font-medium">
+      <i className="pi pi-calendar mr-1" />
+      Período: <span className="text-slate-600">{rangeLabel}</span>
+    </p>
     <div className="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-8 gap-3">
       {/* Ventas del mes */}
       <Link to={ROUTES_MOCK.SALE_ORDERS} className={card}>
@@ -28,7 +40,7 @@ const HeaderHome: FC = () => {
             {generalData.total_sales_number}
           </p>
           <p className="text-[10px] text-slate-400 mt-0.5 font-semibold uppercase tracking-wide">
-            Ventas del mes
+            Ventas del período
           </p>
         </div>
       </Link>
@@ -170,6 +182,7 @@ const HeaderHome: FC = () => {
           </p>
         </div>
       )}
+    </div>
     </div>
   );
 };

@@ -13,6 +13,7 @@ export interface ISaleOrder {
   contado_payment_method?: string;
   created_by: IUser;
   is_paid: boolean;
+  has_return?: boolean;
 }
 
 export interface ISaleOrderInput {

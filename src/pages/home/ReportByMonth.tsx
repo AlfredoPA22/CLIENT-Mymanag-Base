@@ -13,9 +13,15 @@ import { getStatus } from "../order/utils/getStatus";
 import useReportByMonth from "./hooks/useReportByMonth";
 import { ROUTES_MOCK } from "../../routes/RouteMocks";
 import useAuth from "../auth/hooks/useAuth";
+import { formatDateRange } from "../../utils/dateUtils";
 
-const ReportByMonth = () => {
-  const { listSaleOrder, loadingListSaleOrder } = useReportByMonth();
+interface ReportByMonthProps {
+  startDate: Date;
+  endDate: Date;
+}
+
+const ReportByMonth = ({ startDate, endDate }: ReportByMonthProps) => {
+  const { listSaleOrder, loadingListSaleOrder } = useReportByMonth(startDate, endDate);
   const navigate = useNavigate();
   const { currency } = useAuth();
 
@@ -104,7 +110,7 @@ const ReportByMonth = () => {
   const { filters, renderFilterInput } = useTableGlobalFilter(columns);
 
   return (
-    <Card className="lg:col-span-2" title="Últimas ventas del mes">
+    <Card className="lg:col-span-2" title="Ventas del período" subTitle={formatDateRange(startDate, endDate)}>
       {loadingListSaleOrder && <TableSkeleton />}
       <Table
         columns={columns}

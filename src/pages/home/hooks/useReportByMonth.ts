@@ -4,13 +4,14 @@ import { REPORT_SALE_ORDER_BY_MONTH } from "../../../graphql/queries/Home";
 import { ToastSeverity } from "../../../utils/enums/toast.enum";
 import { showToast } from "../../../utils/toastUtils";
 
-const useReportByMonth = () => {
+const useReportByMonth = (startDate: Date, endDate: Date) => {
   const {
     data: { reportSaleOrderByMonth: listSaleOrder } = [],
     loading: loadingListSaleOrder,
     error,
   } = useQuery(REPORT_SALE_ORDER_BY_MONTH, {
     fetchPolicy: "network-only",
+    variables: { startDate, endDate },
   });
 
   useEffect(() => {

@@ -1,8 +1,8 @@
 import { gql } from "@apollo/client";
 
 export const GENERAL_DATA = gql`
-  query GeneralData {
-    generalData {
+  query GeneralData($startDate: Date, $endDate: Date) {
+    generalData(startDate: $startDate, endDate: $endDate) {
       stock
       total_products_number
       total_products_low
@@ -41,8 +41,8 @@ export const REPORT_SALE_ORDER_BY_SELLER = gql`
 `;
 
 export const REPORT_SALE_ORDER_BY_CATEGORY = gql`
-  query ReportSaleOrderByCategory {
-    reportSaleOrderByCategory {
+  query ReportSaleOrderByCategory($startDate: Date, $endDate: Date) {
+    reportSaleOrderByCategory(startDate: $startDate, endDate: $endDate) {
       category
       total
     }
@@ -68,8 +68,8 @@ export const REPORT_MONTHLY_SALES = gql`
 `;
 
 export const REPORT_SALE_ORDER_BY_MONTH = gql`
-  query ReportSaleOrderByMonth {
-    reportSaleOrderByMonth {
+  query ReportSaleOrderByMonth($startDate: Date, $endDate: Date) {
+    reportSaleOrderByMonth(startDate: $startDate, endDate: $endDate) {
       _id
       client {
         fullName

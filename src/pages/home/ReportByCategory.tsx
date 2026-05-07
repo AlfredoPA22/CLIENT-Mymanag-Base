@@ -8,16 +8,30 @@ import { REPORT_SALE_ORDER_BY_CATEGORY } from "../../graphql/queries/Home";
 import { ToastSeverity } from "../../utils/enums/toast.enum";
 import { showToast } from "../../utils/toastUtils";
 import useAuth from "../auth/hooks/useAuth";
+import { formatDateRange } from "../../utils/dateUtils";
 
 // Registrar PieChart
 ChartJS.register(ArcElement, Tooltip, Legend, Title);
 
-const ReportByCategory = () => {
+interface ICategoryReport {
+  category: string;
+  total: number;
+}
+
+interface ReportByCategoryProps {
+  startDate: Date;
+  endDate: Date;
+}
+
+const ReportByCategory = ({ startDate, endDate }: ReportByCategoryProps) => {
   const {
-    data: { reportSaleOrderByCategory: listReport } = [],
+    data: { reportSaleOrderByCategory: listReport } = { reportSaleOrderByCategory: [] as ICategoryReport[] },
     loading: loadingSaleOrderByCategory,
     error: errorSale,
-  } = useQuery(REPORT_SALE_ORDER_BY_CATEGORY, { fetchPolicy: "network-only" });
+  } = useQuery(REPORT_SALE_ORDER_BY_CATEGORY, {
+    fetchPolicy: "network-only",
+    variables: { startDate, endDate },
+  });
 
   const { currency } = useAuth();
 
@@ -45,8 +59,8 @@ const ReportByCategory = () => {
     "rgba(249, 115, 22, 0.8)",
   ];
 
-  const categoryNames = listReport.map((item: any) => item.category);
-  const salesTotal = listReport.map((item: any) => item.total);
+  const categoryNames = listReport.map((item: ICategoryReport) => item.category);
+  const salesTotal = listReport.map((item: ICategoryReport) => item.total);
 
   const data = {
     labels: categoryNames,
@@ -54,8 +68,8 @@ const ReportByCategory = () => {
       {
         label: `Ventas por Categoría (${currency})`,
         data: salesTotal,
-        backgroundColor: listReport.map((_: any, i: number) => PALETTE[i % PALETTE.length]),
-        borderColor: listReport.map((_: any, i: number) => PALETTE[i % PALETTE.length].replace("0.8", "1")),
+        backgroundColor: listReport.map((_: ICategoryReport, i: number) => PALETTE[i % PALETTE.length]),
+        borderColor: listReport.map((_: ICategoryReport, i: number) => PALETTE[i % PALETTE.length].replace("0.8", "1")),
         borderWidth: 2,
       },
     ],
@@ -71,7 +85,11 @@ const ReportByCategory = () => {
   };
 
   return (
-    <Card title="Categorías más vendidas" className="w-full">
+    <Card
+      title="Categorías más vendidas"
+      subTitle={formatDateRange(startDate, endDate)}
+      className="w-full"
+    >
       <Chart type="pie" data={data} options={options} />
     </Card>
   );

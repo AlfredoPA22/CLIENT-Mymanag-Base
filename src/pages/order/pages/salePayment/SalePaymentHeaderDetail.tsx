@@ -65,15 +65,22 @@ const SalePaymentHeaderDetail: FC<SalePaymentHeaderDetailProps> = ({
         </section>
 
         <section className="flex flex-col items-center gap-2 p-4 border rounded-md shadow-sm">
-          <LabelInput name="total_pending" label="Total pendiente" />
+          <LabelInput
+            name="total_pending"
+            label={detailSalePayment.total_pending < 0 ? "Saldo a favor del cliente" : "Total pendiente"}
+          />
           <span
             className={`text-xl font-semibold ${
-              detailSalePayment.total_pending > 0
+              detailSalePayment.total_pending < 0
+                ? "text-blue-600"
+                : detailSalePayment.total_pending > 0
                 ? "text-red-500"
                 : "text-green-600"
             }`}
           >
-            {`${detailSalePayment.total_pending} ${currency}`}
+            {detailSalePayment.total_pending < 0
+              ? `${Math.abs(detailSalePayment.total_pending)} ${currency}`
+              : `${detailSalePayment.total_pending} ${currency}`}
           </span>
         </section>
       </div>
@@ -103,9 +110,11 @@ const SalePaymentHeaderDetail: FC<SalePaymentHeaderDetailProps> = ({
         </div>
       </div>
 
-      {/* Estado de pago completo */}
+      {/* Estado de pago */}
       <div className="mt-6 flex justify-center">
-        {detailSalePayment.sale_order.is_paid ? (
+        {detailSalePayment.total_pending < 0 ? (
+          <Tag severity="info" value={`Saldo a favor: ${Math.abs(detailSalePayment.total_pending)} ${currency}`} />
+        ) : detailSalePayment.sale_order.is_paid ? (
           <Tag severity="success" value="Venta totalmente pagada" />
         ) : (
           <Tag severity="warning" value="Venta con saldo pendiente" />

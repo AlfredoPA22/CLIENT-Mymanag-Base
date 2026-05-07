@@ -61,6 +61,18 @@ body{
   border-color: #cbd5e1 !important;
 }
 
+/* Permitir selección y copia de texto en celdas de tabla */
+.p-datatable .p-datatable-tbody > tr > td {
+  user-select: text !important;
+  -webkit-user-select: text !important;
+  -webkit-user-drag: none;
+}
+
+.p-datatable .p-datatable-tbody > tr > td * {
+  -webkit-user-drag: none;
+  user-drag: none;
+}
+
 /* Sidebar custom scrollbar */
 .sidebar-scroll::-webkit-scrollbar {
   width: 4px;

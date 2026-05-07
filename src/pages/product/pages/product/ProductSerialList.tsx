@@ -44,10 +44,9 @@ const ProductSerialList: FC<ProductSerialListProps> = ({ product }) => {
   const purchaseOrderBodyTemplate = (rowData: IProductSerial) => {
     if (rowData.purchase_order_detail) {
       return (
-        <TextLink
-          link={`${ROUTES_MOCK.PURCHASE_ORDERS}/detalle/${rowData.purchase_order_detail.purchase_order._id}`}
-          text={rowData.purchase_order_detail.purchase_order.code}
-        />
+        <TextLink to={`${ROUTES_MOCK.PURCHASE_ORDERS}/detalle/${rowData.purchase_order_detail.purchase_order._id}`}>
+          {rowData.purchase_order_detail.purchase_order.code}
+        </TextLink>
       );
     }
   };
@@ -55,10 +54,9 @@ const ProductSerialList: FC<ProductSerialListProps> = ({ product }) => {
   const saleOrderBodyTemplate = (rowData: IProductSerial) => {
     if (rowData.sale_order_detail) {
       return (
-        <TextLink
-          link={`${ROUTES_MOCK.SALE_ORDERS}/detalle/${rowData.sale_order_detail.sale_order._id}`}
-          text={rowData.sale_order_detail.sale_order.code}
-        />
+        <TextLink to={`${ROUTES_MOCK.SALE_ORDERS}/detalle/${rowData.sale_order_detail.sale_order._id}`}>
+          {rowData.sale_order_detail.sale_order.code}
+        </TextLink>
       );
     }
   };

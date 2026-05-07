@@ -28,6 +28,7 @@ import ProductTransferList from "../pages/transfer/ProductTransferList";
 import CreateProductTransfer from "../pages/transfer/CreateProductTransfer";
 import EditProductTransfer from "../pages/transfer/EditProductTransfer";
 import ViewProductTransfer from "../pages/transfer/ViewProductTransfer";
+import SaleReturnList from "../pages/order/pages/saleReturn/SaleReturnList";
 
 const PrivateRoutes: FC = () => {
   return (
@@ -210,6 +211,16 @@ const PrivateRoutes: FC = () => {
             element={
               <PermissionRoute permissions={["DETAIL_TRANSFER"]}>
                 <ViewProductTransfer />
+              </PermissionRoute>
+            }
+          />
+
+          {/* devoluciones */}
+          <Route
+            path={`${ROUTES_MOCK.SALE_RETURNS}`}
+            element={
+              <PermissionRoute permissions={["LIST_SALE"]}>
+                <SaleReturnList />
               </PermissionRoute>
             }
           />

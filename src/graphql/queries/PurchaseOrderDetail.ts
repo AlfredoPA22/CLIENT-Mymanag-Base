@@ -6,6 +6,7 @@ export const LIST_PURCHASE_ORDER_DETAIL = gql`
       _id
       product {
         _id
+        code
         name
         stock_type
       }

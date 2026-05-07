@@ -87,6 +87,9 @@ export function buildAbility(permissions: string[]): AppAbility {
       case "REPORT_SALE_ORDER_BY_MONTH":
         can("read", "ReportByMonth");
         break;
+      case "REPORT_SALE_ORDER_BY_PRODUCT":
+        can("read", "ReportByProduct");
+        break;
 
       // ── Reportes ────────────────────────────────────────────────────────────
       case "ALL_REPORT":
@@ -287,6 +290,7 @@ const PERMISSION_MAP: Record<string, Array<[string, string]>> = {
   REPORT_SALE_ORDER_BY_SELLER: [["read", "ReportBySeller"]],
   REPORT_SALE_ORDER_BY_CATEGORY: [["read", "ReportByCategory"]],
   REPORT_SALE_ORDER_BY_MONTH: [["read", "ReportByMonth"]],
+  REPORT_SALE_ORDER_BY_PRODUCT: [["read", "ReportByProduct"]],
   ALL_REPORT: [["manage", "Report"]],
   PRODUCT_REPORT: [["read", "ProductReport"]],
   PURCHASE_ORDER_REPORT: [["read", "PurchaseReport"]],

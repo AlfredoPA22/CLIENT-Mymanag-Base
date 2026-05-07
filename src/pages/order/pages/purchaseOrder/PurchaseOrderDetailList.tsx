@@ -26,6 +26,8 @@ import { DataTableColumn } from "../../../../utils/interfaces/Table";
 import { showToast } from "../../../../utils/toastUtils";
 import SerialToDetail from "./SerialToDetail";
 import useAuth from "../../../auth/hooks/useAuth";
+import TextLink from "../../../../components/TextLink/TextLink";
+import { ROUTES_MOCK } from "../../../../routes/RouteMocks";
 
 interface PurchaseOrderDetailListProps {
   purchaseOrderId: string;
@@ -191,6 +193,17 @@ const PurchaseOrderDetailList: FC<PurchaseOrderDetailListProps> = ({
   };
 
   const [columns] = useState<DataTableColumn<IPurchaseOrderDetail>[]>([
+    {
+      field: "product.code",
+      header: "Código",
+      sortable: true,
+      style: { width: "10%" },
+      body: (rowData: IPurchaseOrderDetail) => (
+        <TextLink to={`${ROUTES_MOCK.INVENTORY}${ROUTES_MOCK.PRODUCTS}/detalle/${rowData.product._id}`}>
+          {rowData.product.code}
+        </TextLink>
+      ),
+    },
     {
       field: "product.name",
       header: "Producto",

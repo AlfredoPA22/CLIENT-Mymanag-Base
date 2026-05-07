@@ -5,7 +5,7 @@ import {
   AiOutlineTags,
   AiOutlineUser,
 } from "react-icons/ai";
-import { BiImport, BiTransfer } from "react-icons/bi";
+import { BiImport, BiTransfer, BiRevision } from "react-icons/bi";
 import { FiChevronLeft, FiPackage, FiTruck } from "react-icons/fi";
 import { HiOutlineUsers } from "react-icons/hi";
 import {
@@ -137,6 +137,12 @@ const SidebarMenu = ({
           icon: <HiOutlineUsers />,
           to: ROUTES_MOCK.CLIENTS,
           permission: ["LIST_CLIENT"],
+        },
+        {
+          label: "Devoluciones",
+          icon: <BiRevision />,
+          to: ROUTES_MOCK.SALE_RETURNS,
+          permission: ["LIST_SALE"],
         },
       ],
     },

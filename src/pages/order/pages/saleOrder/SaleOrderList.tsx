@@ -221,6 +221,15 @@ const SaleOrderList = () => {
         </div>
       );
     }
+    if (rowData.status === orderStatus.CANCELADO || rowData.status === orderStatus.DEVUELTO) {
+      return (
+        <div className="flex justify-center gap-2">
+          <Button tooltip="Imprimir venta" tooltipOptions={{ position: "left" }}
+            icon="pi pi-download" raised severity="warning"
+            onClick={() => handleGeneratePDF(rowData._id)} />
+        </div>
+      );
+    }
     return (
       <div className="flex justify-center gap-2">
         <Button tooltip="Imprimir venta" tooltipOptions={{ position: "left" }}
@@ -262,6 +271,13 @@ const SaleOrderList = () => {
       ),
     },
     { field: "status", header: "Estado", sortable: true, body: statusBodyTemplate, style: { textAlign: "center" } },
+    {
+      field: "has_return", header: "Devolución", sortable: true, style: { textAlign: "center" },
+      body: (rowData: ISaleOrder) =>
+        rowData.has_return
+          ? <Tag severity="warning" icon="pi pi-replay">Con devolución</Tag>
+          : <span className="text-gray-300">—</span>,
+    },
     {
       field: "is_paid", header: "Estado de pago", sortable: true, style: { textAlign: "center" },
       body: (rowData: ISaleOrder) => {

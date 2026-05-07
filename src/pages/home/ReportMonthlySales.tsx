@@ -20,12 +20,17 @@ import useAuth from "../auth/hooks/useAuth";
 
 ChartJS.register(CategoryScale, LinearScale, LineElement, PointElement, Title, Tooltip, Legend, Filler);
 
+interface IMonthlyReport {
+  month: string;
+  total: number;
+}
+
 const ReportMonthlySales = () => {
   const { currency } = useAuth();
   const currentYear = new Date().getFullYear();
 
   const {
-    data: { reportMonthlySales: listReport } = { reportMonthlySales: [] },
+    data: { reportMonthlySales: listReport } = { reportMonthlySales: [] as IMonthlyReport[] },
     loading,
     error,
   } = useQuery(REPORT_MONTHLY_SALES, { fetchPolicy: "network-only" });
@@ -38,8 +43,8 @@ const ReportMonthlySales = () => {
 
   if (loading) return <ReportByClientSkeleton />;
 
-  const labels = listReport.map((item: any) => item.month);
-  const totals = listReport.map((item: any) => item.total);
+  const labels = listReport.map((item: IMonthlyReport) => item.month);
+  const totals = listReport.map((item: IMonthlyReport) => item.total);
 
   const chartData = {
     labels,
@@ -64,7 +69,7 @@ const ReportMonthlySales = () => {
       legend: { display: false },
       tooltip: {
         callbacks: {
-          label: (ctx: any) =>
+          label: (ctx: { parsed: { y: number } }) =>
             ` ${ctx.parsed.y.toLocaleString("es-ES", { minimumFractionDigits: 2 })} ${currency}`,
         },
       },
@@ -72,7 +77,7 @@ const ReportMonthlySales = () => {
     scales: {
       y: {
         beginAtZero: true,
-        ticks: { callback: (value: any) => `${value} ${currency}` },
+        ticks: { callback: (value: number | string) => `${value} ${currency}` },
       },
     },
   };

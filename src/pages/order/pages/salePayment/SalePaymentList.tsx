@@ -24,6 +24,7 @@ import {
 } from "../../../../utils/interfaces/SalePayment";
 import { DataTableColumn } from "../../../../utils/interfaces/Table";
 import { showToast } from "../../../../utils/toastUtils";
+import { orderStatus } from "../../../../utils/enums/orderStatus.enum";
 import { generateHistoryPDF } from "../../utils/generateSalePaymentHistoryPDF";
 import { generatePDF } from "../../utils/generateSalePaymentPDF";
 import { getDate } from "../../utils/getDate";
@@ -69,7 +70,7 @@ const SalePaymentList: FC<SalePaymentListProps> = ({
       <div className="flex flex-col md:flex-row gap-5 justify-between items-center m-2 px-5">
         <h1 className="text-2xl font-bold">{`Lista de pagos (${listSalePayment.length})`}</h1>
         <section className="flex gap-2">
-          {!detailSalePayment.sale_order.is_paid && (
+          {!detailSalePayment.sale_order.is_paid && detailSalePayment.sale_order.status !== orderStatus.DEVUELTO && (
             <Button
               label="Nuevo pago"
               severity="success"
@@ -212,7 +213,7 @@ const SalePaymentList: FC<SalePaymentListProps> = ({
         actionBodyTemplate={actionBodyTemplate}
       />
 
-      {!detailSalePayment.sale_order.is_paid && (
+      {!detailSalePayment.sale_order.is_paid && detailSalePayment.sale_order.status !== orderStatus.DEVUELTO && (
         <Dialog
           header="Nuevo Pago"
           visible={visibleForm}

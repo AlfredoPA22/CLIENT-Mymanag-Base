@@ -26,6 +26,8 @@ import { showToast } from "../../../../utils/toastUtils";
 import SerialToDetail from "./SerialToDetail";
 import { setIsBlocked } from "../../../../redux/slices/blockUISlice";
 import useAuth from "../../../auth/hooks/useAuth";
+import TextLink from "../../../../components/TextLink/TextLink";
+import { ROUTES_MOCK } from "../../../../routes/RouteMocks";
 
 interface SaleOrderDetailListProps {
   saleOrderId: string;
@@ -189,6 +191,17 @@ const SaleOrderDetailList: FC<SaleOrderDetailListProps> = ({
   };
 
   const [columns] = useState<DataTableColumn<ISaleOrderDetail>[]>([
+    {
+      field: "product.code",
+      header: "Código",
+      sortable: true,
+      style: { width: "10%" },
+      body: (rowData: ISaleOrderDetail) => (
+        <TextLink to={`${ROUTES_MOCK.INVENTORY}${ROUTES_MOCK.PRODUCTS}/detalle/${rowData.product._id}`}>
+          {rowData.product.code}
+        </TextLink>
+      ),
+    },
     {
       field: "product.name",
       header: "Producto",

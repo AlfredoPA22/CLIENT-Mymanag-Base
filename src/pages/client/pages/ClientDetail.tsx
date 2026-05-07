@@ -48,10 +48,9 @@ const ClientDetail: FC<ClientDetailProps> = ({ client }) => {
 
   const saleOrderBodyTemplate = (rowData: ISaleOrder) => {
     return (
-      <TextLink
-        link={`${ROUTES_MOCK.SALE_ORDERS}/detalle/${rowData._id}`}
-        text={rowData.code}
-      />
+      <TextLink to={`${ROUTES_MOCK.SALE_ORDERS}/detalle/${rowData._id}`}>
+        {rowData.code}
+      </TextLink>
     );
   };
 

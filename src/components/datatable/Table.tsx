@@ -89,7 +89,20 @@ const Table: FC<TableProps<any>> = ({
         editMode={editMode ? "row" : undefined} // Activar modo edición por filas
         onRowEditComplete={onRowEditComplete} // Manejar la edición de filas
         selectionMode="single"
-        onSelectionChange={onSelectionChange}
+        onSelectionChange={(e) => {
+          if (!onSelectionChange) return;
+          const selected = window.getSelection()?.toString() ?? "";
+          if (selected.length > 0) return;
+          onSelectionChange(e);
+        }}
+        pt={{
+          bodyRow: {
+            onDragStart: (e: React.DragEvent) => e.preventDefault(),
+          },
+          bodyCell: {
+            onDragStart: (e: React.DragEvent) => e.preventDefault(),
+          },
+        }}
       >
         {columns.map((column) => (
           <Column

@@ -19,6 +19,8 @@ import { IProductTransferDetail } from "../../utils/interfaces/ProductTransfer";
 import { DataTableColumn } from "../../utils/interfaces/Table";
 import { showToast } from "../../utils/toastUtils";
 import SerialToTransferDetail from "./SerialToTransferDetail";
+import TextLink from "../../components/TextLink/TextLink";
+import { ROUTES_MOCK } from "../../routes/RouteMocks";
 
 interface ProductTransferDetailListProps {
   transferId: string;
@@ -132,6 +134,17 @@ const ProductTransferDetailList: FC<ProductTransferDetailListProps> = ({
   );
 
   const [columns] = useState<DataTableColumn<IProductTransferDetail>[]>([
+    {
+      field: "product.code",
+      header: "Código",
+      sortable: true,
+      style: { width: "10%" },
+      body: (rowData: IProductTransferDetail) => (
+        <TextLink to={`${ROUTES_MOCK.INVENTORY}${ROUTES_MOCK.PRODUCTS}/detalle/${rowData.product._id}`}>
+          {rowData.product.code}
+        </TextLink>
+      ),
+    },
     {
       field: "product.name",
       header: "Producto",

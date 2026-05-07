@@ -16,6 +16,16 @@ export const getStatus = (status: string): Status | null => {
         severity: severityStatus.aprobado,
         label: orderStatus.APROBADO,
       };
+    case orderStatus.CANCELADO:
+      return {
+        severity: severityStatus.cancelado,
+        label: orderStatus.CANCELADO,
+      };
+    case orderStatus.DEVUELTO:
+      return {
+        severity: severityStatus.devuelto,
+        label: orderStatus.DEVUELTO,
+      };
     case productSerialStatus.RESERVADO:
       return {
         severity: severityStatus.reservado,

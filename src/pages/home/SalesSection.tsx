@@ -1,10 +1,15 @@
 import { PermissionGuard } from "../auth/pages/PermissionGuard";
 import ReportByMonth from "./ReportByMonth";
 
-const SalesSection = () => {
+interface SalesSectionProps {
+  startDate: Date;
+  endDate: Date;
+}
+
+const SalesSection = ({ startDate, endDate }: SalesSectionProps) => {
   return (
     <PermissionGuard permissions={["REPORT_SALE_ORDER_BY_MONTH"]}>
-      <ReportByMonth />
+      <ReportByMonth startDate={startDate} endDate={endDate} />
     </PermissionGuard>
   );
 };

@@ -53,12 +53,9 @@ const ProductInventoryList: FC<ProductInventoryListProps> = ({ product }) => {
     const isApproved = purchaseOrder.status === orderStatus.APROBADO;
 
     return (
-      <TextLink
-        link={`/order/${
-          isApproved ? "viewPurchaseOrder" : "editPurchaseOrder"
-        }/${purchaseOrder._id}`}
-        text={purchaseOrder.code}
-      />
+      <TextLink to={`/order/${isApproved ? "viewPurchaseOrder" : "editPurchaseOrder"}/${purchaseOrder._id}`}>
+        {purchaseOrder.code}
+      </TextLink>
     );
   };
 

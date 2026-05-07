@@ -21,6 +21,7 @@ export const LIST_SALE_ORDER = gql`
       date
       status
       total
+      has_return
     }
   }
 `;
@@ -41,6 +42,7 @@ export const FIND_SALE_ORDER = gql`
       total
       payment_method
       contado_payment_method
+      has_return
     }
   }
 `;

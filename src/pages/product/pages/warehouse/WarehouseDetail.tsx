@@ -1,7 +1,7 @@
 import { Card } from "primereact/card";
 import { Tag } from "primereact/tag";
 import { FC, useState } from "react";
-import { Link } from "react-router-dom";
+import TextLink from "../../../../components/TextLink/TextLink";
 import Table from "../../../../components/datatable/Table";
 import LabelInput from "../../../../components/labelInput/LabelInput";
 import LoadingSpinner from "../../../../components/LoadingSpinner/LoadingSpinner";
@@ -43,12 +43,9 @@ const WarehouseDetail: FC<WarehouseDetailProps> = ({ warehouse }) => {
       sortable: true,
       style: { width: "10%" },
       body: (rowData: IProduct) => (
-        <Link
-          className="underline hover:text-blue-300"
-          to={`${ROUTES_MOCK.INVENTORY}${ROUTES_MOCK.PRODUCTS}/detalle/${rowData._id}`}
-        >
+        <TextLink to={`${ROUTES_MOCK.INVENTORY}${ROUTES_MOCK.PRODUCTS}/detalle/${rowData._id}`}>
           {rowData.code}
-        </Link>
+        </TextLink>
       ),
     },
     {

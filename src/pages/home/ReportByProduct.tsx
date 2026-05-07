@@ -15,6 +15,7 @@ import { REPORT_SALE_ORDER_BY_PRODUCT } from "../../graphql/queries/Home";
 import { ToastSeverity } from "../../utils/enums/toast.enum";
 import { showToast } from "../../utils/toastUtils";
 import useAuth from "../auth/hooks/useAuth";
+import { formatDateRange } from "../../utils/dateUtils";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
@@ -31,6 +32,11 @@ const PALETTE = [
   "rgba(20, 184, 166, 0.75)",
 ];
 
+interface IProductReport {
+  product: string;
+  total: number;
+}
+
 interface ReportByProductProps {
   startDate: Date;
   endDate: Date;
@@ -40,7 +46,7 @@ const ReportByProduct = ({ startDate, endDate }: ReportByProductProps) => {
   const { currency } = useAuth();
 
   const {
-    data: { reportSaleOrderByProduct: listReport } = { reportSaleOrderByProduct: [] },
+    data: { reportSaleOrderByProduct: listReport } = { reportSaleOrderByProduct: [] as IProductReport[] },
     loading,
     error,
   } = useQuery(REPORT_SALE_ORDER_BY_PRODUCT, {
@@ -56,9 +62,9 @@ const ReportByProduct = ({ startDate, endDate }: ReportByProductProps) => {
 
   if (loading) return <ReportByClientSkeleton />;
 
-  const labels = listReport.map((item: any) => item.product);
-  const totals = listReport.map((item: any) => item.total);
-  const backgroundColors = listReport.map((_: any, i: number) => PALETTE[i % PALETTE.length]);
+  const labels = listReport.map((item: IProductReport) => item.product);
+  const totals = listReport.map((item: IProductReport) => item.total);
+  const backgroundColors = listReport.map((_: IProductReport, i: number) => PALETTE[i % PALETTE.length]);
 
   const chartData = {
     labels,
@@ -80,14 +86,17 @@ const ReportByProduct = ({ startDate, endDate }: ReportByProductProps) => {
     scales: {
       x: {
         beginAtZero: true,
-        ticks: { callback: (value: any) => `${value} ${currency}` },
+        ticks: { callback: (value: number | string) => `${value} ${currency}` },
       },
     },
   };
 
   return (
     <div className="p-5 shadow-sm rounded-lg border border-gray-200 bg-white flex flex-col gap-3">
-      <h2 className="text-base font-semibold text-slate-800">Top 10 productos más vendidos</h2>
+      <div>
+        <h2 className="text-base font-semibold text-slate-800">Top 10 productos</h2>
+        <p className="text-xs text-slate-400 mt-0.5">{formatDateRange(startDate, endDate)}</p>
+      </div>
       {listReport.length === 0 ? (
         <p className="text-sm text-slate-400">Sin datos en el período seleccionado.</p>
       ) : (
