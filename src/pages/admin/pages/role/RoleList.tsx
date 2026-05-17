@@ -148,7 +148,7 @@ const RoleList = () => {
           <p className="text-center text-gray-400 py-6 text-sm">Sin roles.</p>
         )}
 
-        {listRole.map((item) => (
+        {listRole.map((item: IRole) => (
           <div
             key={item._id}
             className="border border-gray-200 rounded-xl p-3 bg-white shadow-sm cursor-pointer"

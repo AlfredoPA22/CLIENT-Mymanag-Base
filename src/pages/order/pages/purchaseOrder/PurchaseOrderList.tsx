@@ -245,7 +245,7 @@ const PurchaseOrderList = () => {
           <p className="text-center text-gray-400 py-6 text-sm">Sin compras.</p>
         )}
 
-        {listPurchaseOrder.map((item) => {
+        {listPurchaseOrder.map((item: IPurchaseOrder) => {
           const status = getStatus(item.status);
           const isBorrador = item.status === orderStatus.BORRADOR;
           return (

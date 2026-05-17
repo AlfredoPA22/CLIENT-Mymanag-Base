@@ -280,7 +280,7 @@ const ClientList = () => {
           <p className="text-center text-gray-400 py-6 text-sm">Sin clientes.</p>
         )}
 
-        {listClient.map((item) => (
+        {listClient.map((item: IClient) => (
           <div
             key={item._id}
             className="border border-gray-200 rounded-xl p-3 bg-white shadow-sm cursor-pointer"

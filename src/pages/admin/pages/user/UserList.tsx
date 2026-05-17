@@ -233,7 +233,7 @@ const UserList = () => {
           <p className="text-center text-gray-400 py-6 text-sm">Sin usuarios.</p>
         )}
 
-        {listUser.map((item) => {
+        {listUser.map((item: IUser) => {
           const statusUser = getStatus(item);
           const statusGlobal = getIsGlobal(item);
           return (
@@ -291,7 +291,7 @@ const UserList = () => {
                 />
                 <InputSwitch
                   checked={item.is_active}
-                  onChange={(e) => { e.originalEvent.stopPropagation(); handleChangeUserStatus(item._id); }}
+                  onChange={(e) => { e.originalEvent?.stopPropagation(); handleChangeUserStatus(item._id); }}
                 />
               </div>
             </div>

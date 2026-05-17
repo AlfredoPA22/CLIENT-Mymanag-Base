@@ -282,9 +282,8 @@ const PurchaseOrderDetailList: FC<PurchaseOrderDetailListProps> = ({
                   <div className="min-w-0 overflow-hidden mb-1">
                     <TextLink
                       to={`${ROUTES_MOCK.INVENTORY}${ROUTES_MOCK.PRODUCTS}/detalle/${item.product._id}`}
-                      className="text-xs text-blue-600 font-medium"
                     >
-                      {item.product.code}
+                      <span className="text-xs font-medium">{item.product.code}</span>
                     </TextLink>
                     <p className="font-semibold text-gray-800 text-sm break-words mt-0.5">
                       {item.product.name}
