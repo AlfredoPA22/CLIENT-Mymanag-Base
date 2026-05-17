@@ -26,7 +26,7 @@ const ProductInventoryList: FC<ProductInventoryListProps> = ({ product }) => {
     error,
   } = useQuery(LIST_PRODUCT_INVENTORY_BY_PRODUCT, {
     variables: { productId: product._id },
-    fetchPolicy: "network-only",
+    fetchPolicy: "cache-and-network",
   });
 
   const statusBodyTemplate = (rowData: IProductInventory) => {

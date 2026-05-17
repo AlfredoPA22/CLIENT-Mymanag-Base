@@ -25,7 +25,7 @@ const ProductSerialList: FC<ProductSerialListProps> = ({ product }) => {
     error,
   } = useQuery(LIST_PRODUCT_SERIAL_BY_PRODUCT, {
     variables: { productId: product._id },
-    fetchPolicy: "network-only",
+    fetchPolicy: "cache-and-network",
   });
 
   const statusBodyTemplate = (rowData: IProductSerial) => {

@@ -8,7 +8,7 @@ import { ColumnEditorOptions } from "primereact/column";
 import { DataTableSelectionSingleChangeEvent } from "primereact/datatable";
 import { Dialog } from "primereact/dialog";
 import { Dropdown } from "primereact/dropdown";
-import { useMemo, useState } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import defaultProduct from "../../../../assets/defaultProduct.jpg";
 import Table from "../../../../components/datatable/Table";
@@ -52,6 +52,83 @@ const DROPDOWN_PANEL_PROPS = {
   panelStyle: { maxWidth: "95vw" },
   panelClassName: "[&_.p-dropdown-item]:whitespace-normal [&_.p-dropdown-item]:leading-snug",
 };
+
+// ── Card memoizado: solo se re-renderiza si cambia su propio producto ──────────
+interface ProductCardProps {
+  product: IProduct;
+  currency: string;
+  onNavigate: (productId: string) => void;
+  onStockClick: (product: IProduct, isSerial: boolean) => void;
+  onEdit: (product: IProduct) => void;
+  onDelete: (productId: string) => void;
+}
+
+const ProductCard = memo(({ product, currency, onNavigate, onStockClick, onEdit, onDelete }: ProductCardProps) => {
+  const status = getStatus(product.status);
+  const isSerial = product.stock_type === stockType.SERIALIZADO;
+
+  return (
+    <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+      <div className="flex gap-3 p-3 cursor-pointer active:bg-gray-50"
+        onClick={() => onNavigate(product._id)}>
+        <img
+          src={product.image || defaultProduct}
+          alt={product.name}
+          loading="lazy"
+          className="w-16 h-16 rounded-lg object-cover shrink-0 border border-gray-100"
+        />
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0 overflow-hidden">
+              <span className="text-xs font-mono text-gray-400">{product.code}</span>
+              <p className="font-semibold text-gray-800 text-sm leading-tight break-words">
+                {product.name}
+              </p>
+            </div>
+            {status && (
+              <Tag severity={status.severity as "danger" | "success"} className="shrink-0 text-xs">
+                {status.label}
+              </Tag>
+            )}
+          </div>
+          <div className="flex flex-wrap gap-x-2 gap-y-0.5 text-xs text-gray-500 mt-1">
+            {product.brand?.name && <span>{product.brand.name}</span>}
+            {product.brand?.name && product.category?.name && (
+              <span className="text-gray-300">·</span>
+            )}
+            {product.category?.name && <span>{product.category.name}</span>}
+          </div>
+          <div className="flex items-center gap-3 mt-1.5">
+            <span className="text-sm font-bold text-green-700">
+              {product.sale_price} {currency}
+            </span>
+            <span className="text-xs text-gray-400">
+              {isSerial ? "Serializado" : "Individual"}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between px-3 pb-3 border-t border-gray-100 pt-2">
+        <Button
+          label={`Stock: ${product.stock}`}
+          size="small"
+          raised
+          severity="info"
+          onClick={() => onStockClick(product, isSerial)}
+        />
+        <div className="flex gap-2">
+          <Button icon="pi pi-pencil" raised size="small" severity="info"
+            onClick={() => onEdit(product)} />
+          <Button icon="pi pi-trash" raised size="small" severity="danger"
+            onClick={() => onDelete(product._id)} />
+        </div>
+      </div>
+    </div>
+  );
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 const ProductList = () => {
   const { listProduct, loadingListProduct } = useProductList();
@@ -136,7 +213,7 @@ const ProductList = () => {
     );
   };
 
-  const tableHeaderTemplate = () => (
+  const tableHeaderTemplate = useCallback(() => (
     <div className="flex justify-between items-center m-2 px-5">
       <h1 className="text-2xl font-bold">{`Lista de productos (${filteredData.length})`}</h1>
       <div className="flex gap-2">
@@ -148,9 +225,9 @@ const ProductList = () => {
           onClick={() => { setCurrentProduct(null); setVisibleForm(true); }} raised />
       </div>
     </div>
-  );
+  ), [filteredData.length, setVisibleSearch, setCurrentProduct, setVisibleForm]);
 
-  const handleDeleteProduct = async (productId: string) => {
+  const handleDeleteProduct = useCallback(async (productId: string) => {
     try {
       dispatch(setIsBlocked(true));
       const { data } = await deleteProduct({ variables: { productId } });
@@ -161,7 +238,22 @@ const ProductList = () => {
     } finally {
       dispatch(setIsBlocked(false));
     }
-  };
+  }, [dispatch, deleteProduct]);
+
+  const handleNavigate = useCallback((productId: string) => {
+    navigate(`${ROUTES_MOCK.INVENTORY}${ROUTES_MOCK.PRODUCTS}/detalle/${productId}`);
+  }, [navigate]);
+
+  const handleStockClick = useCallback((product: IProduct, isSerial: boolean) => {
+    setCurrentProduct(product);
+    if (isSerial) setVisibleListSerial(true);
+    else setVisibleListInventory(true);
+  }, []);
+
+  const handleEditClick = useCallback((product: IProduct) => {
+    setCurrentProduct(product);
+    setVisibleForm(true);
+  }, []);
 
   const actionBodyTemplate = (rowData: IProduct) => (
     <div className="flex justify-center gap-2">
@@ -183,7 +275,7 @@ const ProductList = () => {
     {
       field: "image", header: "Imagen", sortable: true, style: { width: "10%", justifyItems: "center" },
       body: (rowData: IProduct) => (
-        <img className="w-[80px] h-[80px]" alt="image"
+        <img className="w-[80px] h-[80px]" alt="image" loading="lazy"
           src={rowData.image ? rowData.image : defaultProduct} />
       ),
     },
@@ -205,7 +297,6 @@ const ProductList = () => {
 
   const { filters, renderFilterInput } = useTableGlobalFilter(columns);
 
-  // Dialogs compartidos entre mobile y desktop
   const dialogs = (
     <>
       <Dialog className="md:w-[50vw] w-[95vw]"
@@ -312,77 +403,17 @@ const ProductList = () => {
         {filteredData.length === 0 && (
           <p className="text-center text-gray-400 py-8 text-sm">Sin productos.</p>
         )}
-        {filteredData.map((product: IProduct) => {
-          const status = getStatus(product.status);
-          const isSerial = product.stock_type === stockType.SERIALIZADO;
-
-          return (
-            <div key={product._id}
-              className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-
-              {/* Fila principal: imagen + info */}
-              <div className="flex gap-3 p-3 cursor-pointer active:bg-gray-50"
-                onClick={() => navigate(`${ROUTES_MOCK.INVENTORY}${ROUTES_MOCK.PRODUCTS}/detalle/${product._id}`)}>
-                <img
-                  src={product.image || defaultProduct}
-                  alt={product.name}
-                  className="w-16 h-16 rounded-lg object-cover shrink-0 border border-gray-100"
-                />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0 overflow-hidden">
-                      <span className="text-xs font-mono text-gray-400">{product.code}</span>
-                      <p className="font-semibold text-gray-800 text-sm leading-tight break-words">
-                        {product.name}
-                      </p>
-                    </div>
-                    {status && (
-                      <Tag severity={status.severity as "danger" | "success"} className="shrink-0 text-xs">
-                        {status.label}
-                      </Tag>
-                    )}
-                  </div>
-                  <div className="flex flex-wrap gap-x-2 gap-y-0.5 text-xs text-gray-500 mt-1">
-                    {product.brand?.name && <span>{product.brand.name}</span>}
-                    {product.category?.name && (
-                      <span className="text-gray-300">·</span>
-                    )}
-                    {product.category?.name && <span>{product.category.name}</span>}
-                  </div>
-                  <div className="flex items-center gap-3 mt-1.5">
-                    <span className="text-sm font-bold text-green-700">
-                      {product.sale_price} {currency}
-                    </span>
-                    <span className="text-xs text-gray-400">
-                      {isSerial ? "Serializado" : "Individual"}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Fila inferior: stock + acciones */}
-              <div className="flex items-center justify-between px-3 pb-3 border-t border-gray-100 pt-2">
-                <Button
-                  label={`Stock: ${product.stock}`}
-                  size="small"
-                  raised
-                  severity="info"
-                  onClick={() => {
-                    setCurrentProduct(product);
-                    isSerial ? setVisibleListSerial(true) : setVisibleListInventory(true);
-                  }}
-                />
-                <div className="flex gap-2">
-                  <Button icon="pi pi-pencil" raised size="small"
-                    severity="info"
-                    onClick={() => { setCurrentProduct(product); setVisibleForm(true); }} />
-                  <Button icon="pi pi-trash" raised size="small" severity="danger"
-                    onClick={() => handleDeleteProduct(product._id)} />
-                </div>
-              </div>
-            </div>
-          );
-        })}
+        {filteredData.map((product: IProduct) => (
+          <ProductCard
+            key={product._id}
+            product={product}
+            currency={currency}
+            onNavigate={handleNavigate}
+            onStockClick={handleStockClick}
+            onEdit={handleEditClick}
+            onDelete={handleDeleteProduct}
+          />
+        ))}
       </div>
 
       {/* ── Vista desktop: tabla ───────────────────────────────── */}
