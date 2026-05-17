@@ -174,6 +174,9 @@ const ProductList = () => {
     });
   }, [listProduct, brandFilter, categoryFilter, stockTypeFilter, statusFilter]);
 
+  const MOBILE_PAGE_SIZE = 20;
+  const [mobilePage, setMobilePage] = useState(1);
+
   const [visibleForm, setVisibleForm] = useState<boolean>(false);
   const [visibleSearch, setVisibleSearch] = useState<boolean>(false);
   const [visibleListSerial, setVisibleListSerial] = useState<boolean>(false);
@@ -403,7 +406,7 @@ const ProductList = () => {
         {filteredData.length === 0 && (
           <p className="text-center text-gray-400 py-8 text-sm">Sin productos.</p>
         )}
-        {filteredData.map((product: IProduct) => (
+        {filteredData.slice(0, mobilePage * MOBILE_PAGE_SIZE).map((product: IProduct) => (
           <ProductCard
             key={product._id}
             product={product}
@@ -414,6 +417,16 @@ const ProductList = () => {
             onDelete={handleDeleteProduct}
           />
         ))}
+        {mobilePage * MOBILE_PAGE_SIZE < filteredData.length && (
+          <Button
+            label={`Cargar más (${filteredData.length - mobilePage * MOBILE_PAGE_SIZE} restantes)`}
+            icon="pi pi-chevron-down"
+            severity="secondary"
+            outlined
+            className="w-full"
+            onClick={() => setMobilePage((p) => p + 1)}
+          />
+        )}
       </div>
 
       {/* ── Vista desktop: tabla ───────────────────────────────── */}

@@ -39,6 +39,8 @@ interface ISaleReturnDetail {
 const SaleReturnList = () => {
   const navigate = useNavigate();
   const { currency } = useAuth();
+  const MOBILE_PAGE_SIZE = 20;
+  const [mobilePage, setMobilePage] = useState(1);
   const [selectedReturn, setSelectedReturn] = useState<ISaleReturn | null>(null);
 
   const { data, loading } = useQuery(LIST_SALE_RETURN, {
@@ -140,7 +142,7 @@ const SaleReturnList = () => {
           <p className="text-center text-gray-400 py-6 text-sm">Sin devoluciones registradas.</p>
         )}
 
-        {list.map((item) => (
+        {list.slice(0, mobilePage * MOBILE_PAGE_SIZE).map((item) => (
           <div
             key={item._id}
             className="border border-gray-200 rounded-xl p-3 bg-white shadow-sm cursor-pointer"
@@ -190,6 +192,16 @@ const SaleReturnList = () => {
             </div>
           </div>
         ))}
+        {mobilePage * MOBILE_PAGE_SIZE < list.length && (
+          <Button
+            label={`Cargar más (${list.length - mobilePage * MOBILE_PAGE_SIZE} restantes)`}
+            icon="pi pi-chevron-down"
+            severity="secondary"
+            outlined
+            className="w-full"
+            onClick={() => setMobilePage((p) => p + 1)}
+          />
+        )}
       </div>
 
       {/* ── Desktop ─────────────────────────────────────────── */}

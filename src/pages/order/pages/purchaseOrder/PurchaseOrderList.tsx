@@ -38,6 +38,9 @@ const PurchaseOrderList = () => {
   const { currency } = useAuth();
   const client = useApolloClient();
 
+  const MOBILE_PAGE_SIZE = 20;
+  const [mobilePage, setMobilePage] = useState(1);
+
   const [DeletePurchaseOrder] = useMutation(DELETE_PURCHASE_ORDER, {
     refetchQueries: [{ query: LIST_PURCHASE_ORDER }, { query: LIST_PRODUCT }],
   });
@@ -245,7 +248,7 @@ const PurchaseOrderList = () => {
           <p className="text-center text-gray-400 py-6 text-sm">Sin compras.</p>
         )}
 
-        {listPurchaseOrder.map((item: IPurchaseOrder) => {
+        {listPurchaseOrder.slice(0, mobilePage * MOBILE_PAGE_SIZE).map((item: IPurchaseOrder) => {
           const status = getStatus(item.status);
           const isBorrador = item.status === orderStatus.BORRADOR;
           return (
@@ -305,6 +308,16 @@ const PurchaseOrderList = () => {
             </div>
           );
         })}
+        {mobilePage * MOBILE_PAGE_SIZE < listPurchaseOrder.length && (
+          <Button
+            label={`Cargar más (${listPurchaseOrder.length - mobilePage * MOBILE_PAGE_SIZE} restantes)`}
+            icon="pi pi-chevron-down"
+            severity="secondary"
+            outlined
+            className="w-full"
+            onClick={() => setMobilePage((p) => p + 1)}
+          />
+        )}
       </div>
 
       {/* ── Desktop ─────────────────────────────────────────── */}

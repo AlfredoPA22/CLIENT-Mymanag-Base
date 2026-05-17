@@ -61,6 +61,8 @@ const SaleOrderList = () => {
   const { currency } = useAuth();
   const client = useApolloClient();
 
+  const MOBILE_PAGE_SIZE = 20;
+  const [mobilePage, setMobilePage] = useState(1);
   const [filtersOpen, setFiltersOpen] = useState(false);
 
   // ── Filter state ──────────────────────────────────────────────
@@ -382,7 +384,7 @@ const SaleOrderList = () => {
         {filteredData.length === 0 && (
           <p className="text-center text-gray-400 py-8 text-sm">Sin ventas.</p>
         )}
-        {filteredData.map((order: ISaleOrder) => {
+        {filteredData.slice(0, mobilePage * MOBILE_PAGE_SIZE).map((order: ISaleOrder) => {
           const status = getStatus(order.status);
           const isBorrador = order.status === orderStatus.BORRADOR;
           const isAprobado = order.status === orderStatus.APROBADO;
@@ -460,6 +462,16 @@ const SaleOrderList = () => {
             </div>
           );
         })}
+        {mobilePage * MOBILE_PAGE_SIZE < filteredData.length && (
+          <Button
+            label={`Cargar más (${filteredData.length - mobilePage * MOBILE_PAGE_SIZE} restantes)`}
+            icon="pi pi-chevron-down"
+            severity="secondary"
+            outlined
+            className="w-full"
+            onClick={() => setMobilePage((p) => p + 1)}
+          />
+        )}
       </div>
 
       {/* ── Vista desktop: tabla ───────────────────────────────── */}
