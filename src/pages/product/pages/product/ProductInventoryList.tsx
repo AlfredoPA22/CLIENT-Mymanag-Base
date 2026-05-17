@@ -10,7 +10,6 @@ import { orderStatus } from "../../../../utils/enums/orderStatus.enum";
 import { ToastSeverity } from "../../../../utils/enums/toast.enum";
 import { IProduct } from "../../../../utils/interfaces/Product";
 import { IProductInventory } from "../../../../utils/interfaces/ProductInventory";
-import { IProductSerial } from "../../../../utils/interfaces/ProductSerial";
 import { DataTableColumn } from "../../../../utils/interfaces/Table";
 import { showToast } from "../../../../utils/toastUtils";
 import { getStatus } from "../../../order/utils/getStatus";
@@ -59,7 +58,7 @@ const ProductInventoryList: FC<ProductInventoryListProps> = ({ product }) => {
     );
   };
 
-  const [columns] = useState<DataTableColumn<IProductSerial>[]>([
+  const [columns] = useState<DataTableColumn<IProductInventory>[]>([
     { field: "purchase_order_detail", header: "orden de compra", sortable: true, style: { width: "15%" }, body: purchaseOrderBodyTemplate },
     { field: "warehouse.name", header: "Almacén", sortable: true, style: { width: "25%" } },
     { field: "quantity", header: "Cantidad", sortable: true, style: { width: "10%" } },

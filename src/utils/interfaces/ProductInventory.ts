@@ -1,11 +1,14 @@
-import { IProduct } from "./Product";
-import { IPurchaseOrderDetail } from "./PurchaseOrderDetail";
-import { ISaleOrderDetail } from "./SaleOrderDetail";
-
 export interface IProductInventory {
-  serial: string;
-  product: IProduct;
-  purchase_order_detail: IPurchaseOrderDetail;
-  sale_order_detail: ISaleOrderDetail;
+  _id: string;
+  warehouse: { _id: string; name: string };
+  purchase_order_detail: {
+    _id: string;
+    purchase_order: { _id: string; code: string; status: string };
+  };
+  quantity: number;
+  available: number;
+  reserved: number;
+  sold: number;
+  transferred: number;
   status: string;
 }
