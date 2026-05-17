@@ -91,7 +91,7 @@ const SalePaymentForm: FC<SalePaymentFormProps> = ({
 
   return (
     <form onSubmit={handleSubmit} className="grid gap-4">
-      <section className="grid  grid-cols-3 w-[300px] md:w-[600px] gap-4">
+      <section className="grid grid-cols-1 md:grid-cols-3 w-full md:w-[600px] gap-4">
         <div>
           <LabelInput name="date" label="Fecha de pago" />
           <Calendar
@@ -99,6 +99,7 @@ const SalePaymentForm: FC<SalePaymentFormProps> = ({
             value={values.date}
             onChange={handleChange}
             showIcon
+            className="w-full"
           />
         </div>
 
@@ -142,6 +143,7 @@ const SalePaymentForm: FC<SalePaymentFormProps> = ({
           type="submit"
           severity="success"
           label="Guardar"
+          className="w-full md:w-auto"
           disabled={!dirty || !isValid || isSubmitting}
         />
       </section>

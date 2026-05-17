@@ -44,7 +44,7 @@ const BrandForm: FC<BrandFormProps> = ({ setVisibleForm }) => {
   });
   return (
     <form onSubmit={handleSubmit} className="grid gap-4 justify-center">
-      <section className="grid w-[300px] gap-4">
+      <section className="grid w-full md:w-[300px] gap-4">
         <FieldTextInput
           role="input-name"
           label="Nombre"
