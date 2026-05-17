@@ -76,12 +76,13 @@ export const generateClientReportPDF = (data: IClient[]) => {
     startY: infoY + 12,
     theme: "plain",
     columnStyles: {
-      0: { cellWidth: 22, halign: "center" },
-      1: { cellWidth: 50 },
-      2: { cellWidth: 50 },
-      3: { cellWidth: 30 },
-      4: { cellWidth: 40 },
+      0: { cellWidth: 18, halign: "center" },
+      1: { cellWidth: 48 },
+      2: { cellWidth: 46 },
+      3: { cellWidth: 28 },
+      4: { cellWidth: 42 },
     },
+    margin: { left: MARGIN, right: MARGIN },
     tableLineColor: RULE,
     tableLineWidth: 0.3,
   });

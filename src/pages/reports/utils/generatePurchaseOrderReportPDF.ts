@@ -122,6 +122,7 @@ export const generatePurchaseOrderReportPDF = (
       3: { cellWidth: 28, halign: "center" },
       4: { cellWidth: 23, halign: "right" },
     },
+    margin: { left: MARGIN, right: MARGIN },
     tableLineColor: RULE,
     tableLineWidth: 0.3,
   });

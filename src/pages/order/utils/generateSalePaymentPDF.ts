@@ -130,6 +130,7 @@ export const generatePDF = (
       cellPadding: { top: 4, right: 4, bottom: 4, left: 4 },
     },
     bodyStyles: { fontSize: 9, textColor: INK, cellPadding: 5 },
+    margin: { left: MARGIN, right: MARGIN },
     tableLineColor: RULE,
     tableLineWidth: 0.3,
   });

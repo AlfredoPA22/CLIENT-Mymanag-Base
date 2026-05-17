@@ -9,10 +9,14 @@ import { showToast } from "../../../../utils/toastUtils";
 import ProductCard from "./ProductCard";
 import ListSaleOrderByProduct from "./ListSaleOrderByProduct";
 import ListPurchaseOrderByProduct from "./ListPurchaseOrderByProduct";
+import ProductKardexList from "./ProductKardexList";
+import { useAbility } from "../../../../casl/AbilityContext";
 
 const ProductDetail = () => {
   const { id } = useParams();
   const productId: string = id || "";
+  const ability = useAbility();
+  const canViewKardex = ability.can("listKardex", "Product");
 
   const {
     data,
@@ -49,6 +53,11 @@ const ProductDetail = () => {
       <TabPanel header={<span className="text-sm">Compras</span>}>
         <ListPurchaseOrderByProduct productId={productId} />
       </TabPanel>
+      {canViewKardex && (
+        <TabPanel header={<span className="text-sm">Kardex</span>}>
+          <ProductKardexList productId={productId} />
+        </TabPanel>
+      )}
     </TabView>
   );
 };

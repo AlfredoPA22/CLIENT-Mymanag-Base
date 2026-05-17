@@ -56,7 +56,7 @@ export const generateLowStockReportPDF = (data: IProduct[]) => {
 
   drawRule(doc, infoY + 6, PAGE_W);
 
-  // Columns total: 28+75+42+25+25+25+25 = 245 (≤ 269 available in landscape)
+  // Columns total: 28+82+59+25+25+25+25 = 269 (fills landscape with MARGIN=14 each side)
   autoTable(doc, {
     head: [["Código", "Producto", "Categoría", "Stock Actual", "Stock Mín.", "Stock Máx.", "A Reponer"]],
     headStyles: {
@@ -85,13 +85,14 @@ export const generateLowStockReportPDF = (data: IProduct[]) => {
     theme: "plain",
     columnStyles: {
       0: { cellWidth: 28, halign: "center" },
-      1: { cellWidth: 75 },
-      2: { cellWidth: 42 },
+      1: { cellWidth: 82 },
+      2: { cellWidth: 59 },
       3: { cellWidth: 25, halign: "center" },
       4: { cellWidth: 25, halign: "center" },
       5: { cellWidth: 25, halign: "center" },
       6: { cellWidth: 25, halign: "center", textColor: WARN, fontStyle: "bold" },
     },
+    margin: { left: MARGIN, right: MARGIN },
     tableLineColor: RULE,
     tableLineWidth: 0.3,
   });

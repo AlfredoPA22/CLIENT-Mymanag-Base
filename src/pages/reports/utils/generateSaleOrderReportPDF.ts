@@ -133,6 +133,7 @@ export const generateSaleOrderReportPDF = (
       4: { cellWidth: 22, halign: "right" },
       5: { cellWidth: 24, halign: "right" },
     },
+    margin: { left: MARGIN, right: MARGIN },
     tableLineColor: RULE,
     tableLineWidth: 0.3,
   });

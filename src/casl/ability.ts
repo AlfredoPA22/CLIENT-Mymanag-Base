@@ -104,6 +104,9 @@ export function buildAbility(permissions: string[]): AppAbility {
       case "SALE_ORDER_REPORT":
         can("read", "SaleReport");
         break;
+      case "PROFITABILITY_REPORT":
+        can("read", "ProfitabilityReport");
+        break;
 
       // ── Almacenes ───────────────────────────────────────────────────────────
       case "ALL_WAREHOUSES":
@@ -143,6 +146,9 @@ export function buildAbility(permissions: string[]): AppAbility {
         break;
       case "LIST_PRODUCT_INVENTORY_BY_PRODUCT":
         can("listInventory", "Product");
+        break;
+      case "LIST_KARDEX_BY_PRODUCT":
+        can("listKardex", "Product");
         break;
       case "DELETE_PRODUCT":
         can("delete", "Product");
@@ -295,6 +301,7 @@ const PERMISSION_MAP: Record<string, Array<[string, string]>> = {
   PRODUCT_REPORT: [["read", "ProductReport"]],
   PURCHASE_ORDER_REPORT: [["read", "PurchaseReport"]],
   SALE_ORDER_REPORT: [["read", "SaleReport"]],
+  PROFITABILITY_REPORT: [["read", "ProfitabilityReport"]],
   ALL_WAREHOUSES: [["manage", "Warehouse"]],
   LIST_WAREHOUSE: [["list", "Warehouse"]],
   CREATE_WAREHOUSE: [["create", "Warehouse"]],
@@ -307,6 +314,7 @@ const PERMISSION_MAP: Record<string, Array<[string, string]>> = {
   VIEW_PRODUCT_COST: [["read", "ProductCost"]],
   LIST_PRODUCT_SERIAL_BY_PRODUCT: [["listSerials", "Product"]],
   LIST_PRODUCT_INVENTORY_BY_PRODUCT: [["listInventory", "Product"]],
+  LIST_KARDEX_BY_PRODUCT: [["listKardex", "Product"]],
   DELETE_PRODUCT: [["delete", "Product"]],
   UPDATE_PRODUCT: [["update", "Product"]],
   ALL_PROVIDERS: [["manage", "Provider"]],

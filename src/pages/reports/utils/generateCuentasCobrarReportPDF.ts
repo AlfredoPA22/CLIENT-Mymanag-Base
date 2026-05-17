@@ -97,11 +97,12 @@ export const generateCuentasCobrarReportPDF = (
     startY: filterY + 22,
     theme: "plain",
     columnStyles: {
-      0: { cellWidth: 36, halign: "center" },
-      1: { cellWidth: 30, halign: "center" },
-      2: { cellWidth: 95 },
-      3: { cellWidth: 25, halign: "right" },
+      0: { cellWidth: 32, halign: "center" },
+      1: { cellWidth: 28, halign: "center" },
+      2: { cellWidth: 98 },
+      3: { cellWidth: 24, halign: "right" },
     },
+    margin: { left: MARGIN, right: MARGIN },
     tableLineColor: RULE,
     tableLineWidth: 0.3,
   });

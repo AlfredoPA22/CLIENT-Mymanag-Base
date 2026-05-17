@@ -123,6 +123,7 @@ export const generateHistoryPDF = (
       3: { cellWidth: 30, halign: "right" },
       4: { cellWidth: 34 },
     },
+    margin: { left: MARGIN, right: MARGIN },
     tableLineColor: RULE,
     tableLineWidth: 0.3,
   });

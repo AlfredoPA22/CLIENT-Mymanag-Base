@@ -11,6 +11,7 @@ import PurchaseOrderReportFilter from "./PurchaseOrderReportFilter";
 import SaleOrderReportFilter from "./SaleOrderReportFilter";
 import InventoryValueReportFilter from "./InventoryValueReportFilter";
 import CuentasCobrarReportFilter from "./CuentasCobrarReportFilter";
+import ProfitabilityReportFilter from "./ProfitabilityReportFilter";
 import { generateClientReportPDF } from "../utils/generateClientReportPDF";
 import { generateLowStockReportPDF } from "../utils/generateLowStockReportPDF";
 
@@ -20,6 +21,7 @@ const ReportsPage = () => {
   const [visibleSaleOrderFilter, setVisibleSaleOrderFilter] = useState(false);
   const [visibleInventoryValue, setVisibleInventoryValue] = useState(false);
   const [visibleCuentasCobrar, setVisibleCuentasCobrar] = useState(false);
+  const [visibleProfitability, setVisibleProfitability] = useState(false);
   const [loadingClients, setLoadingClients] = useState(false);
   const [loadingLowStock, setLoadingLowStock] = useState(false);
 
@@ -127,6 +129,20 @@ const ReportsPage = () => {
         },
       ],
     },
+    {
+      label: "Rentabilidad",
+      icon: "pi pi-chart-line",
+      color: "bg-green-50 border-green-100",
+      iconColor: "text-green-600",
+      reports: [
+        {
+          label: "Ganancia por producto y categoría",
+          icon: "pi pi-percentage",
+          permission: "PROFITABILITY_REPORT",
+          onClick: () => setVisibleProfitability(true),
+        },
+      ],
+    },
   ];
 
   return (
@@ -212,6 +228,15 @@ const ReportsPage = () => {
         onHide={() => setVisibleCuentasCobrar(false)}
       >
         <CuentasCobrarReportFilter setVisible={setVisibleCuentasCobrar} />
+      </Dialog>
+
+      <Dialog
+        className="xl:w-[40vw] w-[90vw]"
+        header="Reporte de rentabilidad"
+        visible={visibleProfitability}
+        onHide={() => setVisibleProfitability(false)}
+      >
+        <ProfitabilityReportFilter setVisible={setVisibleProfitability} />
       </Dialog>
     </Card>
   );

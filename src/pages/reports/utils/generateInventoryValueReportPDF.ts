@@ -94,7 +94,7 @@ export const generateInventoryValueReportPDF = (
 
   drawRule(doc, filterY + 25, PAGE_W);
 
-  // Columns total: 24+50+30+24+24+24+14+30+30 = 250 (≤ 269 available in landscape with both margins)
+  // Columns total: 24+55+40+24+24+24+14+32+32 = 269 (fills landscape with MARGIN=14 each side)
   autoTable(doc, {
     head: [[
       "Código",
@@ -132,15 +132,16 @@ export const generateInventoryValueReportPDF = (
     theme: "plain",
     columnStyles: {
       0: { cellWidth: 24, halign: "center" },
-      1: { cellWidth: 50 },
-      2: { cellWidth: 30 },
+      1: { cellWidth: 55 },
+      2: { cellWidth: 40 },
       3: { cellWidth: 24 },
       4: { cellWidth: 24, halign: "right" },
       5: { cellWidth: 24, halign: "right" },
       6: { cellWidth: 14, halign: "center" },
-      7: { cellWidth: 30, halign: "right" },
-      8: { cellWidth: 30, halign: "right" },
+      7: { cellWidth: 32, halign: "right" },
+      8: { cellWidth: 32, halign: "right" },
     },
+    margin: { left: MARGIN, right: MARGIN },
     tableLineColor: RULE,
     tableLineWidth: 0.3,
   });

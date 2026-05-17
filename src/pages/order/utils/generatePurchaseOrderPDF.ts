@@ -177,13 +177,14 @@ export const generatePDF = async (
     startY: infoY + 30,
     theme: "plain",
     columnStyles: {
-      0: { cellWidth: 24, halign: "center" },
-      1: { cellWidth: 52 },
-      2: { cellWidth: 24 },
+      0: { cellWidth: 26, halign: "center" },
+      1: { cellWidth: 62 },
+      2: { cellWidth: 26 },
       3: { cellWidth: 14, halign: "center" },
       4: { cellWidth: 30, halign: "right" },
-      5: { cellWidth: 28, halign: "right" },
+      5: { cellWidth: 24, halign: "right" },
     },
+    margin: { left: MARGIN, right: MARGIN },
     tableLineColor: RULE,
     tableLineWidth: 0.3,
   });

@@ -228,6 +228,7 @@ export const generatePDF = async (
       4: { cellWidth: 30, halign: "right" },
       5: { cellWidth: 28, halign: "right" },
     },
+    margin: { left: MARGIN, right: MARGIN },
     tableLineColor: RULE,
     tableLineWidth: 0.3,
   });
