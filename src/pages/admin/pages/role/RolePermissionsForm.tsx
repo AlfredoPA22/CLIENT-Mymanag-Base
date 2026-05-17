@@ -144,9 +144,9 @@ const RolePermissionsForm: FC<RolePermissionsFormProps> = ({ role, onClose }) =>
     <div className="flex flex-col gap-6">
       {/* Role info header */}
       <div className="flex flex-col gap-1 pb-3 border-b border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-800">{role.name}</h3>
+        <h3 className="text-lg font-semibold text-gray-800 break-words">{role.name}</h3>
         {role.description && (
-          <p className="text-sm text-gray-500">{role.description}</p>
+          <p className="text-sm text-gray-500 break-words">{role.description}</p>
         )}
         <p className="text-xs text-gray-400 mt-1">
           Permisos activos actualmente:{" "}
@@ -178,12 +178,13 @@ const RolePermissionsForm: FC<RolePermissionsFormProps> = ({ role, onClose }) =>
       </div>
 
       {/* Actions */}
-      <div className="flex justify-end gap-3 pt-2 border-t border-gray-200">
+      <div className="flex flex-col-reverse md:flex-row md:justify-end gap-2 pt-2 border-t border-gray-200">
         <Button
           type="button"
           label="Cancelar"
           severity="secondary"
           outlined
+          className="w-full md:w-auto"
           onClick={onClose}
         />
         <Button
@@ -191,6 +192,7 @@ const RolePermissionsForm: FC<RolePermissionsFormProps> = ({ role, onClose }) =>
           label="Guardar permisos"
           icon="pi pi-check"
           severity="success"
+          className="w-full md:w-auto"
           disabled={!isDirty}
           onClick={handleSave}
         />

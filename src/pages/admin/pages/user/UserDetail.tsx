@@ -41,25 +41,26 @@ const UserDetail: FC<UserDetailProps> = ({ user }) => {
   return (
     <div className="flex flex-col gap-4">
       <Card className="bg-white shadow-lg rounded-2xl p-6 border-none">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-2xl font-bold text-gray-800">{user.user_name}</h2>
+        <div className="flex items-start justify-between gap-2 mb-4">
+          <h2 className="text-xl font-bold text-gray-800 break-words min-w-0">{user.user_name}</h2>
           <Badge
             value={user.is_active ? "Activo" : "Inactivo"}
             severity={user.is_active ? "success" : "danger"}
+            className="shrink-0"
           />
         </div>
 
         <div className="flex flex-col gap-2 text-gray-700 text-sm">
           <div className="flex items-center gap-2">
-            <i className="pi pi-id-card text-blue-500"></i>
-            <span className="font-medium">Rol:</span>
-            <span>{user.role.name}</span>
+            <i className="pi pi-id-card text-blue-500 shrink-0" />
+            <span className="font-medium shrink-0">Rol:</span>
+            <span className="break-words">{user.role.name}</span>
           </div>
 
-          <div className="flex items-center gap-2">
-            <i className="pi pi-align-left text-blue-500"></i>
-            <span className="font-medium">Descripción:</span>
-            <span>{user.role.description}</span>
+          <div className="flex items-start gap-2">
+            <i className="pi pi-align-left text-blue-500 shrink-0 mt-0.5" />
+            <span className="font-medium shrink-0">Descripción:</span>
+            <span className="break-words">{user.role.description}</span>
           </div>
 
           {/* 🌳 Permisos del usuario */}

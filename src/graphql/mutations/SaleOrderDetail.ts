@@ -7,6 +7,8 @@ export const CREATE_SALE_ORDER_DETAIL = gql`
     $sale_price: Float!
     $quantity: Int!
     $warehouse: String
+    $discount_type: String
+    $discount_value: Float
   ) {
     createSaleOrderDetail(
       saleOrderDetailInput: {
@@ -15,6 +17,8 @@ export const CREATE_SALE_ORDER_DETAIL = gql`
         sale_price: $sale_price
         quantity: $quantity
         warehouse: $warehouse
+        discount_type: $discount_type
+        discount_value: $discount_value
       }
     ) {
       _id
@@ -69,15 +73,23 @@ export const UPDATE_SALE_ORDER_DETAIL = gql`
     $sale_price: Float!
     $quantity: Int!
     $saleOrderDetailId: String!
+    $discount_type: String
+    $discount_value: Float
   ) {
     updateSaleOrderDetail(
       updateSaleOrderDetailInput: {
         sale_price: $sale_price
         quantity: $quantity
+        discount_type: $discount_type
+        discount_value: $discount_value
       }
       saleOrderDetailId: $saleOrderDetailId
     ) {
       _id
+      discount_type
+      discount_value
+      discount_amount
+      subtotal
     }
   }
 `;

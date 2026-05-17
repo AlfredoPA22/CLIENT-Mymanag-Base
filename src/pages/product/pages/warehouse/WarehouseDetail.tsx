@@ -66,10 +66,7 @@ const WarehouseDetail: FC<WarehouseDetailProps> = ({ warehouse }) => {
       sortable: true,
       style: { width: "10%" },
       body: (rowData: IProduct) => (
-        <LabelInput
-          className="justify-center"
-          label={`${rowData.sale_price} ${currency}`}
-        />
+        <LabelInput className="justify-center" label={`${rowData.sale_price} ${currency}`} />
       ),
     },
     {
@@ -95,12 +92,10 @@ const WarehouseDetail: FC<WarehouseDetailProps> = ({ warehouse }) => {
 
   return (
     <div className="flex flex-col gap-2">
-      {/* Tarjeta de Categoría */}
+      {/* Info card */}
       <Card className="bg-white shadow-lg rounded-lg">
-        <h2 className="text-xl font-semibold text-gray-800">
-          {warehouse.name}
-        </h2>
-        <p className="text-gray-600 mt-2">{warehouse.description}</p>
+        <h2 className="text-xl font-semibold text-gray-800 break-words">{warehouse.name}</h2>
+        <p className="text-gray-600 mt-2 break-words">{warehouse.description}</p>
       </Card>
 
       {listProductWithParams && (
@@ -111,15 +106,62 @@ const WarehouseDetail: FC<WarehouseDetailProps> = ({ warehouse }) => {
             </h3>
           </div>
 
-          <Table
-            columns={columns}
-            data={listProductWithParams}
-            emptyMessage="Sin productos."
-            size="small"
-            dataFilters={filters}
-            tableHeader={renderFilterInput}
-            editMode="row"
-          />
+          {/* ── Mobile: cards ─────────────────────────────────── */}
+          <div className="flex flex-col gap-2 md:hidden">
+            {listProductWithParams.length === 0 && (
+              <p className="text-center text-gray-400 py-6 text-sm">Sin productos.</p>
+            )}
+            {listProductWithParams.map((product: IProduct) => {
+              const status = getStatus(product.status);
+              return (
+                <div
+                  key={product._id}
+                  className="border border-gray-200 rounded-xl p-3 bg-white shadow-sm"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0 overflow-hidden flex-1">
+                      <TextLink
+                        to={`${ROUTES_MOCK.INVENTORY}${ROUTES_MOCK.PRODUCTS}/detalle/${product._id}`}
+                        className="text-xs text-blue-600 font-medium"
+                      >
+                        {product.code}
+                      </TextLink>
+                      <p className="font-semibold text-gray-800 text-sm break-words mt-0.5">{product.name}</p>
+                      {product.brand?.name && (
+                        <p className="text-xs text-gray-500 break-words">{product.brand.name}</p>
+                      )}
+                    </div>
+                    {status && (
+                      <Tag severity={status.severity as "danger" | "success"} className="shrink-0">
+                        {status.label}
+                      </Tag>
+                    )}
+                  </div>
+                  <div className="flex items-center justify-between mt-2 text-sm">
+                    <span className="font-semibold text-blue-600">
+                      {currency} {product.sale_price.toFixed(2)}
+                    </span>
+                    <span className={`font-semibold text-xs ${product.stock > 0 ? "text-green-500" : "text-red-500"}`}>
+                      Stock: {product.stock}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* ── Desktop: tabla ─────────────────────────────────── */}
+          <div className="hidden md:block">
+            <Table
+              columns={columns}
+              data={listProductWithParams}
+              emptyMessage="Sin productos."
+              size="small"
+              dataFilters={filters}
+              tableHeader={renderFilterInput}
+              editMode="row"
+            />
+          </div>
         </Card>
       )}
     </div>

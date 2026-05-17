@@ -130,7 +130,7 @@ const AddSerialToDetailForm: FC<AddSerialToDetailFormProps> = ({
   return (
     <form
       onSubmit={handleSubmit}
-      className="flex flex-col md:grid md:grid-cols-5 gap-2"
+      className="flex flex-col md:grid md:grid-cols-5 gap-2 mb-2"
     >
       <div className="col-span-2">
         <SelectInput
@@ -159,12 +159,12 @@ const AddSerialToDetailForm: FC<AddSerialToDetailFormProps> = ({
         />
       </div>
 
-      <section className="flex justify-center items-center">
+      <section className="flex justify-center items-center w-full md:w-auto">
         <Button
-          className="h-[50px]"
+          className="h-[50px] w-full md:w-auto"
           type="submit"
           severity="success"
-          label="Guardar"
+          label="Guardar serial"
           disabled={!dirty || !isValid || isSubmitting}
         />
       </section>

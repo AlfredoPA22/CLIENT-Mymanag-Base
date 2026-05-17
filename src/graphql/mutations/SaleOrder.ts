@@ -43,3 +43,25 @@ export const APPROVE_SALE_ORDER = gql`
     }
   }
 `;
+
+export const UPDATE_SALE_ORDER_DISCOUNT = gql`
+  mutation UpdateSaleOrderDiscount(
+    $saleOrderId: String!
+    $discount_type: String
+    $discount_value: Float
+  ) {
+    updateSaleOrderDiscount(
+      saleOrderId: $saleOrderId
+      updateSaleOrderDiscountInput: {
+        discount_type: $discount_type
+        discount_value: $discount_value
+      }
+    ) {
+      _id
+      total
+      discount_type
+      discount_value
+      discount_amount
+    }
+  }
+`;

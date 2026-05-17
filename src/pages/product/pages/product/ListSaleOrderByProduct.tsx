@@ -18,82 +18,40 @@ interface ListSaleOrderByProductProps {
   productId: string;
 }
 
-const ListSaleOrderByProduct: FC<ListSaleOrderByProductProps> = ({
-  productId,
-}) => {
-  const { listSaleOrderByProduct, loadingListProduct } =
-    useListSaleOrderByProduct(productId);
+const ListSaleOrderByProduct: FC<ListSaleOrderByProductProps> = ({ productId }) => {
+  const { listSaleOrderByProduct, loadingListProduct } = useListSaleOrderByProduct(productId);
   const navigate = useNavigate();
   const { currency } = useAuth();
 
-  const handleSelectionChange = (
-    e: DataTableSelectionSingleChangeEvent<ISaleOrderByProduct[]>
-  ) => {
+  const handleSelectionChange = (e: DataTableSelectionSingleChangeEvent<ISaleOrderByProduct[]>) => {
     navigate(`${ROUTES_MOCK.SALE_ORDERS}/detalle/${e.value.saleOrder._id}`);
   };
 
   const [columns] = useState<DataTableColumn<ISaleOrderByProduct>[]>([
+    { field: "saleOrder.code", header: "Código", sortable: true },
     {
-      field: "saleOrder.code",
-      header: "Código",
-      sortable: true,
-    },
-    {
-      field: "saleOrder.date",
-      header: "Fecha",
-      sortable: true,
+      field: "saleOrder.date", header: "Fecha", sortable: true,
       body: (rowData) => <Tag value={getDate(rowData.saleOrder.date)} />,
     },
+    { field: "saleOrder.client.fullName", header: "Cliente", sortable: true },
+    { field: "saleOrderDetail.quantity", header: "Cantidad", sortable: true },
     {
-      field: "saleOrder.client.fullName",
-      header: "Cliente",
-      sortable: true,
-    },
-    {
-      field: "saleOrderDetail.quantity",
-      header: "Cantidad",
-      sortable: true,
-    },
-    {
-      field: "saleOrderDetail.sale_price",
-      header: "Precio de venta",
-      sortable: true,
+      field: "saleOrderDetail.sale_price", header: "Precio de venta", sortable: true,
       body: (rowData) => (
-        <LabelInput
-          className="justify-center"
-          label={`${rowData.saleOrderDetail.sale_price} ${currency}`}
-        />
+        <LabelInput className="justify-center" label={`${rowData.saleOrderDetail.sale_price} ${currency}`} />
       ),
     },
     {
-      field: "saleOrderDetail.subtotal",
-      header: "Subtotal",
-      sortable: true,
+      field: "saleOrderDetail.subtotal", header: "Subtotal", sortable: true,
       body: (rowData) => (
-        <LabelInput
-          className="justify-center"
-          label={`${rowData.saleOrderDetail.subtotal} ${currency}`}
-        />
+        <LabelInput className="justify-center" label={`${rowData.saleOrderDetail.subtotal} ${currency}`} />
       ),
     },
     {
-      field: "saleOrder.status",
-      header: "Estado",
+      field: "saleOrder.status", header: "Estado",
       body: (rowData) => {
         const status = getStatus(rowData.saleOrder.status);
-        return (
-          <Tag
-            value={status?.label}
-            severity={
-              status?.severity as
-                | "success"
-                | "warning"
-                | "danger"
-                | "info"
-                | undefined
-            }
-          />
-        );
+        return <Tag value={status?.label} severity={status?.severity as any} />;
       },
     },
   ]);
@@ -102,13 +60,51 @@ const ListSaleOrderByProduct: FC<ListSaleOrderByProductProps> = ({
 
   return (
     <Card title="Ventas del producto">
-      <Table
-        columns={columns}
-        data={listSaleOrderByProduct}
-        emptyMessage="No se registran ventas para este producto."
-        size="small"
-        onSelectionChange={handleSelectionChange}
-      />
+      {/* ── Mobile: cards ─────────────────────────────────────── */}
+      <div className="flex flex-col gap-2 md:hidden">
+        {(!listSaleOrderByProduct || listSaleOrderByProduct.length === 0) && (
+          <p className="text-center text-gray-400 py-6 text-sm">
+            No se registran ventas para este producto.
+          </p>
+        )}
+        {listSaleOrderByProduct?.map((item: ISaleOrderByProduct) => {
+          const status = getStatus(item.saleOrder.status);
+          return (
+            <div
+              key={item.saleOrder._id}
+              className="border border-gray-200 rounded-xl p-3 bg-white shadow-sm cursor-pointer active:bg-gray-50"
+              onClick={() => navigate(`${ROUTES_MOCK.SALE_ORDERS}/detalle/${item.saleOrder._id}`)}
+            >
+              <div className="flex items-center justify-between mb-1">
+                <span className="font-bold text-gray-800 text-sm">{item.saleOrder.code}</span>
+                <Tag value={status?.label} severity={status?.severity as any} />
+              </div>
+              <p className="text-sm text-gray-700 truncate">{item.saleOrder.client?.fullName}</p>
+              <div className="flex flex-wrap gap-x-3 text-xs text-gray-500 mt-1">
+                <span>{getDate(item.saleOrder.date)}</span>
+                <span>·</span>
+                <span>{item.saleOrderDetail.quantity} uds.</span>
+                <span>·</span>
+                <span>{item.saleOrderDetail.sale_price} {currency} c/u</span>
+              </div>
+              <p className="text-sm font-bold text-green-700 mt-1">
+                {item.saleOrderDetail.subtotal} {currency}
+              </p>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* ── Desktop: tabla ─────────────────────────────────────── */}
+      <div className="hidden md:block">
+        <Table
+          columns={columns}
+          data={listSaleOrderByProduct}
+          emptyMessage="No se registran ventas para este producto."
+          size="small"
+          onSelectionChange={handleSelectionChange}
+        />
+      </div>
     </Card>
   );
 };

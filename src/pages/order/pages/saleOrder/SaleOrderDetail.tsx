@@ -1,6 +1,7 @@
 import { useLazyQuery, useMutation, useQuery } from "@apollo/client";
 import { Button } from "primereact/button";
 import { Dialog } from "primereact/dialog";
+import { SelectButton } from "primereact/selectbutton";
 import { InputNumber } from "primereact/inputnumber";
 import { InputTextarea } from "primereact/inputtextarea";
 import { Tag } from "primereact/tag";
@@ -9,7 +10,7 @@ import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import LabelInput from "../../../../components/labelInput/LabelInput";
 import { OrderSkeleton } from "../../../../components/skeleton/OrderSkeleton";
-import { APPROVE_SALE_ORDER } from "../../../../graphql/mutations/SaleOrder";
+import { APPROVE_SALE_ORDER, UPDATE_SALE_ORDER_DISCOUNT } from "../../../../graphql/mutations/SaleOrder";
 import { CREATE_SALE_RETURN } from "../../../../graphql/mutations/SaleReturn";
 import { LIST_PRODUCT } from "../../../../graphql/queries/Product";
 import { FIND_SALE_ORDER, LIST_SALE_ORDER } from "../../../../graphql/queries/SaleOrder";
@@ -26,6 +27,12 @@ import SectionHeader from "../../../../components/sectionHeader/SectionHeader";
 import useAuth from "../../../auth/hooks/useAuth";
 import { PermissionGuard } from "../../../auth/pages/PermissionGuard";
 
+const DISCOUNT_TYPE_OPTIONS = [
+  { label: "Ninguno", value: "NONE" },
+  { label: "Fijo", value: "FIJO" },
+  { label: "Porcentual", value: "PORCENTUAL" },
+];
+
 interface SaleOrderDetailProps {
   saleOrderId: string;
 }
@@ -38,7 +45,7 @@ interface ReturnItem {
 const SaleOrderDetail: FC<SaleOrderDetailProps> = ({ saleOrderId }) => {
   const { data, loading: loadingSaleOrder, error: errorSaleOrder, refetch: refetchSaleOrder } = useQuery(FIND_SALE_ORDER, {
     variables: { saleOrderId },
-    fetchPolicy: "network-only",
+    fetchPolicy: "cache-and-network",
   });
 
   const navigate = useNavigate();
@@ -47,8 +54,12 @@ const SaleOrderDetail: FC<SaleOrderDetailProps> = ({ saleOrderId }) => {
 
   const [showReturnDialog, setShowReturnDialog] = useState(false);
   const [showReturnDetailDialog, setShowReturnDetailDialog] = useState(false);
+  const [showApproveDialog, setShowApproveDialog] = useState(false);
   const [returnReason, setReturnReason] = useState("");
   const [returnQuantities, setReturnQuantities] = useState<Record<string, number>>({});
+
+  const [orderDiscountType, setOrderDiscountType] = useState<string>("NONE");
+  const [orderDiscountValue, setOrderDiscountValue] = useState<number | null>(null);
 
   const { data: returnData, refetch: refetchReturn } = useQuery(FIND_SALE_RETURN_BY_SALE_ORDER, {
     variables: { saleOrderId },
@@ -90,6 +101,53 @@ const SaleOrderDetail: FC<SaleOrderDetailProps> = ({ saleOrderId }) => {
     setShowReturnDialog(false);
     setReturnReason("");
     setReturnQuantities({});
+  };
+
+  const [updateSaleOrderDiscount] = useMutation(UPDATE_SALE_ORDER_DISCOUNT, {
+    refetchQueries: [{ query: FIND_SALE_ORDER, variables: { saleOrderId } }],
+  });
+
+  const handleOpenApproveDialog = () => {
+    setOrderDiscountType("NONE");
+    setOrderDiscountValue(null);
+    setShowApproveDialog(true);
+  };
+
+  const handleClearOrderDiscount = async () => {
+    try {
+      dispatch(setIsBlocked(true));
+      await updateSaleOrderDiscount({
+        variables: { saleOrderId, discount_type: null, discount_value: null },
+      });
+    } catch (error: any) {
+      showToast({ detail: error.message, severity: ToastSeverity.Error });
+    } finally {
+      dispatch(setIsBlocked(false));
+    }
+  };
+
+  const handleConfirmApprove = async () => {
+    try {
+      dispatch(setIsBlocked(true));
+      // Siempre sincroniza el descuento a DB antes de aprobar (incluye limpiarlo si es NONE)
+      await updateSaleOrderDiscount({
+        variables: {
+          saleOrderId,
+          discount_type: orderDiscountType === "NONE" ? null : orderDiscountType,
+          discount_value: orderDiscountType === "NONE" ? null : (orderDiscountValue ?? null),
+        },
+      });
+      const { data: result } = await approveSaleOrder({ variables: { saleOrderId } });
+      if (result) {
+        showToast({ detail: "Venta Aprobada exitosamente", severity: ToastSeverity.Success });
+        setShowApproveDialog(false);
+        navigate(`${ROUTES_MOCK.SALE_ORDERS}/detalle/${result.approveSaleOrder._id}`);
+      }
+    } catch (error: any) {
+      showToast({ detail: error.message, severity: ToastSeverity.Error });
+    } finally {
+      dispatch(setIsBlocked(false));
+    }
   };
 
   const [approveSaleOrder] = useMutation(APPROVE_SALE_ORDER, {
@@ -139,20 +197,6 @@ const SaleOrderDetail: FC<SaleOrderDetailProps> = ({ saleOrderId }) => {
     }
   };
 
-  const setApproveSaleOrder = async () => {
-    try {
-      dispatch(setIsBlocked(true));
-      const { data: result } = await approveSaleOrder({ variables: { saleOrderId } });
-      if (result) {
-        showToast({ detail: "Venta Aprobada exitosamente", severity: ToastSeverity.Success });
-        navigate(`${ROUTES_MOCK.SALE_ORDERS}/detalle/${result.approveSaleOrder._id}`);
-      }
-    } catch (error: any) {
-      showToast({ detail: error.message, severity: ToastSeverity.Error });
-    } finally {
-      dispatch(setIsBlocked(false));
-    }
-  };
 
   useEffect(() => {
     if (errorSaleOrder) {
@@ -167,6 +211,16 @@ const SaleOrderDetail: FC<SaleOrderDetailProps> = ({ saleOrderId }) => {
     details.forEach((d: any) => { all[d._id] = d.quantity; });
     setReturnQuantities(all);
   };
+  // Subtotal de productos = total actual + descuento general ya aplicado (viene de DB)
+  const sumSubtotals = parseFloat(((data?.findSaleOrder.total ?? 0) + (data?.findSaleOrder.discount_amount ?? 0)).toFixed(2));
+  const previewDiscount = (() => {
+    if (orderDiscountType === "NONE" || !orderDiscountValue) return 0;
+    if (orderDiscountType === "PORCENTUAL")
+      return parseFloat((sumSubtotals * (orderDiscountValue / 100)).toFixed(2));
+    return parseFloat(Math.min(orderDiscountValue, sumSubtotals).toFixed(2));
+  })();
+  const previewTotal = parseFloat((sumSubtotals - previewDiscount).toFixed(2));
+
   const date = getDate(data?.findSaleOrder.date) || "";
 
   if (loadingSaleOrder) return <OrderSkeleton />;
@@ -186,44 +240,17 @@ const SaleOrderDetail: FC<SaleOrderDetailProps> = ({ saleOrderId }) => {
         }
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
-        <section className="flex flex-col gap-3 border-r md:border-r-gray-300 md:pr-6">
-          <div className="grid lg:grid-cols-2 gap-2">
-            <div className="flex flex-col">
-              <LabelInput name="date" label="Fecha de venta" />
-              <span className="text-lg font-medium text-gray-700">{date}</span>
-            </div>
-            <div className="flex flex-col">
-              <LabelInput name="payment_method" label="Condición de pago" />
-              <span className="text-lg font-medium text-gray-700">
-                {data?.findSaleOrder.payment_method}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 items-center">
+
+        {/* Código / estado / acciones — order-1 en mobile para que aparezca primero */}
+        <section className="flex flex-col gap-4 rounded-md order-1 md:order-3">
+          <div className="flex items-center justify-between md:flex-col md:items-center gap-2 bg-gray-100 px-4 py-3 md:p-4 rounded-xl">
+            <div className="flex flex-col md:items-center gap-0.5">
+              <span className="text-gray-500 text-xs">Código de Orden</span>
+              <span className="text-lg md:text-xl font-bold text-gray-800">
+                {data?.findSaleOrder.code}
               </span>
-              {data?.findSaleOrder.payment_method === "Contado" && (
-                <span className="text-sm text-gray-500 mt-0.5">
-                  {data?.findSaleOrder.contado_payment_method ?? "No especificado"}
-                </span>
-              )}
             </div>
-          </div>
-          <div className="flex flex-col">
-            <LabelInput name="client" label="Cliente" />
-            <span className="text-lg font-medium text-gray-700">
-              {data?.findSaleOrder.client.fullName}
-            </span>
-          </div>
-        </section>
-
-        <section className="flex flex-col items-center justify-center">
-          <LabelInput name="total" label="Total de compra" />
-          <span className="text-2xl font-semibold text-green-600">
-            {`${data?.findSaleOrder.total} ${currency}`}
-          </span>
-        </section>
-
-        <section className="flex flex-col gap-5 rounded-md">
-          <div className="flex flex-col items-center gap-2 bg-gray-100 p-4 rounded-md">
-            <span className="text-gray-600 text-sm">Código de Orden</span>
-            <span className="text-xl font-bold text-gray-800">{data?.findSaleOrder.code}</span>
             <Tag
               severity={getStatus(data?.findSaleOrder.status)?.severity as "danger" | "success" | "info" | "warning"}
             >
@@ -232,20 +259,20 @@ const SaleOrderDetail: FC<SaleOrderDetailProps> = ({ saleOrderId }) => {
           </div>
 
           {data?.findSaleOrder.status === orderStatus.BORRADOR && (
-            <div className="flex flex-row justify-center gap-4">
+            <PermissionGuard permissions={["CREATE_SALE", "EDIT_SALE"]}>
               <Button
                 icon="pi pi-check-circle"
                 type="button"
                 severity="success"
                 label="Aprobar venta"
-                onClick={setApproveSaleOrder}
-                className="mt-2"
+                className="w-full justify-center"
+                onClick={handleOpenApproveDialog}
               />
-            </div>
+            </PermissionGuard>
           )}
 
           {data?.findSaleOrder.status === orderStatus.APROBADO && (
-            <div className="flex flex-col items-center gap-2 mt-2">
+            <div className="flex flex-col gap-2">
               <PermissionGuard permissions={["DETAIL_SALE"]}>
                 {existingReturn && (
                   <Button
@@ -274,21 +301,82 @@ const SaleOrderDetail: FC<SaleOrderDetailProps> = ({ saleOrderId }) => {
           )}
 
           {data?.findSaleOrder.status === orderStatus.DEVUELTO && existingReturn && (
-            <div className="flex flex-col items-center gap-2 mt-2">
-              <PermissionGuard permissions={["DETAIL_SALE"]}>
-                <Button
-                  icon="pi pi-replay"
-                  type="button"
-                  severity="warning"
-                  label={`Devolución: ${existingReturn.code}`}
-                  onClick={handleOpenReturnDetail}
-                  outlined
-                  className="w-full"
-                />
-              </PermissionGuard>
-            </div>
+            <PermissionGuard permissions={["DETAIL_SALE"]}>
+              <Button
+                icon="pi pi-replay"
+                type="button"
+                severity="warning"
+                label={`Devolución: ${existingReturn.code}`}
+                onClick={handleOpenReturnDetail}
+                outlined
+                className="w-full"
+              />
+            </PermissionGuard>
           )}
         </section>
+
+        {/* Info de la orden — order-2 en mobile */}
+        <section className="flex flex-col gap-3 order-2 md:order-1 md:border-r md:border-gray-300 md:pr-6">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="flex flex-col">
+              <span className="text-xs text-gray-400">Fecha de venta</span>
+              <span className="text-base font-medium text-gray-700">{date}</span>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-xs text-gray-400">Condición de pago</span>
+              <span className="text-base font-medium text-gray-700">
+                {data?.findSaleOrder.payment_method}
+              </span>
+              {data?.findSaleOrder.payment_method === "Contado" && (
+                <span className="text-xs text-gray-500 mt-0.5">
+                  {data?.findSaleOrder.contado_payment_method ?? "No especificado"}
+                </span>
+              )}
+            </div>
+          </div>
+          <div className="flex flex-col">
+            <span className="text-xs text-gray-400">Cliente</span>
+            <span className="text-base font-medium text-gray-700">
+              {data?.findSaleOrder.client.fullName}
+            </span>
+          </div>
+        </section>
+
+        {/* Totales — order-3 en mobile (al final) */}
+        <section className="flex flex-col items-center justify-center gap-1 text-center order-3 md:order-2 bg-green-50 md:bg-transparent rounded-xl md:rounded-none py-3 md:py-0">
+          {(data?.findSaleOrder.discount_amount ?? 0) > 0 && (
+            <>
+              <span className="text-xs text-gray-400">Subtotal productos</span>
+              <span className="text-sm text-gray-600">
+                {`${((data?.findSaleOrder.total ?? 0) + (data?.findSaleOrder.discount_amount ?? 0)).toFixed(2)} ${currency}`}
+              </span>
+              <div className="flex items-center justify-center gap-1">
+                <span className="text-xs text-orange-500">
+                  Descuento general: -{(data?.findSaleOrder.discount_amount ?? 0).toFixed(2)} {currency}
+                  {data?.findSaleOrder.discount_type === "PORCENTUAL"
+                    ? ` (${data?.findSaleOrder.discount_value}%)`
+                    : ""}
+                </span>
+                {data?.findSaleOrder.status === orderStatus.BORRADOR && (
+                  <Button
+                    icon="pi pi-times"
+                    size="small"
+                    severity="secondary"
+                    text
+                    rounded
+                    tooltip="Quitar descuento general"
+                    onClick={handleClearOrderDiscount}
+                  />
+                )}
+              </div>
+            </>
+          )}
+          <span className="text-xs text-gray-400 mt-1">Total de compra</span>
+          <span className="text-2xl font-bold text-green-600">
+            {`${data?.findSaleOrder.total} ${currency}`}
+          </span>
+        </section>
+
       </div>
 
       {/* ── Dialog de devolución parcial ───────────────────────── */}
@@ -338,7 +426,7 @@ const SaleOrderDetail: FC<SaleOrderDetailProps> = ({ saleOrderId }) => {
             </div>
           )}
 
-          {/* Tabla de productos / estado vacío */}
+          {/* Lista de productos / estado vacío */}
           {loadingDetails ? (
             <div className="flex justify-center py-4">
               <i className="pi pi-spin pi-spinner text-2xl text-gray-400" />
@@ -349,46 +437,38 @@ const SaleOrderDetail: FC<SaleOrderDetailProps> = ({ saleOrderId }) => {
               <span className="text-sm">Todos los productos de esta venta ya fueron devueltos.</span>
             </div>
           ) : (
-            <div className="border border-gray-200 rounded-lg overflow-hidden">
-              <table className="w-full text-sm">
-                <thead className="bg-gray-50 text-gray-500 text-xs uppercase">
-                  <tr>
-                    <th className="px-3 py-2 text-left">Producto</th>
-                    <th className="px-3 py-2 text-center">Disponible</th>
-                    <th className="px-3 py-2 text-center">A devolver</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {details.map((detail: any, idx: number) => (
-                    <tr key={detail._id} className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}>
-                      <td className="px-3 py-2 font-medium text-gray-700">
-                        {detail.product?.name ?? "—"}
-                      </td>
-                      <td className="px-3 py-2 text-center text-gray-500">{detail.quantity}</td>
-                      <td className="px-3 py-2 text-center">
-                        <InputNumber
-                          value={returnQuantities[detail._id] ?? 0}
-                          onValueChange={(e) =>
-                            setReturnQuantities((prev) => ({
-                              ...prev,
-                              [detail._id]: Math.min(Math.max(e.value ?? 0, 0), detail.quantity),
-                            }))
-                          }
-                          min={0}
-                          max={detail.quantity}
-                          showButtons
-                          buttonLayout="horizontal"
-                          decrementButtonClassName="p-button-secondary p-button-sm"
-                          incrementButtonClassName="p-button-secondary p-button-sm"
-                          incrementButtonIcon="pi pi-plus"
-                          decrementButtonIcon="pi pi-minus"
-                          inputStyle={{ width: "3rem", textAlign: "center", fontSize: "0.85rem" }}
-                        />
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="flex flex-col divide-y divide-gray-200 border border-gray-200 rounded-lg overflow-hidden">
+              {details.map((detail: any, idx: number) => (
+                <div
+                  key={detail._id}
+                  className={`flex items-center justify-between gap-3 px-3 py-2 ${idx % 2 === 0 ? "bg-white" : "bg-gray-50"}`}
+                >
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium text-gray-700 text-sm break-words leading-snug">
+                      {detail.product?.name ?? "—"}
+                    </p>
+                    <p className="text-xs text-gray-400 mt-0.5">Disponible: {detail.quantity}</p>
+                  </div>
+                  <InputNumber
+                    value={returnQuantities[detail._id] ?? 0}
+                    onValueChange={(e) =>
+                      setReturnQuantities((prev) => ({
+                        ...prev,
+                        [detail._id]: Math.min(Math.max(e.value ?? 0, 0), detail.quantity),
+                      }))
+                    }
+                    min={0}
+                    max={detail.quantity}
+                    showButtons
+                    buttonLayout="horizontal"
+                    decrementButtonClassName="p-button-secondary p-button-sm"
+                    incrementButtonClassName="p-button-secondary p-button-sm"
+                    incrementButtonIcon="pi pi-plus"
+                    decrementButtonIcon="pi pi-minus"
+                    inputStyle={{ width: "2.5rem", textAlign: "center", fontSize: "0.85rem" }}
+                  />
+                </div>
+              ))}
             </div>
           )}
 
@@ -424,6 +504,79 @@ const SaleOrderDetail: FC<SaleOrderDetailProps> = ({ saleOrderId }) => {
               />
             </div>
           )}
+        </div>
+      </Dialog>
+
+      {/* ── Dialog de aprobación con descuento opcional ─────────── */}
+      <Dialog
+        header={`Aprobar venta — ${data?.findSaleOrder.code}`}
+        visible={showApproveDialog}
+        onHide={() => setShowApproveDialog(false)}
+        style={{ width: "500px" }}
+        breakpoints={{ "640px": "95vw" }}
+        footer={
+          <div className="flex justify-end gap-2 pt-2">
+            <Button label="Cancelar" severity="secondary" outlined onClick={() => setShowApproveDialog(false)} />
+            <Button
+              label="Confirmar y aprobar"
+              icon="pi pi-check-circle"
+              severity="success"
+              onClick={handleConfirmApprove}
+            />
+          </div>
+        }
+      >
+        <div className="flex flex-col gap-4 pt-1">
+          {/* Descuento general opcional */}
+          <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 flex flex-col gap-2">
+            <p className="text-xs font-semibold text-orange-700">Descuento general (opcional)</p>
+            <div className="flex flex-col gap-2">
+              <SelectButton
+                value={orderDiscountType}
+                options={DISCOUNT_TYPE_OPTIONS}
+                onChange={(e) => {
+                  const val = (e.value as string) ?? "NONE";
+                  setOrderDiscountType(val);
+                  if (val === "NONE") setOrderDiscountValue(null);
+                }}
+                className="text-sm w-full"
+              />
+              {orderDiscountType !== "NONE" && (
+                <input
+                  type="number"
+                  value={orderDiscountValue ?? ""}
+                  onChange={(e) => {
+                    const val = e.target.value === "" ? null : parseFloat(e.target.value);
+                    setOrderDiscountValue(isNaN(val as number) ? null : val);
+                  }}
+                  placeholder={orderDiscountType === "PORCENTUAL" ? "%" : currency}
+                  min={0}
+                  max={orderDiscountType === "PORCENTUAL" ? 100 : undefined}
+                  className="p-inputtext p-component w-full text-sm"
+                />
+              )}
+            </div>
+          </div>
+
+          {/* Preview de totales */}
+          <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 flex flex-col gap-1 text-sm">
+            <div className="flex justify-between text-gray-600">
+              <span>Subtotal productos:</span>
+              <span className="font-medium">{sumSubtotals.toFixed(2)} {currency}</span>
+            </div>
+            {previewDiscount > 0 && (
+              <div className="flex justify-between text-orange-600">
+                <span>
+                  Descuento general{orderDiscountType === "PORCENTUAL" ? ` (${orderDiscountValue}%)` : ""}:
+                </span>
+                <span>-{previewDiscount.toFixed(2)} {currency}</span>
+              </div>
+            )}
+            <div className="flex justify-between font-semibold text-green-700 border-t pt-1 mt-0.5">
+              <span>Total final:</span>
+              <span>{previewTotal.toFixed(2)} {currency}</span>
+            </div>
+          </div>
         </div>
       </Dialog>
 

@@ -117,12 +117,13 @@ const ProductTransferDetailForm: FC<ProductTransferDetailFormProps> = ({
           />
         </section>
 
-        <section className="flex items-end justify-center">
+        <section className="flex items-end justify-center w-full md:w-auto">
           <Button
             icon="pi pi-plus"
             type="submit"
             severity="success"
             label="Agregar producto"
+            className="w-full md:w-auto"
             disabled={!dirty || !isValid || isSubmitting}
           />
         </section>

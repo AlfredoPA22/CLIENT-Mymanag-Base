@@ -95,13 +95,8 @@ const ProductTransferForm: FC<ProductTransferFormProps> = ({
         variables: { transferId: productTransferData?._id },
       });
       if (data) {
-        showToast({
-          detail: "Transferencia aprobada exitosamente",
-          severity: ToastSeverity.Success,
-        });
-        navigate(
-          `${ROUTES_MOCK.TRANSFERS}/detalle/${data.approveProductTransfer._id}`
-        );
+        showToast({ detail: "Transferencia aprobada exitosamente", severity: ToastSeverity.Success });
+        navigate(`${ROUTES_MOCK.TRANSFERS}/detalle/${data.approveProductTransfer._id}`);
       }
     } catch (error: any) {
       showToast({ detail: error.message, severity: ToastSeverity.Error });
@@ -113,9 +108,7 @@ const ProductTransferForm: FC<ProductTransferFormProps> = ({
   const onCreateOriginWarehouse = async (inputValue: string) => {
     try {
       dispatch(setIsBlocked(true));
-      const { data } = await createWarehouse({
-        variables: { name: inputValue, description: "" },
-      });
+      const { data } = await createWarehouse({ variables: { name: inputValue, description: "" } });
       if (data) {
         showToast({ detail: "Almacén creado", severity: ToastSeverity.Success });
         const newOption = { value: data.createWarehouse._id, label: data.createWarehouse.name };
@@ -132,9 +125,7 @@ const ProductTransferForm: FC<ProductTransferFormProps> = ({
   const onCreateDestinationWarehouse = async (inputValue: string) => {
     try {
       dispatch(setIsBlocked(true));
-      const { data } = await createWarehouse({
-        variables: { name: inputValue, description: "" },
-      });
+      const { data } = await createWarehouse({ variables: { name: inputValue, description: "" } });
       if (data) {
         showToast({ detail: "Almacén creado", severity: ToastSeverity.Success });
         const newOption = { value: data.createWarehouse._id, label: data.createWarehouse.name };
@@ -148,18 +139,12 @@ const ProductTransferForm: FC<ProductTransferFormProps> = ({
     }
   };
 
-  const handleOriginChange = async (
-    event: SingleValue<IReactSelect>,
-    action: ActionMeta<IReactSelect>
-  ) => {
+  const handleOriginChange = async (event: SingleValue<IReactSelect>, action: ActionMeta<IReactSelect>) => {
     setSelectedOrigin(event);
     setFieldValue(action.name || "", event ? event.value : "");
   };
 
-  const handleDestinationChange = async (
-    event: SingleValue<IReactSelect>,
-    action: ActionMeta<IReactSelect>
-  ) => {
+  const handleDestinationChange = async (event: SingleValue<IReactSelect>, action: ActionMeta<IReactSelect>) => {
     setSelectedDestination(event);
     setFieldValue(action.name || "", event ? event.value : "");
   };
@@ -180,23 +165,24 @@ const ProductTransferForm: FC<ProductTransferFormProps> = ({
     validationSchema: schemaFormProductTransfer,
   });
 
+  const transferStatus = productTransferData?.status
+    ? getStatus(productTransferData.status)
+    : null;
+
   return (
     <form
       id="transfer-form"
       onSubmit={handleSubmit}
-      className="p-5 shadow-lg rounded-lg border border-gray-200 bg-white mb-2"
+      className="p-4 md:p-5 shadow-lg rounded-lg border border-gray-200 bg-white mb-2"
     >
-      <div className="flex flex-col items-center text-center gap-2 mb-5">
-        <h2 className="text-2xl font-bold text-gray-800">
-          Nueva Transferencia
-        </h2>
-        <p className="text-gray-500 text-sm">
-          Completa los detalles para registrar la transferencia
-        </p>
+      <div className="flex flex-col items-center text-center gap-1 mb-4">
+        <h2 className="text-xl md:text-2xl font-bold text-gray-800">Nueva Transferencia</h2>
+        <p className="text-gray-500 text-sm">Completa los detalles para registrar la transferencia</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
-        <section className="flex flex-col gap-3 border-r md:border-r-gray-300 md:pr-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 items-center">
+        {/* Campos del formulario */}
+        <section className="flex flex-col gap-3 md:border-r md:border-r-gray-300 md:pr-6">
           <div className="flex flex-col">
             <LabelInput name="date" label="Fecha" />
             <Calendar
@@ -205,6 +191,7 @@ const ProductTransferForm: FC<ProductTransferFormProps> = ({
               onChange={handleChange}
               showIcon
               disabled={productTransferInitialized}
+              className="w-full"
             />
           </div>
           <SelectInput
@@ -224,9 +211,7 @@ const ProductTransferForm: FC<ProductTransferFormProps> = ({
             name="destination_warehouse"
             placeholder="Seleccionar destino"
             mandatory
-            options={listWarehouseSelect.filter(
-              (w) => w.value !== values.origin_warehouse
-            )}
+            options={listWarehouseSelect.filter((w) => w.value !== values.origin_warehouse)}
             value={selectedDestination}
             error={errors.destination_warehouse}
             onChange={handleDestinationChange}
@@ -235,6 +220,7 @@ const ProductTransferForm: FC<ProductTransferFormProps> = ({
           />
         </section>
 
+        {/* Centro: botón crear o resumen de ruta */}
         <div className="flex justify-center">
           {!productTransferInitialized ? (
             <Button
@@ -242,52 +228,46 @@ const ProductTransferForm: FC<ProductTransferFormProps> = ({
               type="submit"
               severity="success"
               label="Crear transferencia"
+              className="w-full md:w-auto"
               disabled={!isValid || isSubmitting}
             />
           ) : (
-            <section className="flex flex-col items-center justify-center gap-1">
+            <section className="flex flex-col items-center justify-center gap-1 text-center">
               <span className="text-gray-500 text-sm">Almacén origen</span>
-              <span className="font-semibold">
+              <span className="font-semibold break-words">
                 {productTransferData?.origin_warehouse?.name}
               </span>
               <span className="text-gray-400 text-xs mt-1">→</span>
               <span className="text-gray-500 text-sm">Almacén destino</span>
-              <span className="font-semibold">
+              <span className="font-semibold break-words">
                 {productTransferData?.destination_warehouse?.name}
               </span>
             </section>
           )}
         </div>
 
+        {/* Código + estado + acciones (solo cuando hay transferencia creada) */}
         {productTransferInitialized && (
-          <section className="flex flex-col gap-5 rounded-md">
+          <section className="flex flex-col gap-4 rounded-md">
             <div className="flex flex-col items-center gap-2 bg-gray-100 p-4 rounded-md">
               <span className="text-gray-600 text-sm">Código</span>
-              <span className="text-xl font-bold text-gray-800">
-                {productTransferData?.code}
-              </span>
-              {productTransferData?.status && (
+              <span className="text-xl font-bold text-gray-800">{productTransferData?.code}</span>
+              {transferStatus && (
                 <Tag
-                  severity={
-                    getStatus(productTransferData.status)?.severity as
-                      | "danger"
-                      | "success"
-                      | "info"
-                      | "warning"
-                  }
+                  severity={transferStatus.severity as "danger" | "success" | "info" | "warning"}
                 >
-                  {getStatus(productTransferData.status)?.label}
+                  {transferStatus.label}
                 </Tag>
               )}
             </div>
 
-            <div className="flex flex-row justify-center gap-4">
+            <div className="flex flex-col gap-2">
               <Button
                 type="button"
                 severity="warning"
                 label="Reiniciar"
                 onClick={handleReset}
-                className="w-auto"
+                className="w-full"
               />
               <Button
                 icon="pi pi-check-circle"
@@ -296,7 +276,7 @@ const ProductTransferForm: FC<ProductTransferFormProps> = ({
                 label="Aprobar"
                 onClick={handleApprove}
                 disabled={approveBlocked}
-                className="w-auto"
+                className="w-full"
               />
             </div>
           </section>

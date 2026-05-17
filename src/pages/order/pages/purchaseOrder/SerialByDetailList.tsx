@@ -37,48 +37,27 @@ const SerialByDetailList: FC<SerialByDetailListProps> = ({
     DELETE_SERIAL_TO_PURCHASE_ORDER_DETAIL,
     {
       refetchQueries: [
-        {
-          query: LIST_PURCHASE_ORDER_DETAIL,
-          variables: {
-            purchaseOrderId,
-          },
-        },
-        {
-          query: LIST_SERIAL_BY_PURCHASE_ORDER_DETAIL,
-          variables: {
-            purchaseOrderDetailId,
-          },
-        },
+        { query: LIST_PURCHASE_ORDER_DETAIL, variables: { purchaseOrderId } },
+        { query: LIST_SERIAL_BY_PURCHASE_ORDER_DETAIL, variables: { purchaseOrderDetailId } },
       ],
     }
   );
 
   const {
-    data: {
-      listProductSerialByPurchaseOrder: listProductSerialByPurchaseOrder,
-    } = [],
+    data: { listProductSerialByPurchaseOrder: listProductSerialByPurchaseOrder } = [],
     loading: loadingListSerialByPurchaseOrder,
     error,
   } = useQuery(LIST_SERIAL_BY_PURCHASE_ORDER_DETAIL, {
-    variables: {
-      purchaseOrderDetailId,
-    },
+    variables: { purchaseOrderDetailId },
     fetchPolicy: "network-only",
   });
 
   const handleDeleteSerial = async (productSerialId: string) => {
     try {
       dispatch(setIsBlocked(true));
-      const { data } = await deleteSerialToPurchaseOrderDetail({
-        variables: {
-          productSerialId,
-        },
-      });
+      const { data } = await deleteSerialToPurchaseOrderDetail({ variables: { productSerialId } });
       if (data.deleteSerialToPurchaseOrderDetail.success) {
-        showToast({
-          detail: "Serial eliminado",
-          severity: ToastSeverity.Success,
-        });
+        showToast({ detail: "Serial eliminado", severity: ToastSeverity.Success });
       }
     } catch (error: any) {
       showToast({ detail: error.message, severity: ToastSeverity.Error });
@@ -87,28 +66,24 @@ const SerialByDetailList: FC<SerialByDetailListProps> = ({
     }
   };
 
-  const actionBodyTemplate = (rowData: IPurchaseOrderDetail) => {
-    return (
-      <div className="flex justify-center">
-        <Button
-          tooltip="eliminar serial"
-          icon="pi pi-trash"
-          raised
-          severity="danger"
-          aria-label="Cancel"
-          onClick={() => handleDeleteSerial(rowData._id)}
-        />
-      </div>
-    );
-  };
+  const actionBodyTemplate = (rowData: IPurchaseOrderDetail) => (
+    <div className="flex justify-center">
+      <Button
+        tooltip="eliminar serial"
+        icon="pi pi-trash"
+        raised
+        severity="danger"
+        onClick={() => handleDeleteSerial(rowData._id)}
+      />
+    </div>
+  );
 
   const statusBodyTemplate = (rowData: IProductSerial) => {
     const status = getStatus(rowData.status);
     if (status) {
-      const { severity, label } = status;
       return (
-        <Tag severity={severity as "danger" | "success" | "info" | "warning"}>
-          {label}
+        <Tag severity={status.severity as "danger" | "success" | "info" | "warning"}>
+          {status.label}
         </Tag>
       );
     }
@@ -116,18 +91,8 @@ const SerialByDetailList: FC<SerialByDetailListProps> = ({
   };
 
   const [columns] = useState<DataTableColumn<IProductSerial>[]>([
-    {
-      field: "serial",
-      header: "Serial",
-      sortable: true,
-      style: { width: "50%" },
-    },
-    {
-      field: "warehouse.name",
-      header: "Almacén",
-      sortable: true,
-      style: { width: "35%" },
-    },
+    { field: "serial", header: "Serial", sortable: true, style: { width: "50%" } },
+    { field: "warehouse.name", header: "Almacén", sortable: true, style: { width: "35%" } },
     {
       field: "status",
       header: "Estado",
@@ -141,31 +106,69 @@ const SerialByDetailList: FC<SerialByDetailListProps> = ({
 
   useEffect(() => {
     if (error) {
-      showToast({
-        detail: error.message,
-        severity: ToastSeverity.Error,
-      });
+      showToast({ detail: error.message, severity: ToastSeverity.Error });
     }
   }, [error]);
 
-  if (loadingListSerialByPurchaseOrder) {
-    return <LoadingSpinner />;
-  }
+  if (loadingListSerialByPurchaseOrder) return <LoadingSpinner />;
+
+  const count = listProductSerialByPurchaseOrder?.length ?? 0;
 
   return (
-    <Card
-      className="size-full"
-      title={`Seriales asignados (${listProductSerialByPurchaseOrder.length})`}
-    >
-      <Table
-        columns={columns}
-        data={listProductSerialByPurchaseOrder}
-        emptyMessage="Producto sin seriales asignados."
-        size="small"
-        {...(editMode && { actionBodyTemplate })}
-        dataFilters={filters}
-        tableHeader={renderFilterInput}
-      />
+    <Card className="size-full" title={`Seriales asignados (${count})`}>
+      {/* ── Mobile: cards ─────────────────────────────────────── */}
+      <div className="flex flex-col gap-2 md:hidden">
+        {count === 0 && (
+          <p className="text-center text-gray-400 py-4 text-sm">
+            Producto sin seriales asignados.
+          </p>
+        )}
+        {listProductSerialByPurchaseOrder?.map((item: IProductSerial) => {
+          const status = getStatus(item.status);
+          return (
+            <div
+              key={item._id}
+              className="flex items-center justify-between gap-2 border border-gray-200 rounded-xl px-3 py-2 bg-white shadow-sm"
+            >
+              <div className="min-w-0 overflow-hidden flex-1">
+                <p className="font-semibold text-gray-800 text-sm break-all">{item.serial}</p>
+                {item.warehouse?.name && (
+                  <p className="text-xs text-gray-500 break-words">{item.warehouse.name}</p>
+                )}
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                {status && (
+                  <Tag severity={status.severity as "danger" | "success" | "info" | "warning"}>
+                    {status.label}
+                  </Tag>
+                )}
+                {editMode && (
+                  <Button
+                    icon="pi pi-trash"
+                    size="small"
+                    severity="danger"
+                    raised
+                    onClick={() => handleDeleteSerial(item._id)}
+                  />
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* ── Desktop: tabla ─────────────────────────────────────── */}
+      <div className="hidden md:block">
+        <Table
+          columns={columns}
+          data={listProductSerialByPurchaseOrder ?? []}
+          emptyMessage="Producto sin seriales asignados."
+          size="small"
+          {...(editMode && { actionBodyTemplate })}
+          dataFilters={filters}
+          tableHeader={renderFilterInput}
+        />
+      </div>
     </Card>
   );
 };

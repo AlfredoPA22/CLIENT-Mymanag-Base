@@ -43,6 +43,9 @@ export const FIND_SALE_ORDER = gql`
       payment_method
       contado_payment_method
       has_return
+      discount_type
+      discount_value
+      discount_amount
     }
   }
 `;
@@ -64,6 +67,9 @@ export const FIND_SALE_ORDER_TO_PDF = gql`
         total
         payment_method
         contado_payment_method
+        discount_type
+        discount_value
+        discount_amount
       }
       saleOrderDetail {
         productSerial {
@@ -83,6 +89,9 @@ export const FIND_SALE_ORDER_TO_PDF = gql`
           sale_price
           quantity
           subtotal
+          discount_type
+          discount_value
+          discount_amount
         }
       }
     }
@@ -140,6 +149,7 @@ export const REPORT_SALE_ORDER = gql`
       }
       status
       total
+      discount_amount
     }
   }
 `;

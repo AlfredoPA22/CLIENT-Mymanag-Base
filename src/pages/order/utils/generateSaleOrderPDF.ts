@@ -12,6 +12,7 @@ const RULE: [number, number, number] = [203, 213, 225];    // slate-300 — line
 const TABLE_HEAD: [number, number, number] = [241, 245, 249]; // slate-100 — table header bg
 const ROW_ALT: [number, number, number] = [248, 250, 252]; // slate-50  — alt rows
 const ACCENT: [number, number, number] = [160, 200, 46];   // brand green — top rule only
+const RED: [number, number, number] = [180, 0, 0];         // discount — red
 
 const PAGE_W = 210;
 const MARGIN = 14;
@@ -95,53 +96,49 @@ export const generatePDF = async (
 
   // ── INFO FIELDS ──────────────────────────────────────────
   const infoY = 40;
+  const COL2 = 90;
+  const COL3 = 148;
 
-  // Método de pago a mostrar
   const paymentDisplay =
     data.saleOrder.payment_method === "Contado"
       ? `${data.saleOrder.payment_method}  ·  ${data.saleOrder.contado_payment_method ?? "—"}`
       : data.saleOrder.payment_method ?? "—";
 
-  // Left column
+  const discountAmount = Number(data.saleOrder.discount_amount) || 0;
+  const hasDiscount = discountAmount > 0;
+  const subtotalBruto = data.saleOrder.total + discountAmount;
+
+  // Labels row
   doc.setFont("helvetica", "bold");
   doc.setFontSize(7);
   doc.setTextColor(...INK_MID);
   doc.text("CLIENTE", MARGIN, infoY);
+  doc.text("ESTADO", COL2, infoY);
+  doc.text("MÉTODO DE PAGO", COL3, infoY);
+
+  // Values row
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
   doc.setTextColor(...INK);
   doc.text(data.saleOrder.client.fullName, MARGIN, infoY + 6);
+  doc.text(data.saleOrder.status, COL2, infoY + 6);
+  doc.text(paymentDisplay, COL3, infoY + 6);
 
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(7);
-  doc.setTextColor(...INK_MID);
-  doc.text("ESTADO", MARGIN, infoY + 13);
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(9);
-  doc.setTextColor(...INK);
-  doc.text(data.saleOrder.status, MARGIN, infoY + 19);
+  // Client sub-info (code + phone)
+  const subInfo = [
+    data.saleOrder.client.code ? `Cód: ${data.saleOrder.client.code}` : "",
+    data.saleOrder.client.phoneNumber ? `Tel: ${data.saleOrder.client.phoneNumber}` : "",
+  ].filter(Boolean).join("   ·   ");
 
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(7);
-  doc.setTextColor(...INK_MID);
-  doc.text("MÉTODO DE PAGO", MARGIN, infoY + 26);
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(9);
-  doc.setTextColor(...INK);
-  doc.text(paymentDisplay, MARGIN, infoY + 32);
-
-  // Right column — total
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(7);
-  doc.setTextColor(...INK_MID);
-  doc.text("TOTAL", PAGE_W - MARGIN, infoY, { align: "right" });
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(14);
-  doc.setTextColor(...INK);
-  doc.text(`${data.saleOrder.total} ${currency}`, PAGE_W - MARGIN, infoY + 9, { align: "right" });
+  if (subInfo) {
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(7.5);
+    doc.setTextColor(...INK_LIGHT);
+    doc.text(subInfo, MARGIN, infoY + 13);
+  }
 
   // ── SECTION RULE ─────────────────────────────────────────
-  drawRule(doc, infoY + 38);
+  drawRule(doc, infoY + 20);
 
   // ── TABLE ────────────────────────────────────────────────
   const columns = [
@@ -154,32 +151,58 @@ export const generatePDF = async (
   ];
 
   const rows = data.saleOrderDetail.flatMap((detail) => {
+    const d = detail.saleOrderDetail;
+    const detailDiscount = Number(d.discount_amount) || 0;
+
     const mainRow = [
-      detail.saleOrderDetail.product.code,
-      detail.saleOrderDetail.product.name,
-      detail.saleOrderDetail.product.brand.name,
-      detail.saleOrderDetail.quantity,
-      detail.saleOrderDetail.sale_price,
-      detail.saleOrderDetail.subtotal,
+      d.product.code,
+      d.product.name,
+      d.product.brand.name,
+      d.quantity,
+      d.sale_price,
+      d.subtotal,
     ];
+
+    const extraRows: any[] = [];
+
+    if (detailDiscount > 0) {
+      const label =
+        d.discount_type === "percentage"
+          ? `Descuento (${d.discount_value}%): -${detailDiscount.toFixed(2)} ${currency}`
+          : `Descuento: -${detailDiscount.toFixed(2)} ${currency}`;
+      extraRows.push([
+        {
+          content: label,
+          colSpan: 6,
+          styles: {
+            fillColor: [255, 245, 245] as [number, number, number],
+            textColor: RED,
+            fontSize: 6.5,
+            fontStyle: "italic" as const,
+            cellPadding: { top: 2, right: 4, bottom: 2, left: 8 },
+          },
+        },
+      ]);
+    }
 
     const serials = detail.productSerial.map((s) => s.serial);
-    if (serials.length === 0) return [mainRow];
-
-    const serialRow = [
-      {
-        content: `Seriales: ${serials.join("   ·   ")}`,
-        colSpan: 6,
-        styles: {
-          fillColor: [248, 250, 252] as [number, number, number],
-          textColor: INK_LIGHT,
-          fontSize: 6.5,
-          fontStyle: "italic" as const,
-          cellPadding: { top: 2, right: 4, bottom: 2, left: 8 },
+    if (serials.length > 0) {
+      extraRows.push([
+        {
+          content: `Seriales: ${serials.join("   ·   ")}`,
+          colSpan: 6,
+          styles: {
+            fillColor: [248, 250, 252] as [number, number, number],
+            textColor: INK_LIGHT,
+            fontSize: 6.5,
+            fontStyle: "italic" as const,
+            cellPadding: { top: 2, right: 4, bottom: 2, left: 8 },
+          },
         },
-      },
-    ];
-    return [mainRow, serialRow];
+      ]);
+    }
+
+    return [mainRow, ...extraRows];
   });
 
   autoTable(doc, {
@@ -195,12 +218,12 @@ export const generatePDF = async (
     body: rows,
     bodyStyles: { fontSize: 8, textColor: INK, cellPadding: 3 },
     alternateRowStyles: { fillColor: ROW_ALT },
-    startY: infoY + 43,
+    startY: infoY + 25,
     theme: "plain",
     columnStyles: {
       0: { cellWidth: 24, halign: "center" },
-      1: { cellWidth: 52 },
-      2: { cellWidth: 24 },
+      1: { cellWidth: 60 },
+      2: { cellWidth: 26 },
       3: { cellWidth: 14, halign: "center" },
       4: { cellWidth: 30, halign: "right" },
       5: { cellWidth: 28, halign: "right" },
@@ -213,15 +236,48 @@ export const generatePDF = async (
   const finalY = (doc as any).lastAutoTable.finalY + 4;
   drawRule(doc, finalY);
 
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(9.5);
-  doc.setTextColor(...INK);
-  doc.text(
-    `TOTAL:   ${data.saleOrder.total} ${currency}`,
-    PAGE_W - MARGIN,
-    finalY + 8,
-    { align: "right" }
-  );
+  if (hasDiscount) {
+    const discountFooterLabel =
+      data.saleOrder.discount_type === "percentage"
+        ? `Descuento (${data.saleOrder.discount_value}%):`
+        : "Descuento:";
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8.5);
+    doc.setTextColor(...INK_MID);
+    doc.text(
+      `Subtotal:   ${subtotalBruto.toFixed(2)} ${currency}`,
+      PAGE_W - MARGIN,
+      finalY + 6,
+      { align: "right" }
+    );
+    doc.setTextColor(...RED);
+    doc.text(
+      `${discountFooterLabel}   -${discountAmount.toFixed(2)} ${currency}`,
+      PAGE_W - MARGIN,
+      finalY + 12,
+      { align: "right" }
+    );
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9.5);
+    doc.setTextColor(...INK);
+    doc.text(
+      `TOTAL:   ${data.saleOrder.total} ${currency}`,
+      PAGE_W - MARGIN,
+      finalY + 20,
+      { align: "right" }
+    );
+  } else {
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9.5);
+    doc.setTextColor(...INK);
+    doc.text(
+      `TOTAL:   ${data.saleOrder.total} ${currency}`,
+      PAGE_W - MARGIN,
+      finalY + 8,
+      { align: "right" }
+    );
+  }
 
   // ── PAGE FOOTER ───────────────────────────────────────────
   drawRule(doc, 283);

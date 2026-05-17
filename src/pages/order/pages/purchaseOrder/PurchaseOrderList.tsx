@@ -1,9 +1,11 @@
 import { useApolloClient, useMutation } from "@apollo/client";
 import { Button } from "primereact/button";
+import { Card } from "primereact/card";
 import { confirmDialog } from "primereact/confirmdialog";
 import { DataTableSelectionSingleChangeEvent } from "primereact/datatable";
 import { Tag } from "primereact/tag";
 import { useState } from "react";
+import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import Table from "../../../../components/datatable/Table";
 import LabelInput from "../../../../components/labelInput/LabelInput";
@@ -25,39 +27,27 @@ import usePurchaseOrderList from "../../hooks/usePurchaseOrderList";
 import { generatePDF } from "../../utils/generatePurchaseOrderPDF";
 import { getDate } from "../../utils/getDate";
 import { getStatus } from "../../utils/getStatus";
-import { Card } from "primereact/card";
 import { ROUTES_MOCK } from "../../../../routes/RouteMocks";
-import { useDispatch } from "react-redux";
 import { setIsBlocked } from "../../../../redux/slices/blockUISlice";
 import useAuth from "../../../auth/hooks/useAuth";
 
 const PurchaseOrderList = () => {
-  const { listPurchaseOrder, loadingListPurchaseOrder } =
-    usePurchaseOrderList();
+  const { listPurchaseOrder, loadingListPurchaseOrder } = usePurchaseOrderList();
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { currency } = useAuth();
-
   const client = useApolloClient();
 
   const [DeletePurchaseOrder] = useMutation(DELETE_PURCHASE_ORDER, {
-    refetchQueries: [
-      {
-        query: LIST_PURCHASE_ORDER,
-      },
-      {
-        query: LIST_PRODUCT,
-      },
-    ],
+    refetchQueries: [{ query: LIST_PURCHASE_ORDER }, { query: LIST_PRODUCT }],
   });
 
   const statusBodyTemplate = (rowData: IPurchaseOrder) => {
     const status = getStatus(rowData.status);
     if (status) {
-      const { severity, label } = status;
       return (
-        <Tag severity={severity as "danger" | "success" | "info" | "warning"}>
-          {label}
+        <Tag severity={status.severity as "danger" | "success" | "info" | "warning"}>
+          {status.label}
         </Tag>
       );
     }
@@ -65,59 +55,38 @@ const PurchaseOrderList = () => {
   };
 
   const dateBodyTemplate = (rowData: IPurchaseOrder) => {
-    if (rowData.date) {
-      const date = getDate(rowData.date);
-      return <Tag>{date}</Tag>;
-    }
+    if (rowData.date) return <Tag>{getDate(rowData.date)}</Tag>;
     return null;
   };
 
-  const prodiverBodyTemplate = (rowData: IPurchaseOrder) => {
+  const providerBodyTemplate = (rowData: IPurchaseOrder) => {
     if (rowData.provider) {
-      return (
-        <label>
-          ({rowData.provider.code}) {rowData.provider.name}
-        </label>
-      );
+      return <label>({rowData.provider.code}) {rowData.provider.name}</label>;
     }
     return null;
   };
 
-  const tableHeaderTemplate = () => {
-    return (
-      <div className="flex justify-between items-center m-2 px-5">
-        <h1 className="text-2xl font-bold">{`Lista de compras (${listPurchaseOrder.length})`}</h1>
-
-        <Button
-          id="btn-new-purchase"
-          icon="pi pi-plus"
-          severity="success"
-          tooltip="Nueva compra"
-          tooltipOptions={{ position: "left" }}
-          onClick={() =>
-            navigate(
-              `${ROUTES_MOCK.PURCHASE_ORDERS}${ROUTES_MOCK.NEW_PURCHASE_ORDER}`
-            )
-          }
-          raised
-        />
-      </div>
-    );
-  };
+  const tableHeaderTemplate = () => (
+    <div className="flex justify-between items-center m-2 px-5">
+      <h1 className="text-2xl font-bold">{`Lista de compras (${listPurchaseOrder.length})`}</h1>
+      <Button
+        id="btn-new-purchase"
+        icon="pi pi-plus"
+        severity="success"
+        tooltip="Nueva compra"
+        tooltipOptions={{ position: "left" }}
+        onClick={() => navigate(`${ROUTES_MOCK.PURCHASE_ORDERS}${ROUTES_MOCK.NEW_PURCHASE_ORDER}`)}
+        raised
+      />
+    </div>
+  );
 
   const handleDeletePurchaseOrder = async (purchaseOrderId: string) => {
     try {
       dispatch(setIsBlocked(true));
-      const { data } = await DeletePurchaseOrder({
-        variables: {
-          purchaseOrderId,
-        },
-      });
+      const { data } = await DeletePurchaseOrder({ variables: { purchaseOrderId } });
       if (data.deletePurchaseOrder.success) {
-        showToast({
-          detail: "Orden de compra eliminada.",
-          severity: ToastSeverity.Success,
-        });
+        showToast({ detail: "Orden de compra eliminada.", severity: ToastSeverity.Success });
       }
     } catch (error: any) {
       showToast({ detail: error.message, severity: ToastSeverity.Error });
@@ -126,7 +95,7 @@ const PurchaseOrderList = () => {
     }
   };
 
-  const confirmDeletePurchaseOrder = async (purchaseOrderId: string) => {
+  const confirmDeletePurchaseOrder = (purchaseOrderId: string) => {
     confirmDialog({
       message: "¿Esta seguro que desea eliminar la compra?",
       header: "Confirmacion",
@@ -146,10 +115,7 @@ const PurchaseOrderList = () => {
           variables: { purchaseOrderId },
           fetchPolicy: "network-only",
         }),
-        client.query({
-          query: DETAIL_COMPANY,
-          fetchPolicy: "network-only",
-        }),
+        client.query({ query: DETAIL_COMPANY, fetchPolicy: "network-only" }),
       ]);
       await generatePDF(data.findPurchaseOrderToPDF, dataCompany.detailCompany, currency);
     } catch (error: any) {
@@ -170,21 +136,14 @@ const PurchaseOrderList = () => {
               icon="pi pi-pencil"
               raised
               severity="info"
-              aria-label="Cancel"
-              onClick={() =>
-                navigate(
-                  `${ROUTES_MOCK.PURCHASE_ORDERS}${ROUTES_MOCK.EDIT_PURCHASE_ORDER}/${rowData._id}`
-                )
-              }
+              onClick={() => navigate(`${ROUTES_MOCK.PURCHASE_ORDERS}${ROUTES_MOCK.EDIT_PURCHASE_ORDER}/${rowData._id}`)}
             />
-
             <Button
               tooltip="Eliminar compra"
               tooltipOptions={{ position: "left" }}
               icon="pi pi-trash"
               raised
               severity="danger"
-              aria-label="Cancel"
               onClick={() => confirmDeletePurchaseOrder(rowData._id)}
             />
           </div>
@@ -198,21 +157,14 @@ const PurchaseOrderList = () => {
               icon="pi pi-pencil"
               raised
               severity="info"
-              aria-label="Cancel"
-              onClick={() =>
-                navigate(
-                  `${ROUTES_MOCK.PURCHASE_ORDERS}${ROUTES_MOCK.EDIT_PURCHASE_ORDER}/${rowData._id}`
-                )
-              }
+              onClick={() => navigate(`${ROUTES_MOCK.PURCHASE_ORDERS}${ROUTES_MOCK.EDIT_PURCHASE_ORDER}/${rowData._id}`)}
             />
-
             <Button
               tooltip="Imprimir compra"
               tooltipOptions={{ position: "left" }}
               icon="pi pi-download"
               raised
               severity="warning"
-              aria-label="Cancel"
               onClick={() => handleGeneratePDF(rowData._id)}
             />
           </div>
@@ -227,17 +179,14 @@ const PurchaseOrderList = () => {
             icon="pi pi-download"
             raised
             severity="warning"
-            aria-label="Cancel"
             onClick={() => handleGeneratePDF(rowData._id)}
           />
-
           <Button
             tooltip="Eliminar compra"
             tooltipOptions={{ position: "left" }}
             icon="pi pi-trash"
             raised
             severity="danger"
-            aria-label="Cancel"
             onClick={() => confirmDeletePurchaseOrder(rowData._id)}
           />
         </div>
@@ -245,44 +194,22 @@ const PurchaseOrderList = () => {
     }
   };
 
-  const handleSelectionChange = (
-    e: DataTableSelectionSingleChangeEvent<IPurchaseOrder[]>
-  ) => {
+  const handleSelectionChange = (e: DataTableSelectionSingleChangeEvent<IPurchaseOrder[]>) => {
     navigate(`${ROUTES_MOCK.PURCHASE_ORDERS}/detalle/${e.value._id}`);
   };
 
   const [columns] = useState<DataTableColumn<IPurchaseOrder>[]>([
-    {
-      field: "code",
-      header: "Codigo",
-      sortable: true,
-    },
-    {
-      field: "date",
-      header: "Fecha",
-      body: dateBodyTemplate,
-    },
-    {
-      field: "provider.name",
-      header: "Proveedor",
-      sortable: true,
-      body: prodiverBodyTemplate,
-    },
-    {
-      field: "created_by.user_name",
-      header: "Usuario",
-      sortable: true,
-    },
+    { field: "code", header: "Codigo", sortable: true },
+    { field: "date", header: "Fecha", body: dateBodyTemplate },
+    { field: "provider.name", header: "Proveedor", sortable: true, body: providerBodyTemplate },
+    { field: "created_by.user_name", header: "Usuario", sortable: true },
     {
       field: "total",
       header: "Total",
       sortable: true,
       style: { textAlign: "center" },
       body: (rowData: IPurchaseOrder) => (
-        <LabelInput
-          className="justify-center"
-          label={`${rowData.total} ${currency}`}
-        />
+        <LabelInput className="justify-center" label={`${rowData.total} ${currency}`} />
       ),
     },
     {
@@ -296,23 +223,104 @@ const PurchaseOrderList = () => {
 
   const { filters, renderFilterInput } = useTableGlobalFilter(columns);
 
-  if (loadingListPurchaseOrder) {
-    return <LoadingSpinner />;
-  }
+  if (loadingListPurchaseOrder) return <LoadingSpinner />;
 
   return (
-    <Card id="purchase-list-table" className="py-2" header={tableHeaderTemplate}>
-      <Table
-        columns={columns}
-        data={listPurchaseOrder}
-        emptyMessage="Sin compras."
-        size="small"
-        actionBodyTemplate={actionBodyTemplate}
-        dataFilters={filters}
-        tableHeader={renderFilterInput}
-        onSelectionChange={handleSelectionChange}
-      />
-    </Card>
+    <>
+      {/* ── Mobile ─────────────────────────────────────────── */}
+      <div className="md:hidden flex flex-col gap-3 p-3">
+        <div className="flex items-center justify-between">
+          <h1 className="text-lg font-bold">{`Compras (${listPurchaseOrder.length})`}</h1>
+          <Button
+            label="Nueva"
+            icon="pi pi-plus"
+            severity="success"
+            size="small"
+            raised
+            onClick={() => navigate(`${ROUTES_MOCK.PURCHASE_ORDERS}${ROUTES_MOCK.NEW_PURCHASE_ORDER}`)}
+          />
+        </div>
+
+        {listPurchaseOrder.length === 0 && (
+          <p className="text-center text-gray-400 py-6 text-sm">Sin compras.</p>
+        )}
+
+        {listPurchaseOrder.map((item) => {
+          const status = getStatus(item.status);
+          const isBorrador = item.status === orderStatus.BORRADOR;
+          return (
+            <div
+              key={item._id}
+              className="border border-gray-200 rounded-xl p-3 bg-white shadow-sm cursor-pointer active:bg-gray-50"
+              onClick={() => navigate(`${ROUTES_MOCK.PURCHASE_ORDERS}/detalle/${item._id}`)}
+            >
+              <div className="flex items-start justify-between gap-2 mb-1">
+                <span className="font-bold text-gray-800 text-sm">{item.code}</span>
+                {status && (
+                  <Tag
+                    severity={status.severity as "danger" | "success" | "info" | "warning"}
+                    className="shrink-0"
+                  >
+                    {status.label}
+                  </Tag>
+                )}
+              </div>
+              <p className="text-sm text-gray-700 truncate">
+                {item.provider ? `(${item.provider.code}) ${item.provider.name}` : "—"}
+              </p>
+              <div className="flex items-center justify-between mt-1 text-xs text-gray-500">
+                <span>{getDate(item.date)}</span>
+                <span>{item.created_by?.user_name}</span>
+              </div>
+              <p className="text-sm font-bold text-green-700 mt-1">
+                {item.total} {currency}
+              </p>
+              <div className="flex gap-2 mt-2" onClick={(e) => e.stopPropagation()}>
+                {isBorrador && (
+                  <Button
+                    icon="pi pi-pencil"
+                    size="small"
+                    severity="info"
+                    raised
+                    onClick={() => navigate(`${ROUTES_MOCK.PURCHASE_ORDERS}${ROUTES_MOCK.EDIT_PURCHASE_ORDER}/${item._id}`)}
+                  />
+                )}
+                <Button
+                  icon="pi pi-download"
+                  size="small"
+                  severity="warning"
+                  raised
+                  onClick={() => handleGeneratePDF(item._id)}
+                />
+                {(isBorrador && item.total === 0) || !isBorrador ? (
+                  <Button
+                    icon="pi pi-trash"
+                    size="small"
+                    severity="danger"
+                    raised
+                    onClick={() => confirmDeletePurchaseOrder(item._id)}
+                  />
+                ) : null}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* ── Desktop ─────────────────────────────────────────── */}
+      <Card id="purchase-list-table" className="py-2 hidden md:block" header={tableHeaderTemplate}>
+        <Table
+          columns={columns}
+          data={listPurchaseOrder}
+          emptyMessage="Sin compras."
+          size="small"
+          actionBodyTemplate={actionBodyTemplate}
+          dataFilters={filters}
+          tableHeader={renderFilterInput}
+          onSelectionChange={handleSelectionChange}
+        />
+      </Card>
+    </>
   );
 };
 

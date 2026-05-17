@@ -49,9 +49,7 @@ const PurchaseOrderForm = () => {
   const { listProviderSelect } = useProviderList();
   const { currency } = useAuth();
 
-  const [selectedProvider, setSelectedProvider] = useState<IReactSelect | null>(
-    null
-  );
+  const [selectedProvider, setSelectedProvider] = useState<IReactSelect | null>(null);
 
   const navigate = useNavigate();
 
@@ -73,28 +71,17 @@ const PurchaseOrderForm = () => {
 
   const dispatch = useDispatch();
 
-  const initialValues: IPurchaseOrderInput = {
-    date: new Date(),
-    provider: "",
-  };
+  const initialValues: IPurchaseOrderInput = { date: new Date(), provider: "" };
 
   useEffect(() => {
     if (errorCodeOrder) {
-      showToast({
-        detail: errorCodeOrder.message,
-        severity: ToastSeverity.Success,
-      });
+      showToast({ detail: errorCodeOrder.message, severity: ToastSeverity.Success });
     }
   }, [errorCodeOrder]);
 
   const onSubmit = async () => {
-    const order: IPurchaseOrderInput = {
-      date: values.date,
-      provider: values.provider,
-    };
-
+    const order: IPurchaseOrderInput = { date: values.date, provider: values.provider };
     const { data } = await createPurchaseOrder({ variables: order });
-
     dispatch(setPurchaseOrder(data.createPurchaseOrder));
     dispatch(setPurchaseOrderInitialized(true));
   };
@@ -114,15 +101,9 @@ const PurchaseOrderForm = () => {
         variables: { purchaseOrderId: purchaseOrderData?._id },
       });
       if (data) {
-        showToast({
-          detail: "Compra Aprobada exitosamente",
-          severity: ToastSeverity.Success,
-        });
-        navigate(
-          `${ROUTES_MOCK.PURCHASE_ORDERS}/detalle/${data.approvePurchaseOrder._id}`
-        );
+        showToast({ detail: "Compra Aprobada exitosamente", severity: ToastSeverity.Success });
+        navigate(`${ROUTES_MOCK.PURCHASE_ORDERS}/detalle/${data.approvePurchaseOrder._id}`);
       }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       showToast({ detail: error.message, severity: ToastSeverity.Error });
     } finally {
@@ -130,10 +111,7 @@ const PurchaseOrderForm = () => {
     }
   };
 
-  const handleProviderChange = async (
-    event: SingleValue<IReactSelect>,
-    action: ActionMeta<IReactSelect>
-  ) => {
+  const handleProviderChange = async (event: SingleValue<IReactSelect>, action: ActionMeta<IReactSelect>) => {
     setSelectedProvider(event);
     setFieldValue(action.name || "", event ? event.value : "");
   };
@@ -141,25 +119,10 @@ const PurchaseOrderForm = () => {
   const onCreateProvider = async (inputValue: string) => {
     try {
       dispatch(setIsBlocked(true));
-      const { data } = await createProvider({
-        variables: {
-          name: inputValue,
-          address: "",
-          phoneNumber: "",
-        },
-      });
-
+      const { data } = await createProvider({ variables: { name: inputValue, address: "", phoneNumber: "" } });
       if (data) {
-        showToast({
-          detail: "Proveedor creado",
-          severity: ToastSeverity.Success,
-        });
-
-        setSelectedProvider({
-          value: data.createProvider._id,
-          label: data.createProvider.name,
-        });
-
+        showToast({ detail: "Proveedor creado", severity: ToastSeverity.Success });
+        setSelectedProvider({ value: data.createProvider._id, label: data.createProvider.name });
         setFieldValue("provider", data.createProvider._id);
       }
     } catch (error: any) {
@@ -179,29 +142,27 @@ const PurchaseOrderForm = () => {
     resetForm,
     errors,
   } = useFormikForm({
-    initialValues: initialValues,
+    initialValues,
     msgSuccess: "Orden de compra creada",
     handleSubmit: onSubmit,
     validationSchema: schemaFormPurchaseOrder,
   });
 
+  const orderStatus = purchaseOrderData?.status ? getStatus(purchaseOrderData.status) : null;
+
   return (
     <form
       onSubmit={handleSubmit}
-      className="p-5 shadow-lg rounded-lg border border-gray-200 bg-white mb-2"
+      className="p-4 md:p-5 shadow-lg rounded-lg border border-gray-200 bg-white mb-2"
     >
-      <div className="flex flex-col items-center text-center gap-2 mb-5">
-        <h2 className="text-2xl font-bold text-gray-800">
-          Nueva Orden de Compra
-        </h2>
-        <p className="text-gray-500 text-sm">
-          Completa los detalles para registrar la compra
-        </p>
+      <div className="flex flex-col items-center text-center gap-1 mb-4">
+        <h2 className="text-xl md:text-2xl font-bold text-gray-800">Nueva Orden de Compra</h2>
+        <p className="text-gray-500 text-sm">Completa los detalles para registrar la compra</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
-        {/* Información del proveedor y fecha */}
-        <section className="flex flex-col gap-3 border-r md:border-r-gray-300 md:pr-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 items-center">
+        {/* Fecha y proveedor */}
+        <section className="flex flex-col gap-3 md:border-r md:border-r-gray-300 md:pr-6">
           <div className="flex flex-col">
             <LabelInput name="date" label="Fecha de compra" />
             <Calendar
@@ -210,23 +171,24 @@ const PurchaseOrderForm = () => {
               onChange={handleChange}
               showIcon
               disabled={purchaseOrderInitialized}
+              className="w-full"
             />
           </div>
-          <div className="flex flex-col">
-            <SelectInput
-              label="Proveedor"
-              name="provider"
-              placeholder="Seleccionar proveedor"
-              mandatory
-              options={listProviderSelect}
-              error={errors.provider ? errors.provider : ""}
-              onChange={handleProviderChange}
-              onCreateOption={onCreateProvider}
-              value={selectedProvider}
-              disabled={purchaseOrderInitialized}
-            />
-          </div>
+          <SelectInput
+            label="Proveedor"
+            name="provider"
+            placeholder="Seleccionar proveedor"
+            mandatory
+            options={listProviderSelect}
+            error={errors.provider ? errors.provider : ""}
+            onChange={handleProviderChange}
+            onCreateOption={onCreateProvider}
+            value={selectedProvider}
+            disabled={purchaseOrderInitialized}
+          />
         </section>
+
+        {/* Centro: botón crear o total */}
         <div className="flex justify-center">
           {!purchaseOrderInitialized ? (
             <Button
@@ -234,47 +196,39 @@ const PurchaseOrderForm = () => {
               type="submit"
               severity="success"
               label="Crear compra"
+              className="w-full md:w-auto"
               disabled={!isValid || isSubmitting}
             />
           ) : (
-            <section className="flex flex-col items-center justify-center">
+            <section className="flex flex-col items-center justify-center text-center">
               <LabelInput name="total" label="Total de compra" />
-              <span className="text-2xl font-semibold text-green-600">
+              <span className="text-xl md:text-2xl font-semibold text-green-600">
                 {`${purchaseOrderData?.total} ${currency}`}
               </span>
             </section>
           )}
         </div>
 
+        {/* Código + estado + acciones */}
         {purchaseOrderInitialized && (
-          <section className="flex flex-col gap-5 rounded-md">
+          <section className="flex flex-col gap-4 rounded-md">
             <div className="flex flex-col items-center gap-2 bg-gray-100 p-4 rounded-md">
               <span className="text-gray-600 text-sm">Código de Orden</span>
-              <span className="text-xl font-bold text-gray-800">
-                {codeOrder}
-              </span>
-              {purchaseOrderData?.status && (
-                <Tag
-                  severity={
-                    getStatus(purchaseOrderData?.status)?.severity as
-                      | "danger"
-                      | "success"
-                      | "info"
-                      | "warning"
-                  }
-                >
-                  {getStatus(purchaseOrderData?.status)?.label}
+              <span className="text-xl font-bold text-gray-800">{codeOrder}</span>
+              {orderStatus && (
+                <Tag severity={orderStatus.severity as "danger" | "success" | "info" | "warning"}>
+                  {orderStatus.label}
                 </Tag>
               )}
             </div>
 
-            <div className="flex flex-row justify-center gap-4">
+            <div className="flex flex-col gap-2">
               <Button
                 type="button"
                 severity="warning"
                 label="Reiniciar"
                 onClick={handleResetPurchaseOrder}
-                className="w-auto"
+                className="w-full"
               />
               <Button
                 icon="pi pi-check-circle"
@@ -282,7 +236,7 @@ const PurchaseOrderForm = () => {
                 severity="success"
                 label="Aprobar Compra"
                 onClick={setApprovePurchaseOrder}
-                className="w-auto"
+                className="w-full"
               />
             </div>
           </section>
@@ -291,4 +245,5 @@ const PurchaseOrderForm = () => {
     </form>
   );
 };
+
 export default PurchaseOrderForm;

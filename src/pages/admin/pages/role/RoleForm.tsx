@@ -79,7 +79,7 @@ const RoleForm: FC<RoleFormProps> = ({ setVisibleForm }) => {
 
   return (
     <form onSubmit={handleSubmit} className="grid gap-4">
-      <section className="grid  grid-cols-1 w-[300px] md:w-[600px] gap-4">
+      <section className="grid grid-cols-1 w-full md:w-[600px] gap-4">
         <FieldTextInput
           label="Nombre"
           type="text"
@@ -122,6 +122,7 @@ const RoleForm: FC<RoleFormProps> = ({ setVisibleForm }) => {
           type="submit"
           severity="success"
           label="Guardar"
+          className="w-full md:w-auto"
           disabled={!dirty || !isValid || isSubmitting}
         />
       </section>

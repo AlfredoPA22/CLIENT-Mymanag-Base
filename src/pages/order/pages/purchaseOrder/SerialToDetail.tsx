@@ -14,7 +14,7 @@ const SerialToDetail: FC<SerialToDetailProps> = ({
   editMode = true,
 }) => {
   return (
-    <div>
+    <div className="flex flex-col gap-3">
       {editMode && (
         <AddSerialToDetailForm
           purchaseOrderId={purchaseOrderId}

@@ -57,7 +57,7 @@ const ChangePasswordForm: FC<ChangePasswordFormProps> = ({
 
   return (
     <form onSubmit={handleSubmit} className="grid gap-4">
-      <section className="grid  grid-cols-2 w-[300px] md:w-[600px] gap-4">
+      <section className="grid grid-cols-1 md:grid-cols-2 w-full md:w-[600px] gap-4">
         <PasswordInput
           role="input-current-password"
           label="Contraseña Actual"
@@ -88,6 +88,7 @@ const ChangePasswordForm: FC<ChangePasswordFormProps> = ({
           type="submit"
           severity="success"
           label="Guardar"
+          className="w-full md:w-auto"
           disabled={!dirty || !isValid || isSubmitting}
         />
       </section>

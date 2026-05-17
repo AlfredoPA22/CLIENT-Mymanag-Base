@@ -37,14 +37,16 @@ const ProductDetail = () => {
   }
 
   return (
-    <TabView className="size-full">
-      <TabPanel header="Información general">
+    <TabView className="size-full" scrollable>
+      <TabPanel
+        header={<span className="text-sm"><span className="hidden sm:inline">Información </span>General</span>}
+      >
         <ProductCard productData={data.findProduct} />
       </TabPanel>
-      <TabPanel header="Ventas">
+      <TabPanel header={<span className="text-sm">Ventas</span>}>
         <ListSaleOrderByProduct productId={productId} />
       </TabPanel>
-      <TabPanel header="Compras">
+      <TabPanel header={<span className="text-sm">Compras</span>}>
         <ListPurchaseOrderByProduct productId={productId} />
       </TabPanel>
     </TabView>

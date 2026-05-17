@@ -14,6 +14,9 @@ export interface ISaleOrder {
   created_by: IUser;
   is_paid: boolean;
   has_return?: boolean;
+  discount_type?: string | null;
+  discount_value?: number;
+  discount_amount?: number;
 }
 
 export interface ISaleOrderInput {

@@ -46,41 +46,43 @@ const ClientDetail: FC<ClientDetailProps> = ({ client }) => {
     return null;
   };
 
-  const saleOrderBodyTemplate = (rowData: ISaleOrder) => {
-    return (
-      <TextLink to={`${ROUTES_MOCK.SALE_ORDERS}/detalle/${rowData._id}`}>
-        {rowData.code}
-      </TextLink>
-    );
-  };
+  const saleOrderBodyTemplate = (rowData: ISaleOrder) => (
+    <TextLink to={`${ROUTES_MOCK.SALE_ORDERS}/detalle/${rowData._id}`}>
+      {rowData.code}
+    </TextLink>
+  );
 
   const header = (
-    <div className="flex items-center justify-between flex-wrap">
-      {/* Izquierda: nombre y código */}
-      <div className="flex items-center space-x-3">
-        <i className="pi pi-user text-2xl text-blue-500"></i>
-        <div>
-          <h2 className="text-xl font-semibold text-gray-800">
-            {client.fullName}
-          </h2>
+    <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between md:flex-wrap">
+      {/* Nombre y código */}
+      <div className="flex items-center gap-3">
+        <i className="pi pi-user text-2xl text-blue-500 shrink-0" />
+        <div className="min-w-0">
+          <h2 className="text-lg font-semibold text-gray-800 break-words">{client.fullName}</h2>
           <p className="text-sm text-gray-500">Código: {client.code}</p>
         </div>
       </div>
 
-      {/* Derecha: otros datos */}
-      <div className="flex items-center space-x-4 text-gray-700 text-sm mt-2 md:mt-0">
-        <div className="flex items-center">
-          <i className="pi pi-map-marker mr-1 text-blue-500" />
-          <span>{client.address}</span>
-        </div>
-        <div className="flex items-center">
-          <i className="pi pi-envelope mr-1 text-blue-500" />
-          <span>{client.email}</span>
-        </div>
-        <div className="flex items-center">
-          <i className="pi pi-phone mr-1 text-blue-500" />
-          <span>{client.phoneNumber}</span>
-        </div>
+      {/* Datos de contacto */}
+      <div className="flex flex-col gap-1 md:flex-row md:items-center md:gap-4 text-gray-700 text-sm">
+        {client.phoneNumber && (
+          <div className="flex items-center gap-1">
+            <i className="pi pi-phone text-blue-500 shrink-0" />
+            <span>{client.phoneNumber}</span>
+          </div>
+        )}
+        {client.email && (
+          <div className="flex items-center gap-1 min-w-0">
+            <i className="pi pi-envelope text-blue-500 shrink-0" />
+            <span className="break-all">{client.email}</span>
+          </div>
+        )}
+        {client.address && (
+          <div className="flex items-center gap-1 min-w-0">
+            <i className="pi pi-map-marker text-blue-500 shrink-0" />
+            <span className="break-words">{client.address}</span>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -116,18 +118,16 @@ const ClientDetail: FC<ClientDetailProps> = ({ client }) => {
 
   useEffect(() => {
     if (error) {
-      showToast({
-        detail: error.message,
-        severity: ToastSeverity.Success,
-      });
+      showToast({ detail: error.message, severity: ToastSeverity.Success });
     }
   }, [error]);
 
   const { filters, renderFilterInput } = useTableGlobalFilter(columns);
 
-  if (loadingListSaleOrderByClient) {
-    return <LoadingSpinner />;
-  }
+  if (loadingListSaleOrderByClient) return <LoadingSpinner />;
+
+  const saleOrders: ISaleOrder[] = listSaleOrderByClient?.saleOrder ?? [];
+  const total = listSaleOrderByClient?.total ?? 0;
 
   return (
     <div className="flex flex-col gap-2">
@@ -137,19 +137,57 @@ const ClientDetail: FC<ClientDetailProps> = ({ client }) => {
         <Card className="bg-white shadow-lg rounded-lg">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-medium text-gray-800">
-              Lista de ventas ({listSaleOrderByClient.saleOrder.length})
+              Lista de ventas ({saleOrders.length})
             </h3>
           </div>
 
-          <Table
-            columns={columns}
-            data={listSaleOrderByClient.saleOrder}
-            emptyMessage="Sin ventas."
-            size="small"
-            dataFilters={filters}
-            tableHeader={renderFilterInput}
-            footer={`Total vendido: ${listSaleOrderByClient.total} ${currency}`}
-          />
+          {/* ── Mobile: cards ─────────────────────────────── */}
+          <div className="flex flex-col gap-2 md:hidden">
+            {saleOrders.length === 0 && (
+              <p className="text-center text-gray-400 py-4 text-sm">Sin ventas.</p>
+            )}
+            {saleOrders.map((order) => {
+              const status = getStatus(order.status);
+              return (
+                <div
+                  key={order._id}
+                  className="flex items-center justify-between gap-2 border border-gray-200 rounded-xl px-3 py-2 bg-white shadow-sm"
+                >
+                  <div className="min-w-0 flex-1">
+                    <TextLink to={`${ROUTES_MOCK.SALE_ORDERS}/detalle/${order._id}`}>
+                      {order.code}
+                    </TextLink>
+                    <p className="text-sm font-semibold text-blue-600 mt-0.5">
+                      {order.total} {currency}
+                    </p>
+                  </div>
+                  {status && (
+                    <Tag severity={status.severity as "danger" | "success" | "info" | "warning"} className="shrink-0">
+                      {status.label}
+                    </Tag>
+                  )}
+                </div>
+              );
+            })}
+            {saleOrders.length > 0 && (
+              <p className="text-right text-sm font-semibold text-gray-700 pr-1">
+                Total vendido: {total} {currency}
+              </p>
+            )}
+          </div>
+
+          {/* ── Desktop: tabla ─────────────────────────────── */}
+          <div className="hidden md:block">
+            <Table
+              columns={columns}
+              data={saleOrders}
+              emptyMessage="Sin ventas."
+              size="small"
+              dataFilters={filters}
+              tableHeader={renderFilterInput}
+              footer={`Total vendido: ${total} ${currency}`}
+            />
+          </div>
         </Card>
       )}
     </div>

@@ -9,6 +9,9 @@ export interface ISaleOrderDetail {
   sale_price: number;
   quantity: number;
   serials: number;
+  discount_type?: string | null;
+  discount_value?: number;
+  discount_amount?: number;
   subtotal: number;
 }
 
@@ -18,6 +21,8 @@ export interface ISaleOrderDetailInput {
   sale_price: string;
   quantity: string;
   warehouse?: string;
+  discount_type?: string;
+  discount_value?: string;
 }
 
 export interface IAddSerialToSaleOrderDetailInput {

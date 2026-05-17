@@ -40,11 +40,7 @@ const ProductTransferDetail: FC<ProductTransferDetailProps> = ({
 
   const canDelete = permissions.includes("DELETE_TRANSFER");
 
-  const {
-    data,
-    loading,
-    error,
-  } = useQuery(FIND_PRODUCT_TRANSFER, {
+  const { data, loading, error } = useQuery(FIND_PRODUCT_TRANSFER, {
     variables: { transferId },
     fetchPolicy: "network-only",
   });
@@ -66,14 +62,9 @@ const ProductTransferDetail: FC<ProductTransferDetailProps> = ({
   const handleApprove = async () => {
     try {
       dispatch(setIsBlocked(true));
-      const { data: result } = await approveProductTransfer({
-        variables: { transferId },
-      });
+      const { data: result } = await approveProductTransfer({ variables: { transferId } });
       if (result) {
-        showToast({
-          detail: "Transferencia aprobada exitosamente",
-          severity: ToastSeverity.Success,
-        });
+        showToast({ detail: "Transferencia aprobada exitosamente", severity: ToastSeverity.Success });
         navigate(`${ROUTES_MOCK.TRANSFERS}/detalle/${transferId}`);
       }
     } catch (error: any) {
@@ -85,8 +76,7 @@ const ProductTransferDetail: FC<ProductTransferDetailProps> = ({
 
   const confirmApprove = () => {
     confirmDialog({
-      message:
-        "¿Está seguro que desea aprobar esta transferencia? El stock se moverá al almacén destino.",
+      message: "¿Está seguro que desea aprobar esta transferencia? El stock se moverá al almacén destino.",
       header: "Aprobar transferencia",
       icon: "pi pi-info-circle",
       defaultFocus: "reject",
@@ -98,14 +88,9 @@ const ProductTransferDetail: FC<ProductTransferDetailProps> = ({
   const handleDelete = async () => {
     try {
       dispatch(setIsBlocked(true));
-      const { data: result } = await deleteProductTransfer({
-        variables: { transferId },
-      });
+      const { data: result } = await deleteProductTransfer({ variables: { transferId } });
       if (result?.deleteProductTransfer?.success) {
-        showToast({
-          detail: "Transferencia eliminada.",
-          severity: ToastSeverity.Success,
-        });
+        showToast({ detail: "Transferencia eliminada.", severity: ToastSeverity.Success });
         navigate(ROUTES_MOCK.TRANSFERS);
       }
     } catch (error: any) {
@@ -131,15 +116,16 @@ const ProductTransferDetail: FC<ProductTransferDetailProps> = ({
   const transfer = data?.findProductTransfer;
   const isBorrador = transfer?.status === orderStatus.BORRADOR;
   const date = getDate(transfer?.date) || "";
+  const status = getStatus(transfer?.status);
 
   return (
-    <div className="p-5 shadow-lg rounded-lg border border-gray-200 bg-white mb-2">
+    <div className="p-4 md:p-5 shadow-lg rounded-lg border border-gray-200 bg-white mb-2">
       <SectionHeader
         title="Detalle de transferencia"
         subtitle="Consulta la información de la transferencia y realiza cambios si es necesario."
         actions={
           <Button
-            label="Volver a la lista"
+            label="Volver"
             icon="pi pi-arrow-left"
             className="p-button-outlined"
             onClick={() => navigate(ROUTES_MOCK.TRANSFERS)}
@@ -147,53 +133,58 @@ const ProductTransferDetail: FC<ProductTransferDetailProps> = ({
         }
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
+      {/* ── Mobile: código + estado destacado ─────────────── */}
+      <div className="md:hidden flex items-center justify-between bg-gray-100 rounded-lg px-4 py-3 mb-4">
+        <span className="text-lg font-bold text-gray-800">{transfer?.code}</span>
+        {status && (
+          <Tag
+            severity={status.severity as "danger" | "success" | "info" | "warning"}
+          >
+            {status.label}
+          </Tag>
+        )}
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 items-start">
         {/* Ruta y fecha */}
-        <section className="flex flex-col gap-3 border-r md:border-r-gray-300 md:pr-6">
+        <section className="flex flex-col gap-3 md:border-r md:border-r-gray-300 md:pr-6">
           <div className="flex flex-col">
             <LabelInput name="date" label="Fecha" />
-            <span className="text-lg font-medium text-gray-700">{date}</span>
+            <span className="text-base md:text-lg font-medium text-gray-700">{date}</span>
           </div>
           <div className="flex flex-col">
             <LabelInput name="origin" label="Almacén origen" />
-            <span className="text-lg font-medium text-gray-700">
+            <span className="text-base md:text-lg font-medium text-gray-700 break-words">
               {transfer?.origin_warehouse?.name}
             </span>
           </div>
           <div className="flex flex-col">
             <LabelInput name="destination" label="Almacén destino" />
-            <span className="text-lg font-medium text-gray-700">
+            <span className="text-base md:text-lg font-medium text-gray-700 break-words">
               {transfer?.destination_warehouse?.name}
             </span>
           </div>
         </section>
 
         {/* Creado por */}
-        <section className="flex flex-col items-center justify-center">
+        <section className="flex flex-col items-start md:items-center justify-center">
           <LabelInput name="user" label="Creado por" />
-          <span className="text-xl font-semibold text-gray-700">
+          <span className="text-base md:text-xl font-semibold text-gray-700 break-words">
             {transfer?.created_by?.user_name}
           </span>
         </section>
 
         {/* Estado y acciones */}
-        <section className="flex flex-col gap-5 rounded-md">
-          <div className="flex flex-col items-center gap-2 bg-gray-100 p-4 rounded-md">
+        <section className="flex flex-col gap-4 rounded-md">
+          {/* Code/status card — hidden on mobile (shown above) */}
+          <div className="hidden md:flex flex-col items-center gap-2 bg-gray-100 p-4 rounded-md">
             <span className="text-gray-600 text-sm">Código</span>
-            <span className="text-xl font-bold text-gray-800">
-              {transfer?.code}
-            </span>
-            <Tag
-              severity={
-                getStatus(transfer?.status)?.severity as
-                  | "danger"
-                  | "success"
-                  | "info"
-                  | "warning"
-              }
-            >
-              {getStatus(transfer?.status)?.label}
-            </Tag>
+            <span className="text-xl font-bold text-gray-800">{transfer?.code}</span>
+            {status && (
+              <Tag severity={status.severity as "danger" | "success" | "info" | "warning"}>
+                {status.label}
+              </Tag>
+            )}
           </div>
 
           {isBorrador && (
@@ -203,13 +194,10 @@ const ProductTransferDetail: FC<ProductTransferDetailProps> = ({
                 type="button"
                 severity="success"
                 label="Aprobar transferencia"
+                className="w-full"
                 onClick={confirmApprove}
                 disabled={approveBlocked}
-                tooltip={
-                  approveBlocked
-                    ? "Hay productos serializados con seriales incompletos"
-                    : undefined
-                }
+                tooltip={approveBlocked ? "Hay productos serializados con seriales incompletos" : undefined}
                 tooltipOptions={{ position: "top" }}
               />
               {canDelete && (
@@ -219,6 +207,7 @@ const ProductTransferDetail: FC<ProductTransferDetailProps> = ({
                   severity="danger"
                   label="Eliminar transferencia"
                   outlined
+                  className="w-full"
                   onClick={confirmDelete}
                 />
               )}

@@ -98,9 +98,7 @@ const ProductTransferList = () => {
           raised
           severity="info"
           onClick={() =>
-            navigate(
-              `${ROUTES_MOCK.TRANSFERS}${ROUTES_MOCK.EDIT_TRANSFER}/${rowData._id}`
-            )
+            navigate(`${ROUTES_MOCK.TRANSFERS}${ROUTES_MOCK.EDIT_TRANSFER}/${rowData._id}`)
           }
         />
       )}
@@ -133,9 +131,7 @@ const ProductTransferList = () => {
           tooltip="Nueva transferencia"
           tooltipOptions={{ position: "left" }}
           raised
-          onClick={() =>
-            navigate(`${ROUTES_MOCK.TRANSFERS}${ROUTES_MOCK.NEW_TRANSFER}`)
-          }
+          onClick={() => navigate(`${ROUTES_MOCK.TRANSFERS}${ROUTES_MOCK.NEW_TRANSFER}`)}
         />
       )}
     </div>
@@ -144,16 +140,8 @@ const ProductTransferList = () => {
   const [columns] = useState<DataTableColumn<IProductTransfer>[]>([
     { field: "code", header: "Código", sortable: true },
     { field: "date", header: "Fecha", body: dateBodyTemplate },
-    {
-      field: "origin_warehouse.name",
-      header: "Origen → Destino",
-      body: routeBodyTemplate,
-    },
-    {
-      field: "created_by.user_name",
-      header: "Creado por",
-      sortable: true,
-    },
+    { field: "origin_warehouse.name", header: "Origen → Destino", body: routeBodyTemplate },
+    { field: "created_by.user_name", header: "Creado por", sortable: true },
     {
       field: "status",
       header: "Estado",
@@ -170,18 +158,101 @@ const ProductTransferList = () => {
   }
 
   return (
-    <Card id="transfer-list-table" className="py-2" header={tableHeaderTemplate}>
-      <Table
-        columns={columns}
-        data={listProductTransfer ?? []}
-        emptyMessage="Sin transferencias."
-        size="small"
-        actionBodyTemplate={actionBodyTemplate}
-        dataFilters={filters}
-        tableHeader={renderFilterInput}
-        onSelectionChange={handleSelectionChange}
-      />
-    </Card>
+    <>
+      {/* ── Mobile ─────────────────────────────────────────── */}
+      <div className="md:hidden flex flex-col gap-3 p-3">
+        <div className="flex items-center justify-between">
+          <h1 className="text-lg font-bold">
+            {`Transferencias (${listProductTransfer?.length ?? 0})`}
+          </h1>
+          {canCreate && (
+            <Button
+              label="Nueva"
+              icon="pi pi-plus"
+              severity="success"
+              size="small"
+              raised
+              onClick={() => navigate(`${ROUTES_MOCK.TRANSFERS}${ROUTES_MOCK.NEW_TRANSFER}`)}
+            />
+          )}
+        </div>
+
+        {(!listProductTransfer || listProductTransfer.length === 0) && (
+          <p className="text-center text-gray-400 py-6 text-sm">Sin transferencias.</p>
+        )}
+
+        {listProductTransfer?.map((item) => {
+          const status = getStatus(item.status);
+          const isBorrador = item.status === orderStatus.BORRADOR;
+          return (
+            <div
+              key={item._id}
+              className="border border-gray-200 rounded-xl p-3 bg-white shadow-sm cursor-pointer active:bg-gray-50"
+              onClick={() => navigate(`${ROUTES_MOCK.TRANSFERS}/detalle/${item._id}`)}
+            >
+              <div className="flex items-start justify-between gap-2 mb-1">
+                <span className="font-bold text-gray-800 text-sm">{item.code}</span>
+                {status && (
+                  <Tag
+                    severity={status.severity as "danger" | "success" | "info" | "warning"}
+                    className="shrink-0"
+                  >
+                    {status.label}
+                  </Tag>
+                )}
+              </div>
+              <p className="text-sm text-gray-700">
+                {item.origin_warehouse?.name}{" "}
+                <span className="text-gray-400 mx-1">→</span>
+                {item.destination_warehouse?.name}
+              </p>
+              <div className="flex items-center justify-between mt-1 text-xs text-gray-500">
+                <span>{getDate(item.date)}</span>
+                <span>{item.created_by?.user_name}</span>
+              </div>
+              {isBorrador && (canEdit || canDelete) && (
+                <div className="flex gap-2 mt-2" onClick={(e) => e.stopPropagation()}>
+                  {canEdit && (
+                    <Button
+                      icon="pi pi-pencil"
+                      size="small"
+                      severity="info"
+                      raised
+                      onClick={() =>
+                        navigate(`${ROUTES_MOCK.TRANSFERS}${ROUTES_MOCK.EDIT_TRANSFER}/${item._id}`)
+                      }
+                    />
+                  )}
+                  {canDelete && (
+                    <Button
+                      icon="pi pi-trash"
+                      size="small"
+                      severity="danger"
+                      raised
+                      onClick={() => confirmDelete(item._id)}
+                    />
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* ── Desktop ─────────────────────────────────────────── */}
+      <Card id="transfer-list-table" className="py-2 hidden md:block" header={tableHeaderTemplate}>
+        <Table
+          columns={columns}
+          data={listProductTransfer ?? []}
+          emptyMessage="Sin transferencias."
+          size="small"
+          actionBodyTemplate={actionBodyTemplate}
+          dataFilters={filters}
+          tableHeader={renderFilterInput}
+          onSelectionChange={handleSelectionChange}
+        />
+      </Card>
+    </>
   );
 };
 

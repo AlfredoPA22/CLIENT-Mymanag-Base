@@ -1,6 +1,7 @@
 import { useQuery } from "@apollo/client";
 import { Button } from "primereact/button";
 import { Card } from "primereact/card";
+import { Dialog } from "primereact/dialog";
 import { Tag } from "primereact/tag";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -8,7 +9,6 @@ import TextLink from "../../../../components/TextLink/TextLink";
 import Table from "../../../../components/datatable/Table";
 import LabelInput from "../../../../components/labelInput/LabelInput";
 import LoadingSpinner from "../../../../components/LoadingSpinner/LoadingSpinner";
-import SectionHeader from "../../../../components/sectionHeader/SectionHeader";
 import {
   LIST_SALE_RETURN,
   LIST_SALE_RETURN_DETAIL,
@@ -17,7 +17,6 @@ import { ROUTES_MOCK } from "../../../../routes/RouteMocks";
 import { DataTableColumn } from "../../../../utils/interfaces/Table";
 import useAuth from "../../../auth/hooks/useAuth";
 import { getDate } from "../../utils/getDate";
-import { Dialog } from "primereact/dialog";
 
 interface ISaleReturn {
   _id: string;
@@ -108,36 +107,108 @@ const SaleReturnList = () => {
 
   if (loading) return <LoadingSpinner />;
 
+  const list: ISaleReturn[] = data?.listSaleReturn ?? [];
+
+  const tableHeaderTemplate = () => (
+    <div className="flex justify-between items-center m-2 px-5">
+      <h1 className="text-2xl font-bold">{`Devoluciones (${list.length})`}</h1>
+      <Button
+        label="Volver a ventas"
+        icon="pi pi-arrow-left"
+        className="p-button-outlined"
+        onClick={() => navigate(ROUTES_MOCK.SALE_ORDERS)}
+      />
+    </div>
+  );
+
   return (
     <div className="flex flex-col gap-3">
-      <Card className="py-2">
-        <SectionHeader
-          title="Devoluciones"
-          subtitle="Registro de todas las devoluciones de ventas procesadas."
-          actions={
-            <Button
-              label="Volver a ventas"
-              icon="pi pi-arrow-left"
-              className="p-button-outlined"
-              onClick={() => navigate(ROUTES_MOCK.SALE_ORDERS)}
-            />
-          }
-        />
+      {/* ── Mobile ─────────────────────────────────────────── */}
+      <div className="md:hidden flex flex-col gap-3 p-3">
+        <div className="flex items-center justify-between">
+          <h1 className="text-lg font-bold">{`Devoluciones (${list.length})`}</h1>
+          <Button
+            label="Volver"
+            icon="pi pi-arrow-left"
+            size="small"
+            className="p-button-outlined"
+            onClick={() => navigate(ROUTES_MOCK.SALE_ORDERS)}
+          />
+        </div>
+
+        {list.length === 0 && (
+          <p className="text-center text-gray-400 py-6 text-sm">Sin devoluciones registradas.</p>
+        )}
+
+        {list.map((item) => (
+          <div
+            key={item._id}
+            className="border border-gray-200 rounded-xl p-3 bg-white shadow-sm cursor-pointer"
+            onClick={() => setSelectedReturn(item)}
+          >
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0 flex-1">
+                <p className="font-bold text-gray-800 text-sm break-words">{item.code}</p>
+                {item.sale_order?.client?.fullName && (
+                  <p className="text-xs text-gray-500 break-words">{item.sale_order.client.fullName}</p>
+                )}
+              </div>
+              <div className="shrink-0 flex flex-col items-end gap-1">
+                {item.date && (
+                  <Tag severity="secondary" className="text-[10px]">{getDate(item.date)}</Tag>
+                )}
+                <span className="text-sm font-semibold text-green-600">
+                  {item.total} {currency}
+                </span>
+              </div>
+            </div>
+
+            <div className="mt-1.5 flex flex-col gap-0.5 text-xs text-gray-500">
+              {item.sale_order?.code && (
+                <span className="flex items-center gap-1">
+                  <i className="pi pi-file text-[10px]" />
+                  <TextLink
+                    to={`${ROUTES_MOCK.SALE_ORDERS}/detalle/${item.sale_order._id}`}
+                    stopPropagation
+                  >
+                    {item.sale_order.code}
+                  </TextLink>
+                </span>
+              )}
+              {item.created_by?.user_name && (
+                <span className="flex items-center gap-1">
+                  <i className="pi pi-user text-[10px]" />
+                  {item.created_by.user_name}
+                </span>
+              )}
+              {item.reason && (
+                <span className="flex items-center gap-1">
+                  <i className="pi pi-info-circle text-[10px]" />
+                  <span className="break-words">{item.reason}</span>
+                </span>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* ── Desktop ─────────────────────────────────────────── */}
+      <Card className="py-2 hidden md:block" header={tableHeaderTemplate}>
         <Table
           columns={columns}
-          data={data?.listSaleReturn ?? []}
+          data={list}
           emptyMessage="Sin devoluciones registradas."
           size="small"
           onSelectionChange={(e: any) => setSelectedReturn(e.value)}
         />
       </Card>
 
+      {/* ── Detail Dialog ───────────────────────────────────── */}
       <Dialog
         header={`Detalle de devolución — ${selectedReturn?.code ?? ""}`}
         visible={!!selectedReturn}
         onHide={() => setSelectedReturn(null)}
-        style={{ width: "650px" }}
-        breakpoints={{ "768px": "95vw" }}
+        className="w-[95vw] md:w-[650px]"
         footer={
           <Button
             label="Cerrar"
@@ -151,17 +222,51 @@ const SaleReturnList = () => {
           <LoadingSpinner />
         ) : (
           <div className="flex flex-col gap-3">
-            <div className="flex flex-col sm:flex-row gap-2 sm:gap-6 text-sm text-gray-600 bg-gray-50 p-3 rounded-md">
+            {/* Info summary */}
+            <div className="flex flex-col gap-1 text-sm text-gray-600 bg-gray-50 p-3 rounded-md">
               <span><strong>Venta:</strong> {selectedReturn?.sale_order?.code}</span>
               <span><strong>Cliente:</strong> {selectedReturn?.sale_order?.client?.fullName}</span>
               <span><strong>Motivo:</strong> {selectedReturn?.reason}</span>
             </div>
-            <Table
-              columns={detailColumns}
-              data={detailData?.listSaleReturnDetail ?? []}
-              emptyMessage="Sin productos."
-              size="small"
-            />
+
+            {/* ── Mobile: product cards ───────────────────── */}
+            <div className="flex flex-col gap-2 md:hidden">
+              {(detailData?.listSaleReturnDetail ?? []).length === 0 && (
+                <p className="text-center text-gray-400 py-4 text-sm">Sin productos.</p>
+              )}
+              {(detailData?.listSaleReturnDetail ?? []).map((row: ISaleReturnDetail) => (
+                <div
+                  key={row._id}
+                  className="border border-gray-200 rounded-xl px-3 py-2 bg-white shadow-sm"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <TextLink to={`${ROUTES_MOCK.INVENTORY}${ROUTES_MOCK.PRODUCTS}/detalle/${row.product._id}`}>
+                        {row.product?.code}
+                      </TextLink>
+                      <p className="text-sm text-gray-700 break-words">{row.product?.name}</p>
+                    </div>
+                    <span className="text-sm font-semibold text-green-600 shrink-0">
+                      {row.subtotal} {currency}
+                    </span>
+                  </div>
+                  <div className="mt-1 text-xs text-gray-500">
+                    {row.quantity} × {row.sale_price} {currency}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* ── Desktop: table ──────────────────────────── */}
+            <div className="hidden md:block">
+              <Table
+                columns={detailColumns}
+                data={detailData?.listSaleReturnDetail ?? []}
+                emptyMessage="Sin productos."
+                size="small"
+              />
+            </div>
+
             <div className="flex justify-end text-base font-semibold text-green-600">
               Total devuelto: {selectedReturn?.total} {currency}
             </div>

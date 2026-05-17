@@ -26,9 +26,7 @@ interface PurchaseOrderDetailProps {
   purchaseOrderId: string;
 }
 
-const PurchaseOrderDetail: FC<PurchaseOrderDetailProps> = ({
-  purchaseOrderId,
-}) => {
+const PurchaseOrderDetail: FC<PurchaseOrderDetailProps> = ({ purchaseOrderId }) => {
   const {
     data,
     loading: loadingPurchaseOrder,
@@ -49,19 +47,11 @@ const PurchaseOrderDetail: FC<PurchaseOrderDetailProps> = ({
   const setApprovePurchaseOrder = async () => {
     try {
       dispatch(setIsBlocked(true));
-      const { data } = await approvePurchaseOrder({
-        variables: { purchaseOrderId },
-      });
+      const { data } = await approvePurchaseOrder({ variables: { purchaseOrderId } });
       if (data) {
-        showToast({
-          detail: "Compra Aprobada exitosamente",
-          severity: ToastSeverity.Success,
-        });
-        navigate(
-          `${ROUTES_MOCK.PURCHASE_ORDERS}/detalle/${data.approvePurchaseOrder._id}`
-        );
+        showToast({ detail: "Compra Aprobada exitosamente", severity: ToastSeverity.Success });
+        navigate(`${ROUTES_MOCK.PURCHASE_ORDERS}/detalle/${data.approvePurchaseOrder._id}`);
       }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       showToast({ detail: error.message, severity: ToastSeverity.Error });
     } finally {
@@ -71,28 +61,25 @@ const PurchaseOrderDetail: FC<PurchaseOrderDetailProps> = ({
 
   useEffect(() => {
     if (errorPurchaseOrder) {
-      showToast({
-        detail: errorPurchaseOrder.message,
-        severity: ToastSeverity.Error,
-      });
+      showToast({ detail: errorPurchaseOrder.message, severity: ToastSeverity.Error });
     }
   }, [errorPurchaseOrder]);
 
-  const date = getDate(data?.findPurchaseOrder.date) || "";
+  if (loadingPurchaseOrder) return <OrderSkeleton />;
 
-  if (loadingPurchaseOrder) {
-    return <OrderSkeleton />;
-  }
+  const order = data?.findPurchaseOrder;
+  const date = getDate(order?.date) || "";
+  const status = getStatus(order?.status);
+  const isAprobado = order?.status === orderStatus.APROBADO;
 
   return (
-    <div className="p-5 shadow-lg rounded-lg border border-gray-200 bg-white mb-2">
+    <div className="p-4 md:p-5 shadow-lg rounded-lg border border-gray-200 bg-white mb-2">
       <SectionHeader
         title="Detalle de compra"
-        subtitle="Consulta la información de tu compra y realiza cambios si es
-          necesario."
+        subtitle="Consulta la información de tu compra y realiza cambios si es necesario."
         actions={
           <Button
-            label="Volver a la lista"
+            label="Volver"
             icon="pi pi-arrow-left"
             className="p-button-outlined"
             onClick={() => navigate(ROUTES_MOCK.PURCHASE_ORDERS)}
@@ -100,60 +87,61 @@ const PurchaseOrderDetail: FC<PurchaseOrderDetailProps> = ({
         }
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
-        {/* Información del proveedor y fecha */}
-        <section className="flex flex-col gap-3 border-r md:border-r-gray-300 md:pr-6">
+      {/* ── Mobile: código + estado destacado ─────────────── */}
+      <div className="md:hidden flex items-center justify-between bg-gray-100 rounded-lg px-4 py-3 mb-4">
+        <span className="text-base font-bold text-gray-800">{order?.code}</span>
+        {status && (
+          <Tag severity={status.severity as "danger" | "success" | "info" | "warning"}>
+            {status.label}
+          </Tag>
+        )}
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 items-center">
+        {/* Proveedor y fecha */}
+        <section className="flex flex-col gap-3 md:border-r md:border-r-gray-300 md:pr-6">
           <div className="flex flex-col">
             <LabelInput name="date" label="Fecha de compra" />
-            <span className="text-lg font-medium text-gray-700">{date}</span>
+            <span className="text-base md:text-lg font-medium text-gray-700">{date}</span>
           </div>
           <div className="flex flex-col">
             <LabelInput name="provider" label="Proveedor" />
-            <span className="text-lg font-medium text-gray-700">
-              {data?.findPurchaseOrder.provider.name}
+            <span className="text-base md:text-lg font-medium text-gray-700 break-words">
+              {order?.provider?.name}
             </span>
           </div>
         </section>
 
-        {/* Total de venta */}
-        <section className="flex flex-col items-center justify-center">
+        {/* Total */}
+        <section className="flex flex-col items-start md:items-center justify-center">
           <LabelInput name="total" label="Total de compra" />
-          <span className="text-2xl font-semibold text-green-600">
-            {`${data?.findPurchaseOrder.total} ${currency}`}
+          <span className="text-xl md:text-2xl font-semibold text-green-600">
+            {`${order?.total} ${currency}`}
           </span>
         </section>
 
-        {/* Estado de la venta */}
-        <section className="flex flex-col gap-5 rounded-md">
-          <div className="flex flex-col items-center gap-2 bg-gray-100 p-4 rounded-md">
+        {/* Código + estado + acciones */}
+        <section className="flex flex-col gap-4 rounded-md">
+          {/* Card de código/estado — oculto en mobile (se muestra arriba) */}
+          <div className="hidden md:flex flex-col items-center gap-2 bg-gray-100 p-4 rounded-md">
             <span className="text-gray-600 text-sm">Código de Orden</span>
-            <span className="text-xl font-bold text-gray-800">
-              {data?.findPurchaseOrder.code}
-            </span>
-            <Tag
-              severity={
-                getStatus(data?.findPurchaseOrder.status)?.severity as
-                  | "danger"
-                  | "success"
-                  | "info"
-                  | "warning"
-              }
-            >
-              {getStatus(data?.findPurchaseOrder.status)?.label}
-            </Tag>
+            <span className="text-xl font-bold text-gray-800">{order?.code}</span>
+            {status && (
+              <Tag severity={status.severity as "danger" | "success" | "info" | "warning"}>
+                {status.label}
+              </Tag>
+            )}
           </div>
 
-          {data?.findPurchaseOrder.status !== orderStatus.APROBADO && (
-            <div className="flex flex-row justify-center gap-4">
-              <Button
-                icon="pi pi-check-circle"
-                type="button"
-                severity="success"
-                label="Aprobar compra"
-                onClick={setApprovePurchaseOrder}
-                className="mt-2"
-              />
-            </div>
+          {!isAprobado && (
+            <Button
+              icon="pi pi-check-circle"
+              type="button"
+              severity="success"
+              label="Aprobar compra"
+              onClick={setApprovePurchaseOrder}
+              className="w-full"
+            />
           )}
         </section>
       </div>

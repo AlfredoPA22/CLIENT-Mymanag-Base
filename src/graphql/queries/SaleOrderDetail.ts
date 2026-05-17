@@ -17,6 +17,9 @@ export const LIST_SALE_ORDER_DETAIL = gql`
       sale_price
       quantity
       serials
+      discount_type
+      discount_value
+      discount_amount
       subtotal
     }
   }

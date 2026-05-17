@@ -38,8 +38,10 @@ const Dashboard = () => {
 
         <main className="p-2 flex-1 overflow-auto">
           <Outlet />
-          <TourFab />
-          <ChatBot />
+          <div className="hidden md:block">
+            <TourFab />
+            <ChatBot />
+          </div>
         </main>
       </div>
     </div>

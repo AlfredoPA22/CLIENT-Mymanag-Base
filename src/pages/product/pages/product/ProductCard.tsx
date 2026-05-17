@@ -15,20 +15,15 @@ interface ProductCardProps {
 
 const ProductCard: FC<ProductCardProps> = ({ productData }) => {
   const { currency } = useAuth();
-  const statusBodyTemplate = (rowData: IProduct) => {
-    const status = getStatus(rowData.status);
-    if (status) {
-      const { severity, label } = status;
-      return <Tag severity={severity as "danger" | "success"}>{label}</Tag>;
-    }
-    return null;
-  };
+
+  const status = getStatus(productData.status);
 
   return (
-    <Card className="w-full mx-auto shadow-lg rounded-xl p-5">
-      <div className="flex flex-col md:flex-row items-start gap-6">
-        {/* Imagen: tamaño fijo, responsive */}
-        <div className="w-[128px] h-[128px] mx-auto md:mx-0 mb-5 flex-shrink-0">
+    <Card className="w-full mx-auto shadow-lg rounded-xl">
+      <div className="flex flex-col md:flex-row items-start gap-4 md:gap-6">
+
+        {/* Imagen */}
+        <div className="w-24 h-24 md:w-32 md:h-32 mx-auto md:mx-0 flex-shrink-0">
           <Image
             src={productData.image ? productData.image : defaultProduct}
             alt={productData.name}
@@ -37,58 +32,58 @@ const ProductCard: FC<ProductCardProps> = ({ productData }) => {
         </div>
 
         {/* Información */}
-        <div className="flex-1 space-y-2 w-full">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
-            <h2 className="text-xl font-bold text-center md:text-left">
+        <div className="flex-1 w-full space-y-2">
+          {/* Nombre + estado */}
+          <div className="flex items-start justify-between gap-2">
+            <h2 className="text-lg md:text-xl font-bold leading-tight break-all flex-1 min-w-0">
               {productData.name}
             </h2>
-            <div className="text-center md:text-right">
-              {statusBodyTemplate(productData)}
-            </div>
+            {status && (
+              <Tag severity={status.severity as "danger" | "success"} className="shrink-0">
+                {status.label}
+              </Tag>
+            )}
           </div>
 
-          <p className="text-gray-500 text-center md:text-left">
-            {productData.description}
-          </p>
+          {productData.description && (
+            <p className="text-gray-500 text-sm">{productData.description}</p>
+          )}
 
           <Divider className="my-2" />
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-            <div>
-              <p className="text-gray-400">Código:</p>
-              <p className="font-semibold">{productData.code}</p>
+          {/* Grid de datos */}
+          <div className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
+            <div className="overflow-hidden">
+              <p className="text-gray-400 text-xs">Código</p>
+              <p className="font-semibold break-all">{productData.code}</p>
             </div>
             <div>
-              <p className="text-gray-400">Stock:</p>
-              <p
-                className={`font-semibold ${
-                  productData.stock > 0 ? "text-green-500" : "text-red-500"
-                }`}
-              >
-                {productData.stock} {productData.stock_type}
+              <p className="text-gray-400 text-xs">Stock</p>
+              <p className={`font-semibold ${productData.stock > 0 ? "text-green-500" : "text-red-500"}`}>
+                {productData.stock} <span className="text-gray-400 font-normal text-xs">{productData.stock_type}</span>
               </p>
             </div>
             <div>
-              <p className="text-gray-400">Precio de Venta:</p>
-              <p className="font-semibold text-blue-500">
+              <p className="text-gray-400 text-xs">Precio de venta</p>
+              <p className="font-semibold text-blue-600">
                 {currency} {productData.sale_price.toFixed(2)}
               </p>
             </div>
             <PermissionGuard permissions={["VIEW_PRODUCT_COST"]}>
               <div>
-                <p className="text-gray-400">Último Costo:</p>
+                <p className="text-gray-400 text-xs">Último costo</p>
                 <p className="font-semibold text-gray-600">
                   {currency} {productData.last_cost_price.toFixed(2)}
                 </p>
               </div>
             </PermissionGuard>
-            <div>
-              <p className="text-gray-400">Marca:</p>
-              <p className="font-semibold">{productData.brand?.name}</p>
+            <div className="overflow-hidden">
+              <p className="text-gray-400 text-xs">Marca</p>
+              <p className="font-semibold break-all">{productData.brand?.name ?? "—"}</p>
             </div>
-            <div>
-              <p className="text-gray-400">Categoría:</p>
-              <p className="font-semibold">{productData.category?.name}</p>
+            <div className="overflow-hidden">
+              <p className="text-gray-400 text-xs">Categoría</p>
+              <p className="font-semibold break-all">{productData.category?.name ?? "—"}</p>
             </div>
           </div>
         </div>

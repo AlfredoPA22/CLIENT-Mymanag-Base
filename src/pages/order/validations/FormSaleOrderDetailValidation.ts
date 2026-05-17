@@ -10,4 +10,8 @@ export const schemaFormSaleOrderDetail = object().shape({
     .positive("La cantidad debe ser mayor a 0")
     .integer("La cantidad debe ser un numero entero")
     .required("La cantidad es requerida"),
+  discount_type: string().optional(),
+  discount_value: number()
+    .min(0, "El descuento no puede ser negativo")
+    .optional(),
 });

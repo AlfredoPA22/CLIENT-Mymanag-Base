@@ -216,13 +216,13 @@ const PurchaseOrderDetailForm: FC<PurchaseOrderDetailFormProps> = ({
             onChange={handleChange}
           />
         </section>
-        <section className="flex items-end justify-center">
+        <section className="flex items-end justify-center w-full md:w-auto">
           <Button
-            className="md:col-span-2"
             icon="pi pi-plus"
             type="submit"
             severity="success"
             label="Agregar producto"
+            className="w-full md:w-auto"
             disabled={!dirty || !isValid || isSubmitting}
           />
         </section>

@@ -79,8 +79,10 @@ export const generateSaleOrderReportPDF = (
     : "Sin filtro";
   doc.text(`${desde}  —  ${hasta}`, MARGIN + 18, filterY + 9);
 
-  // Right: total
+  // Right: total + discount
   const total = data.reduce((s, o) => s + (Number(o.total) || 0), 0);
+  const totalDiscount = data.reduce((s, o) => s + (Number(o.discount_amount) || 0), 0);
+
   doc.setFont("helvetica", "bold");
   doc.setFontSize(7);
   doc.setTextColor(...INK_MID);
@@ -90,12 +92,19 @@ export const generateSaleOrderReportPDF = (
   doc.setTextColor(...INK);
   doc.text(`${total.toFixed(2)} ${currency}`, PAGE_W - MARGIN, filterY + 9, { align: "right" });
 
+  if (totalDiscount > 0) {
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(7);
+    doc.setTextColor(...INK_MID);
+    doc.text(`Descuentos: -${totalDiscount.toFixed(2)} ${currency}`, PAGE_W - MARGIN, filterY + 15, { align: "right" });
+  }
+
   // ── RULE ──────────────────────────────────────────────────
   drawRule(doc, filterY + 16);
 
   // ── TABLE ────────────────────────────────────────────────
   autoTable(doc, {
-    head: [["Código", "Fecha", "Cliente", "Estado", `Total (${currency})`]],
+    head: [["Código", "Fecha", "Cliente", "Estado", `Descuento (${currency})`, `Total (${currency})`]],
     headStyles: {
       fillColor: TABLE_HEAD,
       textColor: INK,
@@ -109,18 +118,20 @@ export const generateSaleOrderReportPDF = (
       new Date(Number(o.date)).toLocaleDateString("es-ES"),
       o.client.fullName,
       o.status,
+      o.discount_amount ? o.discount_amount.toFixed(2) : "-",
       o.total,
     ]),
     bodyStyles: { fontSize: 8.5, textColor: INK, cellPadding: 4 },
     alternateRowStyles: { fillColor: ROW_ALT },
-    startY: filterY + 22,
+    startY: filterY + 24,
     theme: "plain",
     columnStyles: {
-      0: { cellWidth: 36, halign: "center" },
-      1: { cellWidth: 30, halign: "center" },
-      2: { cellWidth: 65 },
-      3: { cellWidth: 28, halign: "center" },
-      4: { cellWidth: 23, halign: "right" },
+      0: { cellWidth: 30, halign: "center" },
+      1: { cellWidth: 26, halign: "center" },
+      2: { cellWidth: 55 },
+      3: { cellWidth: 25, halign: "center" },
+      4: { cellWidth: 22, halign: "right" },
+      5: { cellWidth: 24, halign: "right" },
     },
     tableLineColor: RULE,
     tableLineWidth: 0.3,
