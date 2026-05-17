@@ -4,6 +4,7 @@ import { ISaleOrderDetail } from "./SaleOrderDetail";
 import { IWarehouse } from "./Warehouse";
 
 export interface IProductSerial {
+  _id: string;
   serial: string;
   product: IProduct;
   warehouse: IWarehouse;

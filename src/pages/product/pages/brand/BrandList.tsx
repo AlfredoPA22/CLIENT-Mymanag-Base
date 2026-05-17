@@ -286,7 +286,7 @@ const BrandList = () => {
           <p className="text-center text-gray-400 py-6 text-sm">Sin marcas.</p>
         )}
 
-        {listBrand.map((item) => {
+        {listBrand.map((item: IBrand) => {
           const status = getStatus(item);
           return (
             <div

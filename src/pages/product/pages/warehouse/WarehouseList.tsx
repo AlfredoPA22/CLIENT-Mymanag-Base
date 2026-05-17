@@ -280,7 +280,7 @@ const WarehouseList = () => {
           <p className="text-center text-gray-400 py-6 text-sm">Sin almacenes.</p>
         )}
 
-        {listWarehouse.map((item) => {
+        {listWarehouse.map((item: IWarehouse) => {
           const status = getStatus(item);
           return (
             <div

@@ -8,7 +8,6 @@ import { Tag } from "primereact/tag";
 import { FC, useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import LabelInput from "../../../../components/labelInput/LabelInput";
 import { OrderSkeleton } from "../../../../components/skeleton/OrderSkeleton";
 import { APPROVE_SALE_ORDER, UPDATE_SALE_ORDER_DISCOUNT } from "../../../../graphql/mutations/SaleOrder";
 import { CREATE_SALE_RETURN } from "../../../../graphql/mutations/SaleReturn";

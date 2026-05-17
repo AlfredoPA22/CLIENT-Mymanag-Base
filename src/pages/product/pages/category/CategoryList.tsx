@@ -286,7 +286,7 @@ const CategoryList = () => {
           <p className="text-center text-gray-400 py-6 text-sm">Sin categorias.</p>
         )}
 
-        {listCategory.map((item) => {
+        {listCategory.map((item: ICategory) => {
           const status = getStatus(item);
           return (
             <div

@@ -123,9 +123,8 @@ const CategoryDetail: FC<CategoryDetailProps> = ({ category }) => {
                     <div className="min-w-0 overflow-hidden flex-1">
                       <TextLink
                         to={`${ROUTES_MOCK.INVENTORY}${ROUTES_MOCK.PRODUCTS}/detalle/${product._id}`}
-                        className="text-xs text-blue-600 font-medium"
                       >
-                        {product.code}
+                        <span className="text-xs font-medium">{product.code}</span>
                       </TextLink>
                       <p className="font-semibold text-gray-800 text-sm break-words mt-0.5">{product.name}</p>
                       {product.brand?.name && (

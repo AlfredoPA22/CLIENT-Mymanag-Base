@@ -181,7 +181,7 @@ const ProductTransferList = () => {
           <p className="text-center text-gray-400 py-6 text-sm">Sin transferencias.</p>
         )}
 
-        {listProductTransfer?.map((item) => {
+        {listProductTransfer?.map((item: IProductTransfer) => {
           const status = getStatus(item.status);
           const isBorrador = item.status === orderStatus.BORRADOR;
           return (

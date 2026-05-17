@@ -241,7 +241,7 @@ const ProviderList = () => {
           <p className="text-center text-gray-400 py-6 text-sm">Sin proveedores.</p>
         )}
 
-        {listProvider.map((item) => (
+        {listProvider.map((item: IProvider) => (
           <div
             key={item._id}
             className="border border-gray-200 rounded-xl p-3 bg-white shadow-sm"
