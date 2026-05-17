@@ -605,18 +605,18 @@ const SaleOrderDetail: FC<SaleOrderDetailProps> = ({ saleOrderId }) => {
             </div>
           ) : (
             <div className="border border-gray-200 rounded-lg overflow-hidden">
-              <table className="w-full text-sm">
+              <table className="w-full text-sm table-fixed">
                 <thead className="bg-gray-50 text-gray-500 text-xs uppercase">
                   <tr>
-                    <th className="px-3 py-2 text-left">Producto</th>
-                    <th className="px-3 py-2 text-center">Cantidad</th>
-                    <th className="px-3 py-2 text-right">Subtotal</th>
+                    <th className="px-3 py-2 text-left w-[55%]">Producto</th>
+                    <th className="px-3 py-2 text-center w-[15%]">Cant.</th>
+                    <th className="px-3 py-2 text-right w-[30%]">Subtotal</th>
                   </tr>
                 </thead>
                 <tbody>
                   {returnDetails.map((item: any, idx: number) => (
                     <tr key={item._id} className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}>
-                      <td className="px-3 py-2 font-medium text-gray-700">{item.product?.name ?? "—"}</td>
+                      <td className="px-3 py-2 font-medium text-gray-700 break-words">{item.product?.name ?? "—"}</td>
                       <td className="px-3 py-2 text-center text-gray-500">{item.quantity}</td>
                       <td className="px-3 py-2 text-right text-gray-700">{item.subtotal} {currency}</td>
                     </tr>

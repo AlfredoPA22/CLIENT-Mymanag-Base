@@ -62,46 +62,16 @@ const ProductSerialList: FC<ProductSerialListProps> = ({ product }) => {
   };
 
   const [columns] = useState<DataTableColumn<IProductSerial>[]>([
-    {
-      field: "serial",
-      header: "Nombre",
-      sortable: true,
-      style: { width: "35%" },
-    },
-    {
-      field: "warehouse.name",
-      header: "Almacén",
-      sortable: true,
-      style: { width: "20%" },
-    },
-    {
-      field: "status",
-      header: "Estado",
-      sortable: true,
-      body: statusBodyTemplate,
-      style: { width: "15%", textAlign: "center" },
-    },
-    {
-      field: "purchase_order_detail.purchase_order.code",
-      header: "orden de compra",
-      style: { width: "15%" },
-      body: purchaseOrderBodyTemplate,
-    },
-    {
-      field: "sale_order_detail.sale_order.code",
-      header: "orden de venta",
-      sortable: true,
-      style: { width: "15%" },
-      body: saleOrderBodyTemplate,
-    },
+    { field: "serial", header: "Nombre", sortable: true, style: { width: "35%" } },
+    { field: "warehouse.name", header: "Almacén", sortable: true, style: { width: "20%" } },
+    { field: "status", header: "Estado", sortable: true, body: statusBodyTemplate, style: { width: "15%", textAlign: "center" } },
+    { field: "purchase_order_detail.purchase_order.code", header: "orden de compra", style: { width: "15%" }, body: purchaseOrderBodyTemplate },
+    { field: "sale_order_detail.sale_order.code", header: "orden de venta", sortable: true, style: { width: "15%" }, body: saleOrderBodyTemplate },
   ]);
 
   useEffect(() => {
     if (error) {
-      showToast({
-        detail: error.message,
-        severity: ToastSeverity.Success,
-      });
+      showToast({ detail: error.message, severity: ToastSeverity.Success });
     }
   }, [error]);
 
@@ -111,15 +81,68 @@ const ProductSerialList: FC<ProductSerialListProps> = ({ product }) => {
     return <LoadingSpinner />;
   }
 
+  const list: IProductSerial[] = listProductSerial ?? [];
+
   return (
-    <Table
-      columns={columns}
-      data={listProductSerial}
-      emptyMessage="Sin seriales."
-      size="small"
-      dataFilters={filters}
-      tableHeader={renderFilterInput}
-    />
+    <>
+      {/* ── Mobile ────────────────────────────────────────────── */}
+      <div className="flex flex-col gap-2 md:hidden">
+        {list.length === 0 && (
+          <p className="text-center text-gray-400 py-4 text-sm">Sin seriales.</p>
+        )}
+        {list.map((row: IProductSerial) => {
+          const status = getStatus(row.status);
+          return (
+            <div key={row._id} className="border border-gray-200 rounded-xl px-3 py-2 bg-white shadow-sm">
+              <div className="flex items-start justify-between gap-2">
+                <p className="text-sm font-mono font-semibold text-gray-800 break-all flex-1">{row.serial}</p>
+                {status && (
+                  <Tag severity={status.severity as "danger" | "success" | "info" | "warning"} className="shrink-0 text-xs">
+                    {status.label}
+                  </Tag>
+                )}
+              </div>
+              {row.warehouse?.name && (
+                <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
+                  <i className="pi pi-building text-[10px]" />
+                  {row.warehouse.name}
+                </p>
+              )}
+              <div className="flex flex-wrap gap-x-4 gap-y-0.5 mt-1.5 text-xs text-gray-500">
+                {row.purchase_order_detail && (
+                  <span className="flex items-center gap-1">
+                    <i className="pi pi-shopping-cart text-[10px]" />
+                    <TextLink to={`${ROUTES_MOCK.PURCHASE_ORDERS}/detalle/${row.purchase_order_detail.purchase_order._id}`}>
+                      {row.purchase_order_detail.purchase_order.code}
+                    </TextLink>
+                  </span>
+                )}
+                {row.sale_order_detail && (
+                  <span className="flex items-center gap-1">
+                    <i className="pi pi-tag text-[10px]" />
+                    <TextLink to={`${ROUTES_MOCK.SALE_ORDERS}/detalle/${row.sale_order_detail.sale_order._id}`}>
+                      {row.sale_order_detail.sale_order.code}
+                    </TextLink>
+                  </span>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* ── Desktop ───────────────────────────────────────────── */}
+      <div className="hidden md:block">
+        <Table
+          columns={columns}
+          data={list}
+          emptyMessage="Sin seriales."
+          size="small"
+          dataFilters={filters}
+          tableHeader={renderFilterInput}
+        />
+      </div>
+    </>
   );
 };
 

@@ -251,19 +251,17 @@ const SaleReturnList = () => {
                   key={row._id}
                   className="border border-gray-200 rounded-xl px-3 py-2 bg-white shadow-sm"
                 >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0 flex-1">
-                      <TextLink to={`${ROUTES_MOCK.INVENTORY}${ROUTES_MOCK.PRODUCTS}/detalle/${row.product._id}`}>
-                        {row.product?.code}
-                      </TextLink>
-                      <p className="text-sm text-gray-700 break-words">{row.product?.name}</p>
-                    </div>
-                    <span className="text-sm font-semibold text-green-600 shrink-0">
+                  <TextLink to={`${ROUTES_MOCK.INVENTORY}${ROUTES_MOCK.PRODUCTS}/detalle/${row.product._id}`}>
+                    <span className="text-xs font-mono">{row.product?.code}</span>
+                  </TextLink>
+                  <p className="text-sm text-gray-700 break-words leading-snug mt-0.5">{row.product?.name}</p>
+                  <div className="flex items-center justify-between mt-1.5">
+                    <span className="text-xs text-gray-500">
+                      {row.quantity} × {row.sale_price} {currency}
+                    </span>
+                    <span className="text-sm font-semibold text-green-600">
                       {row.subtotal} {currency}
                     </span>
-                  </div>
-                  <div className="mt-1 text-xs text-gray-500">
-                    {row.quantity} × {row.sale_price} {currency}
                   </div>
                 </div>
               ))}
