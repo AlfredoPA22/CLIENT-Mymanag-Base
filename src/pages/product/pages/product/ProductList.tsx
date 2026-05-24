@@ -10,7 +10,7 @@ import { Dialog } from "primereact/dialog";
 import { Dropdown } from "primereact/dropdown";
 import { memo, useCallback, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import defaultProduct from "../../../../assets/defaultProduct.jpg";
+import ProductImagePlaceholder from "../../../../components/ProductImagePlaceholder/ProductImagePlaceholder";
 import Table from "../../../../components/datatable/Table";
 import LabelInput from "../../../../components/labelInput/LabelInput";
 import LoadingSpinner from "../../../../components/LoadingSpinner/LoadingSpinner";
@@ -71,12 +71,10 @@ const ProductCard = memo(({ product, currency, onNavigate, onStockClick, onEdit,
     <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
       <div className="flex gap-3 p-3 cursor-pointer active:bg-gray-50"
         onClick={() => onNavigate(product._id)}>
-        <img
-          src={product.image || defaultProduct}
-          alt={product.name}
-          loading="lazy"
-          className="w-16 h-16 rounded-lg object-cover shrink-0 border border-gray-100"
-        />
+        {product.image
+          ? <img src={product.image} alt={product.name} loading="lazy" className="w-16 h-16 rounded-lg object-cover shrink-0 border border-gray-100" />
+          : <ProductImagePlaceholder name={product.name} className="w-16 h-16 rounded-lg shrink-0 border border-gray-100" />
+        }
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0 overflow-hidden">
@@ -277,10 +275,9 @@ const ProductList = () => {
     { field: "code", header: "Codigo", sortable: true, style: { width: "10%" } },
     {
       field: "image", header: "Imagen", sortable: true, style: { width: "10%", justifyItems: "center" },
-      body: (rowData: IProduct) => (
-        <img className="w-[80px] h-[80px]" alt="image" loading="lazy"
-          src={rowData.image ? rowData.image : defaultProduct} />
-      ),
+      body: (rowData: IProduct) => rowData.image
+        ? <img className="w-[80px] h-[80px] object-cover rounded-lg" alt="image" loading="lazy" src={rowData.image} />
+        : <ProductImagePlaceholder name={rowData.name} className="w-[80px] h-[80px] rounded-lg" />,
     },
     { field: "name", header: "Nombre", sortable: true, style: { width: "20%" },
       fieldEditor: (options: ColumnEditorOptions) => textEditor(options) },
@@ -319,7 +316,7 @@ const ProductList = () => {
       </Dialog>
       <Dialog className="md:w-[50vw] w-[95vw]" visible={visibleSearch}
         header="Buscar producto" onHide={() => setVisibleSearch(false)}>
-        <SearchProductForm />
+        <SearchProductForm onSelect={() => setVisibleSearch(false)} />
       </Dialog>
     </>
   );

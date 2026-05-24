@@ -7,6 +7,7 @@ import { LIST_CLIENT } from "../../../graphql/queries/Client";
 import { LIST_LOW_STOCK_PRODUCT } from "../../../graphql/queries/Product";
 import useAuth from "../../auth/hooks/useAuth";
 import ProductReportFilter from "./ProductReportFilter";
+import ProductCatalogFilter from "./ProductCatalogFilter";
 import PurchaseOrderReportFilter from "./PurchaseOrderReportFilter";
 import SaleOrderReportFilter from "./SaleOrderReportFilter";
 import InventoryValueReportFilter from "./InventoryValueReportFilter";
@@ -17,6 +18,7 @@ import { generateLowStockReportPDF } from "../utils/generateLowStockReportPDF";
 
 const ReportsPage = () => {
   const [visibleProductFilter, setVisibleProductFilter] = useState(false);
+  const [visibleCatalog, setVisibleCatalog] = useState(false);
   const [visiblePurchaseOrderFilter, setVisiblePurchaseOrderFilter] = useState(false);
   const [visibleSaleOrderFilter, setVisibleSaleOrderFilter] = useState(false);
   const [visibleInventoryValue, setVisibleInventoryValue] = useState(false);
@@ -85,6 +87,12 @@ const ReportsPage = () => {
           permission: "PRODUCT_REPORT",
           onClick: handleLowStockReport,
           loading: loadingLowStock,
+        },
+        {
+          label: "Catálogo de Productos",
+          icon: "pi pi-book",
+          permission: "PRODUCT_REPORT",
+          onClick: () => setVisibleCatalog(true),
         },
       ],
     },
@@ -190,6 +198,15 @@ const ReportsPage = () => {
         onHide={() => setVisibleProductFilter(false)}
       >
         <ProductReportFilter setVisibleProductFilter={setVisibleProductFilter} />
+      </Dialog>
+
+      <Dialog
+        className="md:w-[55vw] w-[90vw]"
+        header="Catálogo de Productos"
+        visible={visibleCatalog}
+        onHide={() => setVisibleCatalog(false)}
+      >
+        <ProductCatalogFilter setVisible={setVisibleCatalog} />
       </Dialog>
 
       <Dialog

@@ -3,7 +3,7 @@ import { Divider } from "primereact/divider";
 import { Image } from "primereact/image";
 import { Tag } from "primereact/tag";
 import { FC } from "react";
-import defaultProduct from "../../../../assets/defaultProduct.jpg";
+import ProductImagePlaceholder from "../../../../components/ProductImagePlaceholder/ProductImagePlaceholder";
 import { IProduct } from "../../../../utils/interfaces/Product";
 import { getStatus } from "../../../order/utils/getStatus";
 import useAuth from "../../../auth/hooks/useAuth";
@@ -43,13 +43,11 @@ const ProductCard: FC<ProductCardProps> = ({ productData }) => {
       <div className="flex flex-col sm:flex-row gap-5 items-start">
 
         {/* Imagen */}
-        <div className="w-full sm:w-44 sm:h-44 aspect-square flex-shrink-0 rounded-xl overflow-hidden shadow border border-gray-100 bg-gray-50 flex items-center justify-center mx-auto sm:mx-0">
-          <Image
-            src={productData.image || defaultProduct}
-            alt={productData.name}
-            imageClassName="w-full h-full object-contain"
-            preview
-          />
+        <div className="w-full sm:w-44 sm:h-44 aspect-square flex-shrink-0 rounded-xl overflow-hidden shadow border border-gray-100 mx-auto sm:mx-0">
+          {productData.image
+            ? <Image src={productData.image} alt={productData.name} imageClassName="w-full h-full object-contain" preview />
+            : <ProductImagePlaceholder name={productData.name} className="w-full h-full" />
+          }
         </div>
 
         {/* Info principal */}

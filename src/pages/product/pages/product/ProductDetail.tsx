@@ -10,7 +10,9 @@ import ProductCard from "./ProductCard";
 import ListSaleOrderByProduct from "./ListSaleOrderByProduct";
 import ListPurchaseOrderByProduct from "./ListPurchaseOrderByProduct";
 import ProductKardexList from "./ProductKardexList";
+import ProductSerialList from "./ProductSerialList";
 import { useAbility } from "../../../../casl/AbilityContext";
+import { stockType } from "../../../../utils/enums/stockType.enum";
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -53,6 +55,18 @@ const ProductDetail = () => {
       <TabPanel header={<span className="text-sm">Compras</span>}>
         <ListPurchaseOrderByProduct productId={productId} />
       </TabPanel>
+      {data.findProduct.stock_type === stockType.SERIALIZADO && (
+        <TabPanel
+          header={
+            <span className="text-sm flex items-center gap-1.5">
+              <i className="pi pi-barcode text-xs" />
+              Seriales
+            </span>
+          }
+        >
+          <ProductSerialList product={data.findProduct} />
+        </TabPanel>
+      )}
       {canViewKardex && (
         <TabPanel header={<span className="text-sm">Kardex</span>}>
           <ProductKardexList productId={productId} />
