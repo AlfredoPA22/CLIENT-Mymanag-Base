@@ -31,6 +31,7 @@ const useAuth = () => {
     isAuthenticated,
     permissions,
     companyName,
+    companyLogo,
     currency,
     isGlobal,
   } = useSelector((state: RootState) => state.authSlice);
@@ -54,6 +55,7 @@ const useAuth = () => {
             permissions: decoded.permissions,
             currency: decoded.currency,
             companyName: decoded.company,
+            companyLogo: decoded.companyLogo,
             isGlobal: decoded.is_global ?? false,
           })
         );
@@ -131,6 +133,7 @@ const useAuth = () => {
     userId,
     userName,
     companyName,
+    companyLogo,
     currency,
     permissions,
     isGlobal,

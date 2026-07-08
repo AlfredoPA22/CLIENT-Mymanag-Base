@@ -25,7 +25,10 @@ const useCompanySettings = () => {
     const { data: result } = await updateCompany({ variables: { input } });
     const updated = result?.updateCompany;
     if (updated?.currency) {
-      dispatch(setCompanyInfo({ currency: updated.currency }));
+      dispatch(setCompanyInfo({ currency: updated.currency  }));
+    }
+    if (updated?.image) {
+      dispatch(setCompanyInfo({ companyLogo: updated.image }));
     }
     showToast({
       detail: "Datos de la empresa actualizados",

@@ -6,6 +6,7 @@ export interface AuthSliceState {
   userId: string;
   userName: string;
   companyName: string;
+  companyLogo?: string;
   currency: string;
   permissions: string[];
   isGlobal: boolean;
@@ -17,6 +18,7 @@ const initialState: AuthSliceState = {
   userId: "",
   userName: "",
   companyName: "",
+  companyLogo: "",
   currency: "",
   permissions: [],
   isGlobal: false,
@@ -33,6 +35,7 @@ const authSlice = createSlice({
       userName: action.payload.userName,
       currency: action.payload.currency,
       companyName: action.payload.companyName,
+      companyLogo: action.payload.companyLogo,
       permissions: action.payload.permissions,
       isAuthenticated: action.payload.isAuthenticated,
       isGlobal: action.payload.isGlobal,
@@ -43,7 +46,7 @@ const authSlice = createSlice({
     }),
     setCompanyInfo: (
       state,
-      action: PayloadAction<{ companyName?: string; currency?: string }>
+      action: PayloadAction<{ companyName?: string; currency?: string; companyLogo?: string }>
     ) => ({
       ...state,
       ...(action.payload.companyName !== undefined && {
@@ -51,6 +54,9 @@ const authSlice = createSlice({
       }),
       ...(action.payload.currency !== undefined && {
         currency: action.payload.currency,
+      }),
+      ...(action.payload.companyLogo !== undefined && {
+        companyLogo: action.payload.companyLogo,
       }),
     }),
     resetAuth: () => initialState,

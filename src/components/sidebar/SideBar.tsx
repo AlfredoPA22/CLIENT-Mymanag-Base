@@ -44,7 +44,7 @@ const SidebarMenu = ({
 }: Props) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { logout, userName, companyName } = useAuth();
+  const { logout, userName, companyName, companyLogo } = useAuth();
   const ability = useAbility();
   const menuSections = [
     {
@@ -216,17 +216,23 @@ const SidebarMenu = ({
     <div id="sidebar-menu" className="h-full flex flex-col bg-slate-900 text-slate-100 w-full overflow-hidden">
       {/* Header */}
       <div
-        className={`flex flex-col items-center gap-3 pt-5 pb-4 border-b border-white/10 transition-all duration-300 ${
-          collapsed ? "px-2" : "px-4"
-        }`}
+        className={`flex flex-col items-center gap-3 pt-5 pb-4 border-b border-white/10 transition-all duration-300 ${collapsed ? "px-2" : "px-4"
+          }`}
       >
-        <motion.img
-          src="https://res.cloudinary.com/dyyd4no6j/image/upload/v1750462264/icono_inventasys_ca6zei.png"
-          alt="logo"
-          className="w-9 h-9 rounded-xl object-cover flex-shrink-0"
+        <motion.div
+          className="w-16 h-16 rounded-2xl bg-white shadow-lg flex items-center justify-center flex-shrink-0 p-2 overflow-hidden ring-1 ring-white/10"
           whileHover={{ scale: 1.05 }}
           transition={{ type: "spring", stiffness: 400, damping: 20 }}
-        />
+        >
+          <img
+            src={
+              companyLogo ||
+              "https://res.cloudinary.com/dyyd4no6j/image/upload/v1750462264/icono_inventasys_ca6zei.png"
+            }
+            alt="logo"
+            className="w-full h-full object-contain"
+          />
+        </motion.div>
 
         <AnimatePresence>
           {!collapsed && (
@@ -273,9 +279,8 @@ const SidebarMenu = ({
 
       {/* Menu */}
       <div
-        className={`flex-grow overflow-y-auto sidebar-scroll py-3 ${
-          collapsed ? "px-1.5" : "px-3"
-        }`}
+        className={`flex-grow overflow-y-auto sidebar-scroll py-3 ${collapsed ? "px-1.5" : "px-3"
+          }`}
       >
         <nav className="flex flex-col gap-0.5">
           {menuSections.map((section, i) => {
@@ -324,18 +329,16 @@ const SidebarMenu = ({
 
       {/* Logout */}
       <div
-        className={`py-3 border-t border-white/10 ${
-          collapsed ? "px-1.5" : "px-3"
-        }`}
+        className={`py-3 border-t border-white/10 ${collapsed ? "px-1.5" : "px-3"
+          }`}
       >
         <div className="relative group/logout">
           <motion.button
             onClick={handleLogout}
             whileHover={{ x: collapsed ? 0 : 2 }}
             transition={{ type: "spring", stiffness: 400, damping: 25 }}
-            className={`w-full flex items-center gap-3 rounded-xl text-sm font-medium text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-colors duration-200 ${
-              collapsed ? "justify-center px-0 py-3" : "py-2.5 px-3"
-            }`}
+            className={`w-full flex items-center gap-3 rounded-xl text-sm font-medium text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-colors duration-200 ${collapsed ? "justify-center px-0 py-3" : "py-2.5 px-3"
+              }`}
           >
             <PiSignOut className="text-lg flex-shrink-0" />
             {!collapsed && <span>Cerrar sesión</span>}
@@ -381,7 +384,7 @@ const SidebarMenu = ({
   ) : (
     <Sidebar
       visible={visible}
-      onHide={onHide || (() => {})}
+      onHide={onHide || (() => { })}
       position="left"
       className="w-64 shadow-2xl p-0"
       style={{ background: "#0f172a", zIndex: 999 }}

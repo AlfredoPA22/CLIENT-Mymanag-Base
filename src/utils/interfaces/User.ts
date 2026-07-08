@@ -12,6 +12,7 @@ export interface DecodedToken extends JwtPayload {
   access: boolean;
   currency: string;
   company: string;
+  companyLogo?: string;
   permissions: string[];
   is_global: boolean;
 }
