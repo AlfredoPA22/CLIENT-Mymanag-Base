@@ -93,3 +93,17 @@ export const UPDATE_SALE_ORDER_DETAIL = gql`
     }
   }
 `;
+
+export const ADD_MANY_SERIALS_TO_SALE_ORDER_DETAIL = gql`
+  mutation AddManySerialsToSaleOrderDetail(
+    $addManySerialsToSaleOrderDetailInput: AddManySerialsToSaleOrderDetailInput!
+  ) {
+    addManySerialsToSaleOrderDetail(
+      addManySerialsToSaleOrderDetailInput: $addManySerialsToSaleOrderDetailInput
+    ) {
+      _id
+      serial
+      status
+    }
+  }
+`;

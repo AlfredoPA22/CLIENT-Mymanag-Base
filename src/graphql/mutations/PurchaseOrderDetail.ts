@@ -82,3 +82,17 @@ export const UPDATE_PURCHASE_ORDER_DETAIL = gql`
     }
   }
 `;
+
+export const ADD_MANY_SERIALS_TO_PURCHASE_ORDER_DETAIL = gql`
+  mutation AddManySerialsToPurchaseOrderDetail(
+    $addManySerialsToPurchaseOrderDetailInput: AddManySerialsToPurchaseOrderDetailInput!
+  ) {
+    addManySerialsToPurchaseOrderDetail(
+      addManySerialsToPurchaseOrderDetailInput: $addManySerialsToPurchaseOrderDetailInput
+    ) {
+      _id
+      serial
+      status
+    }
+  }
+`;

@@ -126,7 +126,7 @@ const SaleOrderDetailList: FC<SaleOrderDetailListProps> = ({
   const handleMobileEditSave = async () => {
     if (!mobileEditData) return;
     if (!mobileEditData.sale_price || Number(mobileEditData.sale_price) <= 0 ||
-        !mobileEditData.quantity || Number(mobileEditData.quantity) <= 0) {
+      !mobileEditData.quantity || Number(mobileEditData.quantity) <= 0) {
       showToast({ detail: "El precio y la cantidad son obligatorios.", severity: ToastSeverity.Error });
       return;
     }
@@ -385,8 +385,8 @@ const SaleOrderDetailList: FC<SaleOrderDetailListProps> = ({
                   {detail.discount_type === "PORCENTUAL"
                     ? ` (${detail.discount_value}%)`
                     : detail.discount_type === "FIJO"
-                    ? " fijo"
-                    : ""}
+                      ? " fijo"
+                      : ""}
                 </span>
               )}
               {detail.product.stock_type === stockType.SERIALIZADO && (
@@ -562,6 +562,9 @@ const SaleOrderDetailList: FC<SaleOrderDetailListProps> = ({
             saleOrderId={saleOrderId}
             saleOrderDetailId={currentSaleOrderDetail?._id}
             editMode={editMode}
+            remainingSerials={
+              currentSaleOrderDetail.quantity - currentSaleOrderDetail.serials
+            }
           />
         )}
       </Dialog>

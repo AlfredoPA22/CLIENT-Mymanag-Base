@@ -34,3 +34,8 @@ export interface ISaleOrderDetailToPDF {
   saleOrderDetail: ISaleOrderDetail;
   productSerial: IProductSerial[];
 }
+
+export interface IAddManySerialsToSaleOrderDetailInput {
+  sale_order_detail: string;
+  serials: string[];
+}

@@ -30,3 +30,9 @@ export interface IPurchaseOrderDetailToPDF {
   purchaseOrderDetail: IPurchaseOrderDetail;
   productSerial: IProductSerial[];
 }
+
+export interface IAddManySerialsToPurchaseOrderDetailInput {
+  purchase_order_detail: string;
+  warehouse: string;
+  serials: string[];
+}
