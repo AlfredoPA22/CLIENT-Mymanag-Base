@@ -18,6 +18,7 @@ import { LIST_PRODUCT } from "../../../../graphql/queries/Product";
 import {
   FIND_SALE_ORDER_TO_PDF,
   LIST_SALE_ORDER,
+  LIST_STORE_ORDERS,
 } from "../../../../graphql/queries/SaleOrder";
 import { setIsBlocked } from "../../../../redux/slices/blockUISlice";
 import { ROUTES_MOCK } from "../../../../routes/RouteMocks";
@@ -54,8 +55,12 @@ const DROPDOWN_PANEL_PROPS = {
   panelClassName: "[&_.p-dropdown-item]:whitespace-normal [&_.p-dropdown-item]:leading-snug",
 };
 
-const SaleOrderList = () => {
-  const { listSaleOrder, loadingListSaleOrder } = useSaleOrderList();
+interface SaleOrderListProps {
+  storeOnly?: boolean;
+}
+
+const SaleOrderList = ({ storeOnly = false }: SaleOrderListProps) => {
+  const { listSaleOrder, loadingListSaleOrder } = useSaleOrderList(storeOnly);
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { currency } = useAuth();
@@ -133,7 +138,10 @@ const SaleOrderList = () => {
 
   // ── Mutations ─────────────────────────────────────────────────
   const [DeleteSaleOrder] = useMutation(DELETE_SALE_ORDER, {
-    refetchQueries: [{ query: LIST_SALE_ORDER }, { query: LIST_PRODUCT }],
+    refetchQueries: [
+      { query: storeOnly ? LIST_STORE_ORDERS : LIST_SALE_ORDER },
+      { query: LIST_PRODUCT },
+    ],
   });
 
   // ── Helpers ───────────────────────────────────────────────────
@@ -194,6 +202,31 @@ const SaleOrderList = () => {
     }
   };
 
+  const getWhatsAppUrl = (rowData: ISaleOrder) => {
+    const digits = rowData.client?.phoneNumber?.replace(/\D/g, "") || "";
+    if (!digits) return null;
+    const message = encodeURIComponent(
+      `Hola ${rowData.client?.fullName || ""}, te contactamos por tu pedido ${rowData.code}.`
+    );
+    return `https://wa.me/${digits}?text=${message}`;
+  };
+
+  const whatsAppButton = (rowData: ISaleOrder) => {
+    if (!storeOnly) return null;
+    const url = getWhatsAppUrl(rowData);
+    if (!url) return null;
+    return (
+      <Button
+        tooltip="Contactar por WhatsApp"
+        tooltipOptions={{ position: "left" }}
+        icon="pi pi-whatsapp"
+        raised
+        severity="success"
+        onClick={() => window.open(url, "_blank")}
+      />
+    );
+  };
+
   const actionBodyTemplate = (rowData: ISaleOrder) => {
     if (rowData.status === orderStatus.BORRADOR) {
       return (
@@ -209,6 +242,7 @@ const SaleOrderList = () => {
           <Button tooltip="Eliminar venta" tooltipOptions={{ position: "left" }}
             icon="pi pi-trash" raised severity="danger"
             onClick={() => confirmDeleteSaleOrder(rowData._id)} />
+          {whatsAppButton(rowData)}
         </div>
       );
     }
@@ -218,6 +252,7 @@ const SaleOrderList = () => {
           <Button tooltip="Imprimir venta" tooltipOptions={{ position: "left" }}
             icon="pi pi-download" raised severity="warning"
             onClick={() => handleGeneratePDF(rowData._id)} />
+          {whatsAppButton(rowData)}
         </div>
       );
     }
@@ -234,6 +269,7 @@ const SaleOrderList = () => {
         <Button tooltip="Anular y eliminar venta" tooltipOptions={{ position: "left" }}
           icon="pi pi-trash" raised severity="danger"
           onClick={() => confirmDeleteSaleOrder(rowData._id)} />
+        {whatsAppButton(rowData)}
       </div>
     );
   };
@@ -367,16 +403,19 @@ const SaleOrderList = () => {
       {/* ── Cabecera mobile: título + botón ───────────────────── */}
       <div className="flex justify-between items-center px-1 md:hidden">
         <h1 className="text-xl font-bold text-gray-800">
-          Lista de ventas <span className="text-base font-normal text-gray-400">({filteredData.length})</span>
+          {storeOnly ? "Pedidos de la tienda" : "Lista de ventas"}{" "}
+          <span className="text-base font-normal text-gray-400">({filteredData.length})</span>
         </h1>
-        <Button
-          id="btn-new-sale"
-          icon="pi pi-plus"
-          severity="success"
-          label="Nueva venta"
-          onClick={() => navigate(`${ROUTES_MOCK.SALE_ORDERS}${ROUTES_MOCK.NEW_SALE_ORDER}`)}
-          raised
-        />
+        {!storeOnly && (
+          <Button
+            id="btn-new-sale"
+            icon="pi pi-plus"
+            severity="success"
+            label="Nueva venta"
+            onClick={() => navigate(`${ROUTES_MOCK.SALE_ORDERS}${ROUTES_MOCK.NEW_SALE_ORDER}`)}
+            raised
+          />
+        )}
       </div>
 
       {/* ── Vista mobile: cards ────────────────────────────────── */}
@@ -458,6 +497,11 @@ const SaleOrderList = () => {
                     tooltip="Eliminar"
                     onClick={() => confirmDeleteSaleOrder(order._id)} />
                 )}
+                {storeOnly && getWhatsAppUrl(order) && (
+                  <Button size="small" icon="pi pi-whatsapp" raised severity="success"
+                    tooltip="Contactar por WhatsApp"
+                    onClick={() => window.open(getWhatsAppUrl(order)!, "_blank")} />
+                )}
               </div>
             </div>
           );
@@ -481,17 +525,19 @@ const SaleOrderList = () => {
         header={
           <div className="flex justify-between items-center m-2 px-5">
             <h1 className="text-2xl font-bold">
-              {`Lista de ventas (${filteredData.length})`}
+              {`${storeOnly ? "Pedidos de la tienda" : "Lista de ventas"} (${filteredData.length})`}
             </h1>
-            <Button
-              id="btn-new-sale"
-              icon="pi pi-plus"
-              severity="success"
-              tooltip="Nueva venta"
-              tooltipOptions={{ position: "left" }}
-              onClick={() => navigate(`${ROUTES_MOCK.SALE_ORDERS}${ROUTES_MOCK.NEW_SALE_ORDER}`)}
-              raised
-            />
+            {!storeOnly && (
+              <Button
+                id="btn-new-sale"
+                icon="pi pi-plus"
+                severity="success"
+                tooltip="Nueva venta"
+                tooltipOptions={{ position: "left" }}
+                onClick={() => navigate(`${ROUTES_MOCK.SALE_ORDERS}${ROUTES_MOCK.NEW_SALE_ORDER}`)}
+                raised
+              />
+            )}
           </div>
         }
       >

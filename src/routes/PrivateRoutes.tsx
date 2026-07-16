@@ -5,6 +5,7 @@ import Dashboard from "../components/dashboard/Dashboard";
 import RoleList from "../pages/admin/pages/role/RoleList";
 import UserList from "../pages/admin/pages/user/UserList";
 import { PermissionRoute } from "../pages/auth/pages/PermissionRoute";
+import { PlanRoute } from "../pages/auth/pages/PlanRoute";
 import UnauthorizedPage from "../pages/auth/pages/UnauthorizedPage";
 import ClientList from "../pages/client/pages/ClientList";
 import Home from "../pages/home/Home";
@@ -29,6 +30,7 @@ import CreateProductTransfer from "../pages/transfer/CreateProductTransfer";
 import EditProductTransfer from "../pages/transfer/EditProductTransfer";
 import ViewProductTransfer from "../pages/transfer/ViewProductTransfer";
 import SaleReturnList from "../pages/order/pages/saleReturn/SaleReturnList";
+import StoreSettings from "../pages/store/StoreSettings";
 
 const PrivateRoutes: FC = () => {
   return (
@@ -232,6 +234,28 @@ const PrivateRoutes: FC = () => {
               <PermissionRoute permissions={["UPDATE_COMPANY"]}>
                 <CompanySettings />
               </PermissionRoute>
+            }
+          />
+
+          {/* tienda online (solo plan PRO) */}
+          <Route
+            path={`${ROUTES_MOCK.STORE}`}
+            element={
+              <PlanRoute>
+                <PermissionRoute permissions={["UPDATE_COMPANY"]}>
+                  <StoreSettings />
+                </PermissionRoute>
+              </PlanRoute>
+            }
+          />
+          <Route
+            path={`${ROUTES_MOCK.STORE}/pedidos`}
+            element={
+              <PlanRoute>
+                <PermissionRoute permissions={["LIST_SALE"]}>
+                  <SaleOrderList storeOnly />
+                </PermissionRoute>
+              </PlanRoute>
             }
           />
         </Route>

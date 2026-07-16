@@ -63,7 +63,7 @@ const Login = () => {
               </p>
             </div>
 
-            <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
+            <form className="p-fluid flex flex-col gap-5" onSubmit={handleSubmit}>
               <div>
                 <label
                   htmlFor="user_name"
@@ -96,14 +96,13 @@ const Login = () => {
                   Contraseña
                 </label>
                 <Password
-                  inputClassName="sm:w-[340px] w-full p-3 bg-gray-100 border border-gray-300 text-[#103953] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#A0C82E]"
+                  inputClassName="w-full p-3 bg-gray-100 border border-gray-300 text-[#103953] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#A0C82E]"
                   inputId="password"
                   name="password"
                   value={values.password}
                   onChange={handleChange}
                   toggleMask
                   feedback={false}
-                  className="w-full"
                   placeholder="Contraseña"
                 />
                 <div className="h-5">

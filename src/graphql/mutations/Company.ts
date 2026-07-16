@@ -12,6 +12,16 @@ export const UPDATE_COMPANY = gql`
       country
       image
       currency
+      store_enabled
+      store_banner_image
+      store_theme {
+        primary
+        primaryDark
+        primaryForeground
+        dark
+        darkLight
+        light
+      }
     }
   }
 `;

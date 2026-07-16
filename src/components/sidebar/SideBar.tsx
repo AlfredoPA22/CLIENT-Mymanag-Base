@@ -6,7 +6,7 @@ import {
   AiOutlineUser,
 } from "react-icons/ai";
 import { BiImport, BiTransfer, BiRevision } from "react-icons/bi";
-import { FiChevronLeft, FiPackage, FiTruck } from "react-icons/fi";
+import { FiChevronLeft, FiPackage, FiShoppingBag, FiTruck } from "react-icons/fi";
 import { HiOutlineUsers } from "react-icons/hi";
 import {
   MdCategory,
@@ -22,6 +22,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { canDoAny } from "../../casl/ability";
 import { useAbility } from "../../casl/AbilityContext";
 import useAuth from "../../pages/auth/hooks/useAuth";
+import usePlan from "../../hooks/usePlan";
 import { ROUTES_MOCK } from "../../routes/RouteMocks";
 import { SidebarMenuItem } from "./SideBarMenuItem";
 
@@ -46,6 +47,7 @@ const SidebarMenu = ({
   const location = useLocation();
   const { logout, userName, companyName, companyLogo } = useAuth();
   const ability = useAbility();
+  const { isPro } = usePlan();
   const menuSections = [
     {
       title: "Inicio",
@@ -178,6 +180,27 @@ const SidebarMenu = ({
         },
       ],
     },
+    ...(isPro
+      ? [
+          {
+            title: "Tienda online",
+            items: [
+              {
+                label: "Configuración",
+                icon: <FiShoppingBag />,
+                to: ROUTES_MOCK.STORE,
+                permission: ["UPDATE_COMPANY"],
+              },
+              {
+                label: "Pedidos de la tienda",
+                icon: <RiStore3Line />,
+                to: `${ROUTES_MOCK.STORE}/pedidos`,
+                permission: [],
+              },
+            ],
+          },
+        ]
+      : []),
     {
       title: "Configuración",
       items: [

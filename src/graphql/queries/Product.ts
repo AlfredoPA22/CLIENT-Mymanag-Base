@@ -17,7 +17,11 @@ export const LIST_PRODUCT = gql`
       last_cost_price
       name
       image
+      images
+      show_in_store
       sale_price
+      store_price
+      store_discount_price
       status
       stock
       stock_type

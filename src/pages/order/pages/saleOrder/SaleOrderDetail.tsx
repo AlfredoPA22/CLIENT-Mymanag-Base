@@ -9,7 +9,14 @@ import { FC, useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { OrderSkeleton } from "../../../../components/skeleton/OrderSkeleton";
-import { APPROVE_SALE_ORDER, UPDATE_SALE_ORDER_DISCOUNT } from "../../../../graphql/mutations/SaleOrder";
+import {
+  APPROVE_SALE_ORDER,
+  UPDATE_SALE_ORDER_DISCOUNT,
+  UPDATE_SALE_ORDER_PAYMENT_METHOD,
+} from "../../../../graphql/mutations/SaleOrder";
+import DropdownInput from "../../../../components/dropdownInput/DropdownInput";
+import { saleOrderPaymentMethodOptions } from "../../utils/saleOrderPaymentMethodMock";
+import { salePaymentMethodOptions } from "../../utils/salePaymentMethodMock";
 import { CREATE_SALE_RETURN } from "../../../../graphql/mutations/SaleReturn";
 import { LIST_PRODUCT } from "../../../../graphql/queries/Product";
 import { FIND_SALE_ORDER, LIST_SALE_ORDER } from "../../../../graphql/queries/SaleOrder";
@@ -60,6 +67,10 @@ const SaleOrderDetail: FC<SaleOrderDetailProps> = ({ saleOrderId }) => {
   const [orderDiscountType, setOrderDiscountType] = useState<string>("NONE");
   const [orderDiscountValue, setOrderDiscountValue] = useState<number | null>(null);
 
+  const [showEditPaymentMethodDialog, setShowEditPaymentMethodDialog] = useState(false);
+  const [editPaymentMethod, setEditPaymentMethod] = useState("Contado");
+  const [editContadoPaymentMethod, setEditContadoPaymentMethod] = useState("Efectivo");
+
   const { data: returnData, refetch: refetchReturn } = useQuery(FIND_SALE_RETURN_BY_SALE_ORDER, {
     variables: { saleOrderId },
     fetchPolicy: "network-only",
@@ -105,6 +116,36 @@ const SaleOrderDetail: FC<SaleOrderDetailProps> = ({ saleOrderId }) => {
   const [updateSaleOrderDiscount] = useMutation(UPDATE_SALE_ORDER_DISCOUNT, {
     refetchQueries: [{ query: FIND_SALE_ORDER, variables: { saleOrderId } }],
   });
+
+  const [updateSaleOrderPaymentMethod] = useMutation(UPDATE_SALE_ORDER_PAYMENT_METHOD, {
+    refetchQueries: [{ query: FIND_SALE_ORDER, variables: { saleOrderId } }],
+  });
+
+  const handleOpenEditPaymentMethodDialog = () => {
+    setEditPaymentMethod(data?.findSaleOrder.payment_method ?? "Contado");
+    setEditContadoPaymentMethod(data?.findSaleOrder.contado_payment_method ?? "Efectivo");
+    setShowEditPaymentMethodDialog(true);
+  };
+
+  const handleSavePaymentMethod = async () => {
+    try {
+      dispatch(setIsBlocked(true));
+      await updateSaleOrderPaymentMethod({
+        variables: {
+          saleOrderId,
+          payment_method: editPaymentMethod,
+          contado_payment_method:
+            editPaymentMethod === "Contado" ? editContadoPaymentMethod : undefined,
+        },
+      });
+      setShowEditPaymentMethodDialog(false);
+      showToast({ detail: "Método de pago actualizado", severity: ToastSeverity.Success });
+    } catch (error: any) {
+      showToast({ detail: error.message, severity: ToastSeverity.Error });
+    } finally {
+      dispatch(setIsBlocked(false));
+    }
+  };
 
   const handleOpenApproveDialog = () => {
     setOrderDiscountType("NONE");
@@ -234,7 +275,7 @@ const SaleOrderDetail: FC<SaleOrderDetailProps> = ({ saleOrderId }) => {
             label="Volver a la lista"
             icon="pi pi-arrow-left"
             className="p-button-outlined"
-            onClick={() => navigate(ROUTES_MOCK.SALE_ORDERS)}
+            onClick={() => navigate(-1)}
           />
         }
       />
@@ -323,9 +364,24 @@ const SaleOrderDetail: FC<SaleOrderDetailProps> = ({ saleOrderId }) => {
             </div>
             <div className="flex flex-col">
               <span className="text-xs text-gray-400">Condición de pago</span>
-              <span className="text-base font-medium text-gray-700">
-                {data?.findSaleOrder.payment_method}
-              </span>
+              <div className="flex items-center gap-1">
+                <span className="text-base font-medium text-gray-700">
+                  {data?.findSaleOrder.payment_method}
+                </span>
+                {data?.findSaleOrder.status === orderStatus.BORRADOR && (
+                  <PermissionGuard permissions={["CREATE_SALE", "EDIT_SALE"]}>
+                    <Button
+                      icon="pi pi-pencil"
+                      size="small"
+                      severity="secondary"
+                      text
+                      rounded
+                      tooltip="Editar método de pago"
+                      onClick={handleOpenEditPaymentMethodDialog}
+                    />
+                  </PermissionGuard>
+                )}
+              </div>
               {data?.findSaleOrder.payment_method === "Contado" && (
                 <span className="text-xs text-gray-500 mt-0.5">
                   {data?.findSaleOrder.contado_payment_method ?? "No especificado"}
@@ -576,6 +632,49 @@ const SaleOrderDetail: FC<SaleOrderDetailProps> = ({ saleOrderId }) => {
               <span>{previewTotal.toFixed(2)} {currency}</span>
             </div>
           </div>
+        </div>
+      </Dialog>
+
+      {/* ── Dialog de edición de método de pago ─────────────────── */}
+      <Dialog
+        header={`Editar método de pago — ${data?.findSaleOrder.code}`}
+        visible={showEditPaymentMethodDialog}
+        onHide={() => setShowEditPaymentMethodDialog(false)}
+        style={{ width: "420px" }}
+        breakpoints={{ "640px": "95vw" }}
+        footer={
+          <div className="flex justify-end gap-2 pt-2">
+            <Button
+              label="Cancelar"
+              severity="secondary"
+              outlined
+              onClick={() => setShowEditPaymentMethodDialog(false)}
+            />
+            <Button label="Guardar" icon="pi pi-check" onClick={handleSavePaymentMethod} />
+          </div>
+        }
+      >
+        <div className="flex flex-col gap-4 pt-1">
+          <DropdownInput
+            label="Condición de pago"
+            name="editPaymentMethod"
+            optionLabel="label"
+            mandatory
+            options={saleOrderPaymentMethodOptions}
+            value={editPaymentMethod}
+            onChange={(e) => setEditPaymentMethod(e.value)}
+          />
+          {editPaymentMethod === "Contado" && (
+            <DropdownInput
+              label="Método de pago"
+              name="editContadoPaymentMethod"
+              optionLabel="label"
+              mandatory
+              options={salePaymentMethodOptions}
+              value={editContadoPaymentMethod}
+              onChange={(e) => setEditContadoPaymentMethod(e.value)}
+            />
+          )}
         </div>
       </Dialog>
 

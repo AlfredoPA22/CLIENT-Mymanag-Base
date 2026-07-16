@@ -3,6 +3,7 @@ import autoTable from "jspdf-autotable";
 import { ICompany } from "../../../utils/interfaces/Company";
 import { IPurchaseOrderToPDF } from "../../../utils/interfaces/PurchaseOrder";
 import { getDate } from "./getDate";
+import { buildSerialsRows, drawPaginatedFooter, withBottomRule } from "./pdfSerialsGrid";
 
 // ── Design tokens — sober, white-based ───────────────────────
 const INK: [number, number, number] = [30, 41, 59];
@@ -10,7 +11,6 @@ const INK_MID: [number, number, number] = [71, 85, 105];
 const INK_LIGHT: [number, number, number] = [148, 163, 184];
 const RULE: [number, number, number] = [203, 213, 225];
 const TABLE_HEAD: [number, number, number] = [241, 245, 249];
-const ROW_ALT: [number, number, number] = [248, 250, 252];
 const ACCENT: [number, number, number] = [160, 200, 46];
 
 const PAGE_W = 210;
@@ -143,22 +143,9 @@ export const generatePDF = async (
     ];
 
     const serials = detail.productSerial.map((s) => s.serial);
-    if (serials.length === 0) return [mainRow];
-
-    const serialRow = [
-      {
-        content: `Seriales: ${serials.join("   ·   ")}`,
-        colSpan: 6,
-        styles: {
-          fillColor: [248, 250, 252] as [number, number, number],
-          textColor: INK_LIGHT,
-          fontSize: 6.5,
-          fontStyle: "italic" as const,
-          cellPadding: { top: 2, right: 4, bottom: 2, left: 8 },
-        },
-      },
-    ];
-    return [mainRow, serialRow];
+    const block = [mainRow, ...buildSerialsRows(serials, 6, PAGE_W - 2 * MARGIN)];
+    block[block.length - 1] = withBottomRule(block[block.length - 1]);
+    return block;
   });
 
   autoTable(doc, {
@@ -170,12 +157,14 @@ export const generatePDF = async (
       fontSize: 7.5,
       halign: "center",
       cellPadding: { top: 4, right: 3, bottom: 4, left: 3 },
+      lineWidth: { top: 0, right: 0, bottom: 0.3, left: 0 },
+      lineColor: RULE,
     },
     body: rows,
     bodyStyles: { fontSize: 8, textColor: INK, cellPadding: 3 },
-    alternateRowStyles: { fillColor: ROW_ALT },
     startY: infoY + 30,
     theme: "plain",
+    rowPageBreak: "avoid",
     columnStyles: {
       0: { cellWidth: 26, halign: "center" },
       1: { cellWidth: 62 },
@@ -203,17 +192,8 @@ export const generatePDF = async (
     { align: "right" }
   );
 
-  // ── PAGE FOOTER ───────────────────────────────────────────
-  drawRule(doc, 283);
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(6.5);
-  doc.setTextColor(...INK_LIGHT);
-  doc.text(
-    `Generado el ${new Date().toLocaleDateString("es-ES", { day: "2-digit", month: "long", year: "numeric" })}`,
-    MARGIN,
-    287
-  );
-  doc.text("Página 1 de 1", PAGE_W - MARGIN, 287, { align: "right" });
+  // ── PAGE FOOTER (numeración real, se repite en cada página) ──
+  drawPaginatedFooter(doc, drawRule, INK_LIGHT, MARGIN, PAGE_W);
 
   doc.save(`${data.purchaseOrder.code}.pdf`);
 };

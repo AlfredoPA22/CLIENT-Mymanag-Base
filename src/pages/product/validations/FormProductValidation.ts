@@ -1,11 +1,28 @@
 import { number, object, string } from "yup";
 
+const storePricingFields = {
+  store_price: number().nullable().min(0.01, "El precio de tienda debe ser mayor a 0"),
+  store_discount_price: number()
+    .nullable()
+    .min(0.01, "El precio de descuento debe ser mayor a 0")
+    .test(
+      "discount-menor-que-store-price",
+      "El precio de descuento debe ser menor al precio de tienda",
+      function (value) {
+        const { store_price, sale_price } = this.parent;
+        const basePrice = store_price ?? sale_price;
+        return value == null || basePrice === undefined || value < basePrice;
+      }
+    ),
+};
+
 export const schemaFormProduct = object().shape({
   name: string().required("El nombre del producto es requerido"),
   category: string().required("Seleccione una categoria"),
   brand: string().required("Seleccione una marca"),
   stock_type: string().required("Seleccione un tipo de stock"),
   sale_price: number().required("El precio del producto es requerido"),
+  ...storePricingFields,
   min_stock: number()
     .required("El stock mínimo es requerido")
     .min(0, "El stock mínimo no puede ser negativo"),
@@ -31,6 +48,7 @@ export const schemaFormUpdateProduct = object().shape({
   brand: string().required("Seleccione una marca"),
   stock_type: string().required("Seleccione un tipo de stock"),
   sale_price: number().required("El precio del producto es requerido"),
+  ...storePricingFields,
   min_stock: number()
     .required("El stock mínimo es requerido")
     .min(0, "El stock mínimo no puede ser negativo"),

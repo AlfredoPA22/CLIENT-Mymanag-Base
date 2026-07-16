@@ -2,13 +2,15 @@ import { useMutation } from "@apollo/client";
 import { AutoCompleteChangeEvent } from "primereact/autocomplete";
 import { Button } from "primereact/button";
 import { InputNumberChangeEvent } from "primereact/inputnumber";
-import { FC, useEffect, useState } from "react";
+import { ChangeEvent, FC, useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { ActionMeta, SingleValue } from "react-select";
 import DropdownInput from "../../../../components/dropdownInput/DropdownInput";
 import FieldNumberInput from "../../../../components/FieldNumberInput/FieldNumberInput";
 import FieldSimpleFileUpload from "../../../../components/fileuploadInput/FileUploadInput";
+import FieldInputSwitch from "../../../../components/inputSwitch/FieldInputSwitch";
 import SelectInput from "../../../../components/SelectInput/SelectInput";
+import { FiX } from "react-icons/fi";
 import FieldTextareaInput from "../../../../components/textAreaInput/FieldTextareaInput";
 import FieldTextInput from "../../../../components/textInput/FieldTextInput";
 import { CREATE_BRAND } from "../../../../graphql/mutations/Brand";
@@ -80,13 +82,24 @@ const ProductForm: FC<ProductFormProps> = ({
   );
   const [selectedBrand, setSelectedBrand] = useState<IReactSelect | null>(null);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [galleryUrls, setGalleryUrls] = useState<string[]>(
+    productToEdit?.images || []
+  );
+  const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
+  const [galleryDirty, setGalleryDirty] = useState(false);
+  const [hasStorePrice, setHasStorePrice] = useState(
+    productToEdit?.store_price != null
+  );
 
   const initialValues: IProductInput = {
     name: productToEdit?.name || "",
     code: productToEdit?.code || "",
     description: productToEdit?.description || "",
     image: "",
+    show_in_store: productToEdit?.show_in_store ?? true,
     sale_price: productToEdit?.sale_price || 0,
+    store_price: productToEdit?.store_price ?? null,
+    store_discount_price: productToEdit?.store_discount_price ?? null,
     category: productToEdit?.category._id || "",
     brand: productToEdit?.brand._id || "",
     stock_type: productToEdit?.stock_type || stockType.SERIALIZADO,
@@ -94,11 +107,29 @@ const ProductForm: FC<ProductFormProps> = ({
     max_stock: productToEdit?.max_stock || 0,
   };
 
+  const handleToggleStorePrice = (checked: boolean) => {
+    setHasStorePrice(checked);
+    if (!checked) {
+      setFieldValue("store_price", null);
+      setFieldValue("store_discount_price", null);
+    }
+  };
+
   const onSubmit = async () => {
     if (selectedImage) {
       const data = await uploadImage(selectedImage);
       values.image = data;
     }
+
+    const newlyUploaded = await Promise.all(
+      galleryFiles.map((file) => uploadImage(file))
+    );
+    values.images = [...galleryUrls, ...newlyUploaded];
+    values.store_price = hasStorePrice ? values.store_price ?? null : null;
+    values.store_discount_price = hasStorePrice
+      ? values.store_discount_price ?? null
+      : null;
+
     if (productToEdit) {
       await updateProduct({
         variables: {
@@ -205,6 +236,24 @@ const ProductForm: FC<ProductFormProps> = ({
 
   const handleFileClear = () => {
     setSelectedImage(null);
+  };
+
+  const handleGallerySelect = (e: ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files ? Array.from(e.target.files) : [];
+    if (files.length === 0) return;
+    setGalleryFiles((prev) => [...prev, ...files]);
+    setGalleryDirty(true);
+    e.target.value = "";
+  };
+
+  const removeExistingGalleryImage = (index: number) => {
+    setGalleryUrls((prev) => prev.filter((_, i) => i !== index));
+    setGalleryDirty(true);
+  };
+
+  const removePendingGalleryFile = (index: number) => {
+    setGalleryFiles((prev) => prev.filter((_, i) => i !== index));
+    setGalleryDirty(true);
   };
 
   const {
@@ -347,6 +396,122 @@ const ProductForm: FC<ProductFormProps> = ({
             onFileClear={handleFileClear}
             file={selectedImage}
           />
+          <FieldInputSwitch
+            label="Mostrar en tienda online"
+            name="show_in_store"
+            checked={!!values.show_in_store}
+            onChange={(e) => setFieldValue("show_in_store", !!e.value)}
+          />
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-gray-700">
+            Galería de imágenes (opcional)
+          </label>
+          <div className="flex flex-wrap gap-3">
+            {galleryUrls.map((url, index) => (
+              <div
+                key={`existing-${url}`}
+                className="relative w-20 h-20 rounded-lg overflow-hidden border border-gray-200"
+              >
+                <img
+                  src={url}
+                  alt={`Imagen ${index + 1}`}
+                  className="w-full h-full object-cover"
+                />
+                <button
+                  type="button"
+                  onClick={() => removeExistingGalleryImage(index)}
+                  className="absolute top-0.5 right-0.5 bg-white/90 rounded-full p-0.5 shadow"
+                >
+                  <FiX size={12} />
+                </button>
+              </div>
+            ))}
+            {galleryFiles.map((file, index) => (
+              <div
+                key={`pending-${file.name}-${index}`}
+                className="relative w-20 h-20 rounded-lg overflow-hidden border border-gray-200"
+              >
+                <img
+                  src={URL.createObjectURL(file)}
+                  alt={file.name}
+                  className="w-full h-full object-cover"
+                />
+                <button
+                  type="button"
+                  onClick={() => removePendingGalleryFile(index)}
+                  className="absolute top-0.5 right-0.5 bg-white/90 rounded-full p-0.5 shadow"
+                >
+                  <FiX size={12} />
+                </button>
+              </div>
+            ))}
+            <label className="w-20 h-20 flex items-center justify-center rounded-lg border border-dashed border-gray-300 text-xs text-gray-400 cursor-pointer hover:border-[#A0C82E] hover:text-[#A0C82E]">
+              + Agregar
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                className="hidden"
+                onChange={handleGallerySelect}
+              />
+            </label>
+          </div>
+        </div>
+
+        <div className="space-y-2 border border-gray-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-700">
+                Precio especial para la tienda online
+              </p>
+              <p className="text-xs text-gray-500">
+                Si no lo activas, la tienda usa el precio de venta normal.
+              </p>
+            </div>
+            <FieldInputSwitch
+              label=""
+              name="hasStorePrice"
+              checked={hasStorePrice}
+              onChange={(e) => handleToggleStorePrice(!!e.value)}
+            />
+          </div>
+
+          {hasStorePrice && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+              <FieldNumberInput
+                label="Precio para la tienda"
+                name="store_price"
+                placeholder="Nuevo precio (mayor o menor al normal)"
+                value={values.store_price ?? null}
+                error={errors.store_price || ""}
+                onChange={(e: InputNumberChangeEvent) =>
+                  setFieldValue("store_price", e.value)
+                }
+              />
+              <FieldNumberInput
+                label="Precio con descuento (opcional)"
+                name="store_discount_price"
+                placeholder="Debe ser menor al precio de tienda"
+                value={values.store_discount_price ?? null}
+                error={errors.store_discount_price || ""}
+                onChange={(e: InputNumberChangeEvent) =>
+                  setFieldValue("store_discount_price", e.value)
+                }
+              />
+              {!!values.store_discount_price &&
+                !!values.store_price &&
+                values.store_discount_price < values.store_price && (
+                  <div className="md:col-span-2 text-sm text-green-700">
+                    {Math.round(
+                      (1 - values.store_discount_price / values.store_price) * 100
+                    )}
+                    % de descuento respecto al precio de tienda ({values.store_price})
+                  </div>
+                )}
+            </div>
+          )}
         </div>
       </section>
 
@@ -387,7 +552,7 @@ const ProductForm: FC<ProductFormProps> = ({
           type="submit"
           severity="success"
           label="Guardar"
-          disabled={!dirty || !isValid || isSubmitting}
+          disabled={(!dirty && !galleryDirty) || !isValid || isSubmitting}
         />
       </section>
     </form>

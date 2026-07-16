@@ -7,9 +7,13 @@ export interface IProduct {
   code: string;
   description: string;
   image: string;
+  images?: string[];
+  show_in_store?: boolean;
   last_cost_price: number;
   name: string;
   sale_price: number;
+  store_price?: number | null;
+  store_discount_price?: number | null;
   status: string;
   stock: number;
   category: ICategory;
@@ -24,7 +28,11 @@ export interface IProductInput {
   code?: string;
   description?: string;
   image?: string;
+  images?: string[];
+  show_in_store?: boolean;
   sale_price?: number;
+  store_price?: number | null;
+  store_discount_price?: number | null;
   category: string;
   brand: string;
   stock_type: stockType;

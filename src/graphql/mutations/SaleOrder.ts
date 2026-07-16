@@ -44,6 +44,27 @@ export const APPROVE_SALE_ORDER = gql`
   }
 `;
 
+export const UPDATE_SALE_ORDER_PAYMENT_METHOD = gql`
+  mutation UpdateSaleOrderPaymentMethod(
+    $saleOrderId: String!
+    $payment_method: String!
+    $contado_payment_method: String
+  ) {
+    updateSaleOrderPaymentMethod(
+      saleOrderId: $saleOrderId
+      updateSaleOrderPaymentMethodInput: {
+        payment_method: $payment_method
+        contado_payment_method: $contado_payment_method
+      }
+    ) {
+      _id
+      payment_method
+      contado_payment_method
+      is_paid
+    }
+  }
+`;
+
 export const UPDATE_SALE_ORDER_DISCOUNT = gql`
   mutation UpdateSaleOrderDiscount(
     $saleOrderId: String!

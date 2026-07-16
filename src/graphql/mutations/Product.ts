@@ -6,7 +6,11 @@ export const CREATE_PRODUCT = gql`
     $code: String!
     $description: String
     $image: String
+    $images: [String!]
+    $show_in_store: Boolean
     $sale_price: Float
+    $store_price: Float
+    $store_discount_price: Float
     $category: String!
     $brand: String!
     $stock_type: StockType!
@@ -19,7 +23,11 @@ export const CREATE_PRODUCT = gql`
         code: $code
         description: $description
         image: $image
+        images: $images
+        show_in_store: $show_in_store
         sale_price: $sale_price
+        store_price: $store_price
+        store_discount_price: $store_discount_price
         category: $category
         brand: $brand
         stock_type: $stock_type
@@ -47,8 +55,12 @@ export const UPDATE_PRODUCT = gql`
     $category: String!
     $name: String!
     $image: String!
+    $images: [String!]
+    $show_in_store: Boolean
     $description: String!
     $sale_price: Float!
+    $store_price: Float
+    $store_discount_price: Float
     $stock_type: StockType!
     $productId: String!
     $min_stock: Int!
@@ -59,11 +71,15 @@ export const UPDATE_PRODUCT = gql`
       updateProductInput: {
         code: $code
         image: $image
+        images: $images
+        show_in_store: $show_in_store
         brand: $brand
         category: $category
         name: $name
         description: $description
         sale_price: $sale_price
+        store_price: $store_price
+        store_discount_price: $store_discount_price
         stock_type: $stock_type
         min_stock: $min_stock
         max_stock: $max_stock

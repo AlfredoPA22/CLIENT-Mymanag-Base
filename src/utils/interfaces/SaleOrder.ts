@@ -47,3 +47,18 @@ export interface IFilterSaleOrderInput {
   client?: string;
   status?: string;
 }
+
+export interface IStoreOrderStatsProduct {
+  product: string;
+  quantity: number;
+  total: number;
+}
+
+export interface IStoreOrderStats {
+  totalOrders: number;
+  pendingOrders: number;
+  approvedOrders: number;
+  totalRevenue: number;
+  averageTicket: number;
+  topProducts: IStoreOrderStatsProduct[];
+}

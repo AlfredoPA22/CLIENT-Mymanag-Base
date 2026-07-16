@@ -26,6 +26,49 @@ export const LIST_SALE_ORDER = gql`
   }
 `;
 
+export const LIST_STORE_ORDERS = gql`
+  query ListStoreOrders {
+    listStoreOrders {
+      _id
+      code
+      client {
+        _id
+        code
+        fullName
+        phoneNumber
+      }
+      created_by {
+        _id
+        user_name
+      }
+      payment_method
+      contado_payment_method
+      is_paid
+      date
+      status
+      total
+      has_return
+    }
+  }
+`;
+
+export const STORE_ORDER_STATS = gql`
+  query StoreOrderStats {
+    storeOrderStats {
+      totalOrders
+      pendingOrders
+      approvedOrders
+      totalRevenue
+      averageTicket
+      topProducts {
+        product
+        quantity
+        total
+      }
+    }
+  }
+`;
+
 export const FIND_SALE_ORDER = gql`
   query FindSaleOrder($saleOrderId: String!) {
     findSaleOrder(saleOrderId: $saleOrderId) {
