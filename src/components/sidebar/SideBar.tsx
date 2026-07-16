@@ -195,7 +195,7 @@ const SidebarMenu = ({
                 label: "Pedidos de la tienda",
                 icon: <RiStore3Line />,
                 to: `${ROUTES_MOCK.STORE}/pedidos`,
-                permission: [],
+                permission: ["UPDATE_COMPANY"],
               },
             ],
           },

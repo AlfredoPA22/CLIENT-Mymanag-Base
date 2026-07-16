@@ -252,7 +252,7 @@ const PrivateRoutes: FC = () => {
             path={`${ROUTES_MOCK.STORE}/pedidos`}
             element={
               <PlanRoute>
-                <PermissionRoute permissions={["LIST_SALE"]}>
+                <PermissionRoute permissions={["UPDATE_COMPANY"]}>
                   <SaleOrderList storeOnly />
                 </PermissionRoute>
               </PlanRoute>
