@@ -2,6 +2,7 @@ import { useApolloClient } from "@apollo/client";
 import { Tag } from "primereact/tag";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import BarcodeScannerButton from "../../../../components/barcodeScanner/BarcodeScannerButton";
 import ProductImagePlaceholder from "../../../../components/ProductImagePlaceholder/ProductImagePlaceholder";
 import { SEARCH_PRODUCT } from "../../../../graphql/queries/Product";
 import { ROUTES_MOCK } from "../../../../routes/RouteMocks";
@@ -88,25 +89,28 @@ const SearchProductForm = ({ onSelect }: Props) => {
   return (
     <div className="flex flex-col gap-3">
       {/* Search input */}
-      <div className="relative">
-        <i className="pi pi-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm pointer-events-none" />
-        <input
-          autoFocus
-          type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Código, nombre, marca, categoría o serial..."
-          className="w-full pl-9 pr-9 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-transparent"
-        />
-        {query && (
-          <button
-            type="button"
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-            onClick={() => { setQuery(""); setSerialMatch(null); }}
-          >
-            <i className="pi pi-times text-xs" />
-          </button>
-        )}
+      <div className="flex items-center gap-2">
+        <div className="relative flex-1">
+          <i className="pi pi-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm pointer-events-none" />
+          <input
+            autoFocus
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Código, nombre, marca, categoría o serial..."
+            className="w-full pl-9 pr-9 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-transparent"
+          />
+          {query && (
+            <button
+              type="button"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              onClick={() => { setQuery(""); setSerialMatch(null); }}
+            >
+              <i className="pi pi-times text-xs" />
+            </button>
+          )}
+        </div>
+        <BarcodeScannerButton onScan={(value) => setQuery(value)} />
       </div>
 
       {/* Hint */}
