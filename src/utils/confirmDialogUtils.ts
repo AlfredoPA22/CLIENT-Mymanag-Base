@@ -10,6 +10,8 @@ export const confirmDialogAction = (
     message: message,
     header: "Confirmar accion",
     icon: "pi pi-info-circle",
+    // TODO: remove comment if you update version of primereact
+    // defaultFocus: 'reject',
     acceptClassName: "p-button-danger",
     rejectClassName: "p-button-info",
     draggable: false,
