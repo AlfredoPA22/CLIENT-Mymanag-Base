@@ -150,6 +150,7 @@ const BarcodeScannerButton = ({ onScan, className = "" }: BarcodeScannerButtonPr
   const handleResizeMove = (e: PointerEvent<HTMLDivElement>) => {
     const drag = dragRef.current;
     if (!drag) return;
+    e.preventDefault();
 
     const dx = (e.clientX - drag.startX) * 2;
     const dy = (e.clientY - drag.startY) * 2;
@@ -205,7 +206,7 @@ const BarcodeScannerButton = ({ onScan, className = "" }: BarcodeScannerButtonPr
                 onPointerDown={handleResizeStart}
                 onPointerMove={handleResizeMove}
                 onPointerUp={handleResizeEnd}
-                className="pointer-events-auto absolute -bottom-2 -right-2 flex h-7 w-7 cursor-nwse-resize items-center justify-center rounded-full border-2 border-white bg-primary shadow"
+                className="pointer-events-auto absolute -bottom-2 -right-2 flex h-7 w-7 touch-none select-none items-center justify-center rounded-full border-2 border-white bg-primary shadow cursor-nwse-resize"
               >
                 <i className="pi pi-arrows-alt text-[10px] text-white" />
               </div>
