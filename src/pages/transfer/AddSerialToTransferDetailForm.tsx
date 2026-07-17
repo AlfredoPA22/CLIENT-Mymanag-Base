@@ -1,6 +1,7 @@
 import { useMutation } from "@apollo/client";
 import { Button } from "primereact/button";
 import { FC, useRef } from "react";
+import BarcodeScannerButton from "../../components/barcodeScanner/BarcodeScannerButton";
 import FieldTextInput from "../../components/textInput/FieldTextInput";
 import { ADD_SERIAL_TO_TRANSFER_DETAIL } from "../../graphql/mutations/ProductTransfer";
 import { LIST_PRODUCT_TRANSFER_DETAIL } from "../../graphql/queries/ProductTransfer";
@@ -60,18 +61,21 @@ const AddSerialToTransferDetailForm: FC<AddSerialToTransferDetailFormProps> = ({
       onSubmit={handleSubmit}
       className="flex flex-col md:flex-row gap-3 items-end mb-4"
     >
-      <div className="flex-1">
-        <FieldTextInput
-          label="Serial"
-          type="text"
-          name="serial"
-          mandatory
-          placeholder="Ingresá el serial"
-          inputRef={serialInputRef}
-          value={values.serial}
-          error={errors.serial}
-          onChange={handleChange}
-        />
+      <div className="flex-1 flex items-end gap-2">
+        <div className="flex-1">
+          <FieldTextInput
+            label="Serial"
+            type="text"
+            name="serial"
+            mandatory
+            placeholder="Ingresá el serial"
+            inputRef={serialInputRef}
+            value={values.serial}
+            error={errors.serial}
+            onChange={handleChange}
+          />
+        </div>
+        <BarcodeScannerButton onScan={(value) => setFieldValue("serial", value)} />
       </div>
       <Button
         type="submit"

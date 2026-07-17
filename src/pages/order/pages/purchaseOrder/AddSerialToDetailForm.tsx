@@ -1,6 +1,7 @@
 import { useMutation } from "@apollo/client";
 import { Button } from "primereact/button";
 import { FC, useRef, useState } from "react";
+import BarcodeScannerButton from "../../../../components/barcodeScanner/BarcodeScannerButton";
 import FieldTextInput from "../../../../components/textInput/FieldTextInput";
 import { ADD_SERIAL_TO_PURCHASE_ORDER_DETAIL } from "../../../../graphql/mutations/PurchaseOrderDetail";
 import {
@@ -145,18 +146,21 @@ const AddSerialToDetailForm: FC<AddSerialToDetailFormProps> = ({
           value={selectedWarehouse}
         />
       </div>
-      <div className="col-span-2">
-        <FieldTextInput
-          label="Serial"
-          type="text"
-          name="serial"
-          mandatory
-          placeholder="Ingresa el serial"
-          inputRef={serialInputRef}
-          value={values.serial}
-          error={errors.serial ? errors.serial : ""}
-          onChange={handleChange}
-        />
+      <div className="col-span-2 flex items-end gap-2">
+        <div className="flex-1">
+          <FieldTextInput
+            label="Serial"
+            type="text"
+            name="serial"
+            mandatory
+            placeholder="Ingresa el serial"
+            inputRef={serialInputRef}
+            value={values.serial}
+            error={errors.serial ? errors.serial : ""}
+            onChange={handleChange}
+          />
+        </div>
+        <BarcodeScannerButton onScan={(value) => setFieldValue("serial", value)} />
       </div>
 
       <section className="flex justify-center items-center w-full md:w-auto">
