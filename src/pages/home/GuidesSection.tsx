@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { useFullProcessTour } from "../../hooks/useFullProcessTour";
 import { useTour } from "../../hooks/useTour";
@@ -14,6 +15,7 @@ interface GuideCard {
 const GuidesSection = () => {
   const { startPurchaseTour, startSaleTour, startTransferTour } = useFullProcessTour();
   const { schedulePageTour } = useTour();
+  const [isOpen, setIsOpen] = useState(false);
 
   const guides: GuideCard[] = [
     {
@@ -65,52 +67,65 @@ const GuidesSection = () => {
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex items-center gap-2">
-        <span className="text-lg">🎓</span>
-        <h2 className="text-lg font-bold text-slate-800">Guías del sistema</h2>
-        <span className="text-xs text-slate-400 font-normal ml-1">
-          — aprende a usar cada módulo paso a paso
-        </span>
-      </div>
+      <button
+        type="button"
+        onClick={() => setIsOpen((v) => !v)}
+        className="flex items-center gap-3 bg-white border border-slate-200 rounded-xl shadow-sm px-4 py-3 text-left select-none hover:bg-slate-50 hover:border-slate-300 transition-colors duration-150"
+      >
+        <span className="text-xl">🎓</span>
+        <div className="flex-1 min-w-0">
+          <h2 className="text-sm font-bold text-slate-800 leading-tight">Guías del sistema</h2>
+          <p className="text-xs text-slate-400 leading-tight mt-0.5">
+            {guides.length} guías paso a paso — toca para {isOpen ? "ocultar" : "ver"}
+          </p>
+        </div>
+        <i
+          className={`pi pi-chevron-down text-slate-400 transition-transform duration-200 ${
+            isOpen ? "rotate-180" : ""
+          }`}
+        />
+      </button>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
-        {guides.map((guide, i) => (
-          <motion.div
-            key={i}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.05, duration: 0.25 }}
-            className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 flex flex-col gap-3 hover:shadow-md hover:border-slate-200 transition-all duration-200"
-          >
-            <div className="flex items-start justify-between gap-2">
-              <div className="flex items-center gap-2.5">
-                <span className="text-2xl leading-none">{guide.emoji}</span>
-                <h3 className="text-sm font-bold text-slate-800 leading-tight">
-                  {guide.title}
-                </h3>
-              </div>
-              <span
-                className={`text-[10px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap flex-shrink-0 ${guide.badgeColor}`}
-              >
-                {guide.badge}
-              </span>
-            </div>
-
-            <p className="text-xs text-slate-500 leading-relaxed flex-grow">
-              {guide.description}
-            </p>
-
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.97 }}
-              onClick={guide.onStart}
-              className="w-full py-2 rounded-xl text-xs font-semibold bg-[#A0C82E] text-white hover:bg-[#8db526] transition-colors duration-150 shadow-sm"
+      {isOpen && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
+          {guides.map((guide, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.05, duration: 0.25 }}
+              className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 flex flex-col gap-3 hover:shadow-md hover:border-slate-200 transition-all duration-200"
             >
-              ▶ Iniciar guía
-            </motion.button>
-          </motion.div>
-        ))}
-      </div>
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex items-center gap-2.5">
+                  <span className="text-2xl leading-none">{guide.emoji}</span>
+                  <h3 className="text-sm font-bold text-slate-800 leading-tight">
+                    {guide.title}
+                  </h3>
+                </div>
+                <span
+                  className={`text-[10px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap flex-shrink-0 ${guide.badgeColor}`}
+                >
+                  {guide.badge}
+                </span>
+              </div>
+
+              <p className="text-xs text-slate-500 leading-relaxed flex-grow">
+                {guide.description}
+              </p>
+
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.97 }}
+                onClick={guide.onStart}
+                className="w-full py-2 rounded-xl text-xs font-semibold bg-[#A0C82E] text-white hover:bg-[#8db526] transition-colors duration-150 shadow-sm"
+              >
+                ▶ Iniciar guía
+              </motion.button>
+            </motion.div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

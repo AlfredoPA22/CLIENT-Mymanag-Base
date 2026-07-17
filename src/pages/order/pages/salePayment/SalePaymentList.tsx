@@ -8,6 +8,7 @@ import { FC, useState } from "react";
 import { useDispatch } from "react-redux";
 import Table from "../../../../components/datatable/Table";
 import LabelInput from "../../../../components/labelInput/LabelInput";
+import RowActionButtons, { RowAction } from "../../../../components/table/RowActionButtons";
 import TableSkeleton from "../../../../components/skeleton/TableSkeleton";
 import { DELETE_SALE_PAYMENT } from "../../../../graphql/mutations/SalePayment";
 import { LIST_SALE_ORDER } from "../../../../graphql/queries/SaleOrder";
@@ -108,15 +109,13 @@ const SalePaymentList: FC<SalePaymentListProps> = ({
     });
   };
 
+  const buildSalePaymentActions = (rowData: ISalePayment): RowAction[] => [
+    { label: "Imprimir comprobante", icon: "pi pi-download", severity: "warning", onClick: () => generatePDF(rowData, currency, detailSalePayment) },
+    { label: "Anular y eliminar pago", icon: "pi pi-trash", severity: "danger", onClick: () => confirmDeleteSalePayment(rowData._id) },
+  ];
+
   const actionBodyTemplate = (rowData: ISalePayment) => (
-    <div className="flex justify-center gap-2">
-      <Button tooltip="Imprimir comprobante" tooltipOptions={{ position: "left" }}
-        icon="pi pi-download" raised severity="warning"
-        onClick={() => generatePDF(rowData, currency, detailSalePayment)} />
-      <Button tooltip="Anular y eliminar pago" tooltipOptions={{ position: "left" }}
-        icon="pi pi-trash" raised severity="danger"
-        onClick={() => confirmDeleteSalePayment(rowData._id)} />
-    </div>
+    <RowActionButtons actions={buildSalePaymentActions(rowData)} />
   );
 
   const [columns] = useState<DataTableColumn<ISalePayment>[]>([
@@ -181,12 +180,7 @@ const SalePaymentList: FC<SalePaymentListProps> = ({
             )}
             <div className="flex items-center justify-between mt-2">
               <span className="text-base font-bold text-green-700">{item.amount} {currency}</span>
-              <div className="flex gap-2">
-                <Button icon="pi pi-download" size="small" severity="warning" raised
-                  onClick={() => generatePDF(item, currency, detailSalePayment)} />
-                <Button icon="pi pi-trash" size="small" severity="danger" raised
-                  onClick={() => confirmDeleteSalePayment(item._id)} />
-              </div>
+              <RowActionButtons actions={buildSalePaymentActions(item)} size="small" />
             </div>
           </div>
         ))}

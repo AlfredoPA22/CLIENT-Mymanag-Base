@@ -103,7 +103,7 @@ const StoreSettings = () => {
   )?.name;
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="p-4 max-w-3xl mx-auto">
       <SectionHeader
         title="Tienda online"
         subtitle="Administra tu tienda pública de cara al cliente final"

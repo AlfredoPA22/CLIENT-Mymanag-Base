@@ -11,6 +11,7 @@ import { Tag } from "primereact/tag";
 import { useState } from "react";
 import Table from "../../../../components/datatable/Table";
 import LoadingSpinner from "../../../../components/LoadingSpinner/LoadingSpinner";
+import RowActionButtons, { RowAction } from "../../../../components/table/RowActionButtons";
 import { textEditor } from "../../../../components/textEditor/textEditor";
 import {
   DELETE_BRAND,
@@ -103,21 +104,13 @@ const BrandList = () => {
     }
   };
 
-  const actionBodyTemplate = (rowData: IBrand) => {
-    return (
-      <div className="flex justify-center gap-2">
-        <Button
-          tooltip="eliminar marca"
-          tooltipOptions={{ position: "left" }}
-          icon="pi pi-trash"
-          raised
-          severity="danger"
-          aria-label="Cancel"
-          onClick={() => handleDeleteBrand(rowData._id)}
-        />
-      </div>
-    );
-  };
+  const buildBrandActions = (rowData: IBrand): RowAction[] => [
+    { label: "Eliminar marca", icon: "pi pi-trash", severity: "danger", onClick: () => handleDeleteBrand(rowData._id) },
+  ];
+
+  const actionBodyTemplate = (rowData: IBrand) => (
+    <RowActionButtons actions={buildBrandActions(rowData)} />
+  );
 
   const handleSelectionChange = (e: DataTableSelectionSingleChangeEvent<IBrand[]>) => {
     setCurrentBrand(e.value);
@@ -311,20 +304,13 @@ const BrandList = () => {
                 <span className="text-xs text-gray-500">
                   {item.count_product} producto{item.count_product !== 1 ? "s" : ""}
                 </span>
-                <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
-                  <Button
-                    icon="pi pi-pencil"
+                <div onClick={(e) => e.stopPropagation()}>
+                  <RowActionButtons
                     size="small"
-                    severity="secondary"
-                    raised
-                    onClick={() => handleMobileEdit(item)}
-                  />
-                  <Button
-                    icon="pi pi-trash"
-                    size="small"
-                    severity="danger"
-                    raised
-                    onClick={() => handleDeleteBrand(item._id)}
+                    actions={[
+                      { label: "Editar marca", icon: "pi pi-pencil", severity: "secondary", onClick: () => handleMobileEdit(item) },
+                      ...buildBrandActions(item),
+                    ]}
                   />
                 </div>
               </div>

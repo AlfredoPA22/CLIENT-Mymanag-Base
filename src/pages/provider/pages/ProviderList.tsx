@@ -9,6 +9,7 @@ import { useState } from "react";
 import { useDispatch } from "react-redux";
 import Table from "../../../components/datatable/Table";
 import LoadingSpinner from "../../../components/LoadingSpinner/LoadingSpinner";
+import RowActionButtons, { RowAction } from "../../../components/table/RowActionButtons";
 import { textEditor } from "../../../components/textEditor/textEditor";
 import {
   DELETE_PROVIDER,
@@ -69,17 +70,12 @@ const ProviderList = () => {
     }
   };
 
+  const buildProviderActions = (rowData: IProvider): RowAction[] => [
+    { label: "Eliminar proveedor", icon: "pi pi-trash", severity: "danger", onClick: () => handleDeleteProvider(rowData._id) },
+  ];
+
   const actionBodyTemplate = (rowData: IProvider) => (
-    <div className="flex justify-center gap-2">
-      <Button
-        tooltip="Eliminar proveedor"
-        tooltipOptions={{ position: "left" }}
-        icon="pi pi-trash"
-        raised
-        severity="danger"
-        onClick={() => handleDeleteProvider(rowData._id)}
-      />
-    </div>
+    <RowActionButtons actions={buildProviderActions(rowData)} />
   );
 
   const onRowEditComplete = async (e: DataTableRowEditCompleteEvent) => {
@@ -270,20 +266,13 @@ const ProviderList = () => {
               </div>
             )}
 
-            <div className="flex gap-2 mt-2 justify-end">
-              <Button
-                icon="pi pi-pencil"
+            <div className="flex justify-end mt-2">
+              <RowActionButtons
                 size="small"
-                severity="secondary"
-                raised
-                onClick={() => handleMobileEdit(item)}
-              />
-              <Button
-                icon="pi pi-trash"
-                size="small"
-                severity="danger"
-                raised
-                onClick={() => handleDeleteProvider(item._id)}
+                actions={[
+                  { label: "Editar proveedor", icon: "pi pi-pencil", severity: "secondary", onClick: () => handleMobileEdit(item) },
+                  ...buildProviderActions(item),
+                ]}
               />
             </div>
           </div>

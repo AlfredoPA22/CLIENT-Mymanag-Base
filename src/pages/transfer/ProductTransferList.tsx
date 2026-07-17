@@ -9,6 +9,7 @@ import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import LoadingSpinner from "../../components/LoadingSpinner/LoadingSpinner";
 import Table from "../../components/datatable/Table";
+import RowActionButtons, { RowAction } from "../../components/table/RowActionButtons";
 import { DELETE_PRODUCT_TRANSFER } from "../../graphql/mutations/ProductTransfer";
 import { LIST_PRODUCT_TRANSFER } from "../../graphql/queries/ProductTransfer";
 import useTableGlobalFilter from "../../hooks/useTableGlobalFilter";
@@ -89,29 +90,30 @@ const ProductTransferList = () => {
     </span>
   );
 
+  const buildTransferActions = (rowData: IProductTransfer): RowAction[] => {
+    const actions: RowAction[] = [];
+    const isBorrador = rowData.status === orderStatus.BORRADOR;
+    if (isBorrador && canEdit) {
+      actions.push({
+        label: "Editar transferencia",
+        icon: "pi pi-pencil",
+        severity: "info",
+        onClick: () => navigate(`${ROUTES_MOCK.TRANSFERS}${ROUTES_MOCK.EDIT_TRANSFER}/${rowData._id}`),
+      });
+    }
+    if (isBorrador && canDelete) {
+      actions.push({
+        label: "Eliminar transferencia",
+        icon: "pi pi-trash",
+        severity: "danger",
+        onClick: () => confirmDelete(rowData._id),
+      });
+    }
+    return actions;
+  };
+
   const actionBodyTemplate = (rowData: IProductTransfer) => (
-    <div className="flex justify-center gap-2">
-      {rowData.status === orderStatus.BORRADOR && canEdit && (
-        <Button
-          tooltip="Editar transferencia"
-          icon="pi pi-pencil"
-          raised
-          severity="info"
-          onClick={() =>
-            navigate(`${ROUTES_MOCK.TRANSFERS}${ROUTES_MOCK.EDIT_TRANSFER}/${rowData._id}`)
-          }
-        />
-      )}
-      {rowData.status === orderStatus.BORRADOR && canDelete && (
-        <Button
-          tooltip="Eliminar transferencia"
-          icon="pi pi-trash"
-          raised
-          severity="danger"
-          onClick={() => confirmDelete(rowData._id)}
-        />
-      )}
-    </div>
+    <RowActionButtons actions={buildTransferActions(rowData)} />
   );
 
   const handleSelectionChange = (
@@ -211,27 +213,8 @@ const ProductTransferList = () => {
                 <span>{item.created_by?.user_name}</span>
               </div>
               {isBorrador && (canEdit || canDelete) && (
-                <div className="flex gap-2 mt-2" onClick={(e) => e.stopPropagation()}>
-                  {canEdit && (
-                    <Button
-                      icon="pi pi-pencil"
-                      size="small"
-                      severity="info"
-                      raised
-                      onClick={() =>
-                        navigate(`${ROUTES_MOCK.TRANSFERS}${ROUTES_MOCK.EDIT_TRANSFER}/${item._id}`)
-                      }
-                    />
-                  )}
-                  {canDelete && (
-                    <Button
-                      icon="pi pi-trash"
-                      size="small"
-                      severity="danger"
-                      raised
-                      onClick={() => confirmDelete(item._id)}
-                    />
-                  )}
+                <div className="mt-2" onClick={(e) => e.stopPropagation()}>
+                  <RowActionButtons actions={buildTransferActions(item)} size="small" />
                 </div>
               )}
             </div>

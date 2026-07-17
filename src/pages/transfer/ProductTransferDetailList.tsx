@@ -1,5 +1,4 @@
 import { useMutation, useQuery } from "@apollo/client";
-import { Button } from "primereact/button";
 import { Card } from "primereact/card";
 import { Dialog } from "primereact/dialog";
 import { Tag } from "primereact/tag";
@@ -8,6 +7,7 @@ import { useDispatch } from "react-redux";
 import Table from "../../components/datatable/Table";
 import TableSkeleton from "../../components/skeleton/TableSkeleton";
 import TextLink from "../../components/TextLink/TextLink";
+import RowActionButtons, { RowAction } from "../../components/table/RowActionButtons";
 import { DELETE_PRODUCT_FROM_TRANSFER } from "../../graphql/mutations/ProductTransfer";
 import { LIST_PRODUCT_TRANSFER_DETAIL } from "../../graphql/queries/ProductTransfer";
 import useTableGlobalFilter from "../../hooks/useTableGlobalFilter";
@@ -96,27 +96,29 @@ const ProductTransferDetailList: FC<ProductTransferDetailListProps> = ({
     return <Tag severity={complete ? "success" : "warning"} value={`${assigned} / ${required}`} />;
   };
 
+  const buildTransferDetailActions = (rowData: IProductTransferDetail): RowAction[] => {
+    const actions: RowAction[] = [];
+    if (rowData.product.stock_type === stockType.SERIALIZADO) {
+      actions.push({
+        label: editMode ? "Gestionar seriales" : "Ver seriales",
+        icon: "pi pi-cart-plus",
+        severity: "success",
+        onClick: () => openSerialDialog(rowData._id),
+      });
+    }
+    if (editMode) {
+      actions.push({
+        label: "Eliminar producto",
+        icon: "pi pi-trash",
+        severity: "danger",
+        onClick: () => handleDeleteProduct(rowData._id),
+      });
+    }
+    return actions;
+  };
+
   const actionBodyTemplate = (rowData: IProductTransferDetail) => (
-    <div className="flex justify-center gap-2">
-      {rowData.product.stock_type === stockType.SERIALIZADO && (
-        <Button
-          tooltip={editMode ? "Gestionar seriales" : "Ver seriales"}
-          icon="pi pi-cart-plus"
-          raised
-          severity="success"
-          onClick={() => openSerialDialog(rowData._id)}
-        />
-      )}
-      {editMode && (
-        <Button
-          tooltip="Eliminar producto"
-          icon="pi pi-trash"
-          raised
-          severity="danger"
-          onClick={() => handleDeleteProduct(rowData._id)}
-        />
-      )}
-    </div>
+    <RowActionButtons actions={buildTransferDetailActions(rowData)} />
   );
 
   const [columns] = useState<DataTableColumn<IProductTransferDetail>[]>([
@@ -214,26 +216,8 @@ const ProductTransferDetailList: FC<ProductTransferDetailListProps> = ({
                     </span>
                   </div>
 
-                  <div className="flex gap-2 mt-2">
-                    {isSerialized && (
-                      <Button
-                        icon="pi pi-cart-plus"
-                        size="small"
-                        severity="success"
-                        raised
-                        label={editMode ? "Seriales" : "Ver seriales"}
-                        onClick={() => openSerialDialog(item._id)}
-                      />
-                    )}
-                    {editMode && (
-                      <Button
-                        icon="pi pi-trash"
-                        size="small"
-                        severity="danger"
-                        raised
-                        onClick={() => handleDeleteProduct(item._id)}
-                      />
-                    )}
+                  <div className="mt-2">
+                    <RowActionButtons actions={buildTransferDetailActions(item)} size="small" />
                   </div>
                 </div>
               );

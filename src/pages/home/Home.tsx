@@ -1,6 +1,7 @@
 import { FC, useState } from "react";
 import { PermissionGuard } from "../auth/pages/PermissionGuard";
 import useAuth from "../auth/hooks/useAuth";
+import SearchAndNotifications from "../../components/topbar/SearchAndNotifications";
 import DateRangePicker from "./DateRangePicker";
 import GuidesSection from "./GuidesSection";
 import HeaderHome from "./HeaderHome";
@@ -38,7 +39,7 @@ const Home: FC = () => {
   return (
     <div id="dashboard-main" className="flex flex-col gap-4 w-full">
       {/* Greeting + filtro global de fecha */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white rounded-2xl border border-slate-100 shadow-sm px-6 py-5">
         <div>
           <h1 className="text-2xl font-bold text-slate-800">
             {getGreeting()},{" "}
@@ -49,7 +50,12 @@ const Home: FC = () => {
           <p className="text-sm text-slate-400 mt-0.5 capitalize">{dateLabel}</p>
         </div>
 
-        <DateRangePicker value={appliedRange} onChange={setAppliedRange} />
+        <div className="flex items-center gap-3">
+          <DateRangePicker value={appliedRange} onChange={setAppliedRange} />
+          <div className="hidden md:flex items-center gap-2">
+            <SearchAndNotifications />
+          </div>
+        </div>
       </div>
 
       <PermissionGuard permissions={["GENERAL_DATA"]}>

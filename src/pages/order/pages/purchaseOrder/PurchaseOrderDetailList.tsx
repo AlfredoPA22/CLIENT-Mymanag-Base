@@ -12,6 +12,7 @@ import LabelInput from "../../../../components/labelInput/LabelInput";
 import { numberEditor } from "../../../../components/numberEditor/numberEditor";
 import TableSkeleton from "../../../../components/skeleton/TableSkeleton";
 import TextLink from "../../../../components/TextLink/TextLink";
+import RowActionButtons, { RowAction } from "../../../../components/table/RowActionButtons";
 import {
   DELETE_PRODUCT_TO_PURCHASE_ORDER_DETAIL,
   UPDATE_PURCHASE_ORDER_DETAIL,
@@ -129,30 +130,40 @@ const PurchaseOrderDetailList: FC<PurchaseOrderDetailListProps> = ({
     }
   };
 
+  const buildDetailActions = (
+    rowData: IPurchaseOrderDetail,
+    includeEdit: boolean
+  ): RowAction[] => {
+    const actions: RowAction[] = [];
+    if (rowData.product.stock_type === stockType.SERIALIZADO) {
+      actions.push({
+        label: editMode ? "Agregar seriales" : "Ver seriales",
+        icon: "pi pi-cart-plus",
+        severity: "success",
+        onClick: () => { setCurrentPurchaseOrderDetail(rowData); setVisibleForm(true); },
+      });
+    }
+    if (editMode && includeEdit) {
+      actions.push({
+        label: "Editar detalle",
+        icon: "pi pi-pencil",
+        severity: "info",
+        onClick: () => { setMobileEditData({ ...rowData }); setMobileEditVisible(true); },
+      });
+    }
+    if (editMode) {
+      actions.push({
+        label: "Eliminar detalle",
+        icon: "pi pi-trash",
+        severity: "danger",
+        onClick: () => handleDeleteProduct(rowData._id),
+      });
+    }
+    return actions;
+  };
+
   const actionBodyTemplate = (rowData: IPurchaseOrderDetail) => (
-    <div className="flex justify-center gap-2">
-      {rowData.product.stock_type === stockType.SERIALIZADO && (
-        <Button
-          tooltip={editMode ? "Agregar seriales" : "Ver seriales"}
-          icon="pi pi-cart-plus"
-          raised
-          severity="success"
-          onClick={() => {
-            setCurrentPurchaseOrderDetail(rowData);
-            setVisibleForm(true);
-          }}
-        />
-      )}
-      {editMode && (
-        <Button
-          tooltip="eliminar detalle"
-          icon="pi pi-trash"
-          raised
-          severity="danger"
-          onClick={() => handleDeleteProduct(rowData._id)}
-        />
-      )}
-    </div>
+    <RowActionButtons actions={buildDetailActions(rowData, false)} />
   );
 
   const onRowEditComplete = async (e: DataTableRowEditCompleteEvent) => {
@@ -311,41 +322,8 @@ const PurchaseOrderDetailList: FC<PurchaseOrderDetailListProps> = ({
                     </p>
                   )}
 
-                  <div className="flex gap-2 mt-2">
-                    {isSerialized && (
-                      <Button
-                        icon="pi pi-cart-plus"
-                        size="small"
-                        severity="success"
-                        raised
-                        label={editMode ? "Seriales" : "Ver seriales"}
-                        onClick={() => {
-                          setCurrentPurchaseOrderDetail(item);
-                          setVisibleForm(true);
-                        }}
-                      />
-                    )}
-                    {editMode && (
-                      <>
-                        <Button
-                          icon="pi pi-pencil"
-                          size="small"
-                          severity="info"
-                          raised
-                          onClick={() => {
-                            setMobileEditData({ ...item });
-                            setMobileEditVisible(true);
-                          }}
-                        />
-                        <Button
-                          icon="pi pi-trash"
-                          size="small"
-                          severity="danger"
-                          raised
-                          onClick={() => handleDeleteProduct(item._id)}
-                        />
-                      </>
-                    )}
+                  <div className="mt-2">
+                    <RowActionButtons actions={buildDetailActions(item, true)} size="small" />
                   </div>
                 </div>
               );

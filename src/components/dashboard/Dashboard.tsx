@@ -1,15 +1,22 @@
 import { useState } from "react";
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import ChatBot from "../chatbot/ChatBot";
 import { useFullProcessTour } from "../../hooks/useFullProcessTour";
 import Navbar from "../navbar/NavBar";
 import SidebarMenu from "../sidebar/SideBar";
+import TopBar from "../topbar/TopBar";
 import TourFab from "../tour/TourFab";
+import { ROUTES_MOCK } from "../../routes/RouteMocks";
 
 const Dashboard = () => {
   const [visibleSidebar, setVisibleSidebar] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+  const { pathname } = useLocation();
   useFullProcessTour();
+
+  // En Inicio el buscador y las notificaciones ya están incrustados en la
+  // fila de saludo (ver Home.tsx) — no se duplican con la barra superior.
+  const isHomePage = pathname === ROUTES_MOCK.DASHBOARD;
 
   return (
     <div className="flex h-screen">
@@ -36,7 +43,10 @@ const Dashboard = () => {
           <Navbar onToggleSidebar={() => setVisibleSidebar(true)} />
         </div>
 
-        <main className="p-2 flex-1 overflow-auto">
+        {/* Barra superior (búsqueda global, notificaciones) solo en escritorio */}
+        {!isHomePage && <TopBar />}
+
+        <main className="p-4 md:p-6 flex-1 overflow-auto">
           <Outlet />
           <div className="hidden md:block">
             <TourFab />

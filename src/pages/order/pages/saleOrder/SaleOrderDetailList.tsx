@@ -30,6 +30,7 @@ import { setIsBlocked } from "../../../../redux/slices/blockUISlice";
 import useAuth from "../../../auth/hooks/useAuth";
 import TextLink from "../../../../components/TextLink/TextLink";
 import { ROUTES_MOCK } from "../../../../routes/RouteMocks";
+import RowActionButtons, { RowAction } from "../../../../components/table/RowActionButtons";
 
 interface SaleOrderDetailListProps {
   saleOrderId: string;
@@ -160,35 +161,41 @@ const SaleOrderDetailList: FC<SaleOrderDetailListProps> = ({
     }
   };
 
-  const actionBodyTemplate = (rowData: ISaleOrderDetail) => {
-    return (
-      <div className="flex justify-center gap-2">
-        {rowData.product.stock_type === stockType.SERIALIZADO && (
-          <Button
-            tooltip={editMode ? "Agregar seriales" : "Ver seriales"}
-            icon="pi pi-cart-plus"
-            raised
-            severity="success"
-            aria-label="Seriales"
-            onClick={() => {
-              setCurrentSaleOrderDetail(rowData);
-              setVisibleForm(true);
-            }}
-          />
-        )}
-        {editMode && (
-          <Button
-            tooltip="Eliminar detalle"
-            icon="pi pi-trash"
-            raised
-            severity="danger"
-            aria-label="Eliminar"
-            onClick={() => handleDeleteProduct(rowData._id)}
-          />
-        )}
-      </div>
-    );
+  const buildDetailActions = (
+    rowData: ISaleOrderDetail,
+    includeEdit: boolean
+  ): RowAction[] => {
+    const actions: RowAction[] = [];
+    if (rowData.product.stock_type === stockType.SERIALIZADO) {
+      actions.push({
+        label: editMode ? "Agregar seriales" : "Ver seriales",
+        icon: "pi pi-cart-plus",
+        severity: "success",
+        onClick: () => { setCurrentSaleOrderDetail(rowData); setVisibleForm(true); },
+      });
+    }
+    if (editMode && includeEdit) {
+      actions.push({
+        label: "Editar",
+        icon: "pi pi-pencil",
+        severity: "info",
+        onClick: () => handleMobileEdit(rowData),
+      });
+    }
+    if (editMode) {
+      actions.push({
+        label: "Eliminar detalle",
+        icon: "pi pi-trash",
+        severity: "danger",
+        onClick: () => handleDeleteProduct(rowData._id),
+      });
+    }
+    return actions;
   };
+
+  const actionBodyTemplate = (rowData: ISaleOrderDetail) => (
+    <RowActionButtons actions={buildDetailActions(rowData, false)} />
+  );
 
   const onRowEditComplete = async (e: DataTableRowEditCompleteEvent) => {
     try {
@@ -398,40 +405,8 @@ const SaleOrderDetailList: FC<SaleOrderDetailListProps> = ({
 
             {/* Acciones */}
             {(editMode || detail.product.stock_type === stockType.SERIALIZADO) && (
-              <div className="flex gap-2 mt-3 justify-end border-t pt-2">
-                {detail.product.stock_type === stockType.SERIALIZADO && (
-                  <Button
-                    tooltip={editMode ? "Agregar seriales" : "Ver seriales"}
-                    icon="pi pi-cart-plus"
-                    raised
-                    severity="success"
-                    size="small"
-                    onClick={() => {
-                      setCurrentSaleOrderDetail(detail);
-                      setVisibleForm(true);
-                    }}
-                  />
-                )}
-                {editMode && (
-                  <>
-                    <Button
-                      icon="pi pi-pencil"
-                      raised
-                      severity="info"
-                      size="small"
-                      tooltip="Editar"
-                      onClick={() => handleMobileEdit(detail)}
-                    />
-                    <Button
-                      icon="pi pi-trash"
-                      raised
-                      severity="danger"
-                      size="small"
-                      tooltip="Eliminar"
-                      onClick={() => handleDeleteProduct(detail._id)}
-                    />
-                  </>
-                )}
+              <div className="flex justify-end mt-3 border-t pt-2">
+                <RowActionButtons actions={buildDetailActions(detail, true)} size="small" />
               </div>
             )}
           </div>

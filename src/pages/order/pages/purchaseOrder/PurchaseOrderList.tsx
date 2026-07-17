@@ -10,6 +10,7 @@ import { useNavigate } from "react-router-dom";
 import Table from "../../../../components/datatable/Table";
 import LabelInput from "../../../../components/labelInput/LabelInput";
 import LoadingSpinner from "../../../../components/LoadingSpinner/LoadingSpinner";
+import RowActionButtons, { RowAction } from "../../../../components/table/RowActionButtons";
 import { DELETE_PURCHASE_ORDER } from "../../../../graphql/mutations/PurchaseOrder";
 import { LIST_PRODUCT } from "../../../../graphql/queries/Product";
 import {
@@ -128,74 +129,41 @@ const PurchaseOrderList = () => {
     }
   };
 
-  const actionBodyTemplate = (rowData: IPurchaseOrder) => {
-    if (rowData.status === orderStatus.BORRADOR) {
-      if (rowData.total === 0) {
-        return (
-          <div className="flex justify-center gap-2">
-            <Button
-              tooltip="Completar compra"
-              tooltipOptions={{ position: "left" }}
-              icon="pi pi-pencil"
-              raised
-              severity="info"
-              onClick={() => navigate(`${ROUTES_MOCK.PURCHASE_ORDERS}${ROUTES_MOCK.EDIT_PURCHASE_ORDER}/${rowData._id}`)}
-            />
-            <Button
-              tooltip="Eliminar compra"
-              tooltipOptions={{ position: "left" }}
-              icon="pi pi-trash"
-              raised
-              severity="danger"
-              onClick={() => confirmDeletePurchaseOrder(rowData._id)}
-            />
-          </div>
-        );
-      } else {
-        return (
-          <div className="flex justify-center gap-2">
-            <Button
-              tooltip="Completar compra"
-              tooltipOptions={{ position: "left" }}
-              icon="pi pi-pencil"
-              raised
-              severity="info"
-              onClick={() => navigate(`${ROUTES_MOCK.PURCHASE_ORDERS}${ROUTES_MOCK.EDIT_PURCHASE_ORDER}/${rowData._id}`)}
-            />
-            <Button
-              tooltip="Imprimir compra"
-              tooltipOptions={{ position: "left" }}
-              icon="pi pi-download"
-              raised
-              severity="warning"
-              onClick={() => handleGeneratePDF(rowData._id)}
-            />
-          </div>
-        );
-      }
-    } else {
-      return (
-        <div className="flex justify-center gap-2">
-          <Button
-            tooltip="Imprimir compra"
-            tooltipOptions={{ position: "left" }}
-            icon="pi pi-download"
-            raised
-            severity="warning"
-            onClick={() => handleGeneratePDF(rowData._id)}
-          />
-          <Button
-            tooltip="Eliminar compra"
-            tooltipOptions={{ position: "left" }}
-            icon="pi pi-trash"
-            raised
-            severity="danger"
-            onClick={() => confirmDeletePurchaseOrder(rowData._id)}
-          />
-        </div>
-      );
+  const buildPurchaseOrderActions = (rowData: IPurchaseOrder): RowAction[] => {
+    const isBorrador = rowData.status === orderStatus.BORRADOR;
+    const actions: RowAction[] = [];
+
+    if (isBorrador) {
+      actions.push({
+        label: "Completar compra",
+        icon: "pi pi-pencil",
+        severity: "info",
+        onClick: () => navigate(`${ROUTES_MOCK.PURCHASE_ORDERS}${ROUTES_MOCK.EDIT_PURCHASE_ORDER}/${rowData._id}`),
+      });
     }
+    if (!isBorrador || rowData.total > 0) {
+      actions.push({
+        label: "Imprimir compra",
+        icon: "pi pi-download",
+        severity: "warning",
+        onClick: () => handleGeneratePDF(rowData._id),
+      });
+    }
+    if (!isBorrador || rowData.total === 0) {
+      actions.push({
+        label: "Eliminar compra",
+        icon: "pi pi-trash",
+        severity: "danger",
+        onClick: () => confirmDeletePurchaseOrder(rowData._id),
+      });
+    }
+
+    return actions;
   };
+
+  const actionBodyTemplate = (rowData: IPurchaseOrder) => (
+    <RowActionButtons actions={buildPurchaseOrderActions(rowData)} />
+  );
 
   const handleSelectionChange = (e: DataTableSelectionSingleChangeEvent<IPurchaseOrder[]>) => {
     navigate(`${ROUTES_MOCK.PURCHASE_ORDERS}/detalle/${e.value._id}`);
@@ -250,7 +218,6 @@ const PurchaseOrderList = () => {
 
         {listPurchaseOrder.slice(0, mobilePage * MOBILE_PAGE_SIZE).map((item: IPurchaseOrder) => {
           const status = getStatus(item.status);
-          const isBorrador = item.status === orderStatus.BORRADOR;
           return (
             <div
               key={item._id}
@@ -278,32 +245,8 @@ const PurchaseOrderList = () => {
               <p className="text-sm font-bold text-green-700 mt-1">
                 {item.total} {currency}
               </p>
-              <div className="flex gap-2 mt-2" onClick={(e) => e.stopPropagation()}>
-                {isBorrador && (
-                  <Button
-                    icon="pi pi-pencil"
-                    size="small"
-                    severity="info"
-                    raised
-                    onClick={() => navigate(`${ROUTES_MOCK.PURCHASE_ORDERS}${ROUTES_MOCK.EDIT_PURCHASE_ORDER}/${item._id}`)}
-                  />
-                )}
-                <Button
-                  icon="pi pi-download"
-                  size="small"
-                  severity="warning"
-                  raised
-                  onClick={() => handleGeneratePDF(item._id)}
-                />
-                {(isBorrador && item.total === 0) || !isBorrador ? (
-                  <Button
-                    icon="pi pi-trash"
-                    size="small"
-                    severity="danger"
-                    raised
-                    onClick={() => confirmDeletePurchaseOrder(item._id)}
-                  />
-                ) : null}
+              <div className="mt-2" onClick={(e) => e.stopPropagation()}>
+                <RowActionButtons actions={buildPurchaseOrderActions(item)} size="small" />
               </div>
             </div>
           );

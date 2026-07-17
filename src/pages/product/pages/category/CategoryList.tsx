@@ -11,6 +11,7 @@ import { Tag } from "primereact/tag";
 import { useState } from "react";
 import Table from "../../../../components/datatable/Table";
 import LoadingSpinner from "../../../../components/LoadingSpinner/LoadingSpinner";
+import RowActionButtons, { RowAction } from "../../../../components/table/RowActionButtons";
 import { textEditor } from "../../../../components/textEditor/textEditor";
 import {
   DELETE_CATEGORY,
@@ -103,21 +104,13 @@ const CategoryList = () => {
     }
   };
 
-  const actionBodyTemplate = (rowData: ICategory) => {
-    return (
-      <div className="flex justify-center gap-2">
-        <Button
-          tooltip="eliminar categoria"
-          tooltipOptions={{ position: "left" }}
-          icon="pi pi-trash"
-          raised
-          severity="danger"
-          aria-label="Cancel"
-          onClick={() => handleDeleteCategory(rowData._id)}
-        />
-      </div>
-    );
-  };
+  const buildCategoryActions = (rowData: ICategory): RowAction[] => [
+    { label: "Eliminar categoria", icon: "pi pi-trash", severity: "danger", onClick: () => handleDeleteCategory(rowData._id) },
+  ];
+
+  const actionBodyTemplate = (rowData: ICategory) => (
+    <RowActionButtons actions={buildCategoryActions(rowData)} />
+  );
 
   const onRowEditComplete = async (e: DataTableRowEditCompleteEvent) => {
     try {
@@ -311,20 +304,13 @@ const CategoryList = () => {
                 <span className="text-xs text-gray-500">
                   {item.count_product} producto{item.count_product !== 1 ? "s" : ""}
                 </span>
-                <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
-                  <Button
-                    icon="pi pi-pencil"
+                <div onClick={(e) => e.stopPropagation()}>
+                  <RowActionButtons
                     size="small"
-                    severity="secondary"
-                    raised
-                    onClick={() => handleMobileEdit(item)}
-                  />
-                  <Button
-                    icon="pi pi-trash"
-                    size="small"
-                    severity="danger"
-                    raised
-                    onClick={() => handleDeleteCategory(item._id)}
+                    actions={[
+                      { label: "Editar categoria", icon: "pi pi-pencil", severity: "secondary", onClick: () => handleMobileEdit(item) },
+                      ...buildCategoryActions(item),
+                    ]}
                   />
                 </div>
               </div>

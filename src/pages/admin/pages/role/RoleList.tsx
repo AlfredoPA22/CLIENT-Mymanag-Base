@@ -6,6 +6,7 @@ import { Dialog } from "primereact/dialog";
 import { useState } from "react";
 import Table from "../../../../components/datatable/Table";
 import LoadingSpinner from "../../../../components/LoadingSpinner/LoadingSpinner";
+import RowActionButtons, { RowAction } from "../../../../components/table/RowActionButtons";
 import { DELETE_ROLE } from "../../../../graphql/mutations/Role";
 import { LIST_ROLE } from "../../../../graphql/queries/Role";
 import useTableGlobalFilter from "../../../../hooks/useTableGlobalFilter";
@@ -61,26 +62,23 @@ const RoleList = () => {
     }
   };
 
+  const buildRoleActions = (rowData: IRole): RowAction[] => [
+    {
+      label: "Editar permisos",
+      icon: "pi pi-lock",
+      severity: "info",
+      onClick: () => { setPermissionsRole(rowData); setVisiblePermissions(true); },
+    },
+    {
+      label: "Eliminar rol",
+      icon: "pi pi-trash",
+      severity: "danger",
+      onClick: () => handleDeleteRole(rowData._id),
+    },
+  ];
+
   const actionBodyTemplate = (rowData: IRole) => (
-    <div className="flex justify-center gap-2">
-      <Button
-        tooltip="Editar permisos"
-        tooltipOptions={{ position: "left" }}
-        icon="pi pi-lock"
-        raised
-        severity="info"
-        onClick={() => { setPermissionsRole(rowData); setVisiblePermissions(true); }}
-      />
-      <Button
-        tooltip="Eliminar rol"
-        tooltipOptions={{ position: "left" }}
-        icon="pi pi-trash"
-        raised
-        severity="danger"
-        aria-label="Cancel"
-        onClick={() => handleDeleteRole(rowData._id)}
-      />
-    </div>
+    <RowActionButtons actions={buildRoleActions(rowData)} />
   );
 
   const [columns] = useState<DataTableColumn<IRole>[]>([
@@ -161,25 +159,8 @@ const RoleList = () => {
               )}
             </div>
 
-            <div className="flex gap-2 mt-2 justify-end">
-              <Button
-                icon="pi pi-lock"
-                size="small"
-                severity="info"
-                raised
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setPermissionsRole(item);
-                  setVisiblePermissions(true);
-                }}
-              />
-              <Button
-                icon="pi pi-trash"
-                size="small"
-                severity="danger"
-                raised
-                onClick={(e) => { e.stopPropagation(); handleDeleteRole(item._id); }}
-              />
+            <div className="flex justify-end mt-2" onClick={(e) => e.stopPropagation()}>
+              <RowActionButtons actions={buildRoleActions(item)} size="small" />
             </div>
           </div>
         ))}

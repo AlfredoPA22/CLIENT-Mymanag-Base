@@ -11,6 +11,7 @@ import { Tag } from "primereact/tag";
 import { useState } from "react";
 import Table from "../../../../components/datatable/Table";
 import LoadingSpinner from "../../../../components/LoadingSpinner/LoadingSpinner";
+import RowActionButtons, { RowAction } from "../../../../components/table/RowActionButtons";
 import { textEditor } from "../../../../components/textEditor/textEditor";
 import {
   DELETE_WAREHOUSE,
@@ -103,21 +104,13 @@ const WarehouseList = () => {
     }
   };
 
-  const actionBodyTemplate = (rowData: IWarehouse) => {
-    return (
-      <div className="flex justify-center gap-2">
-        <Button
-          tooltip="eliminar almacén"
-          tooltipOptions={{ position: "left" }}
-          icon="pi pi-trash"
-          raised
-          severity="danger"
-          aria-label="Cancel"
-          onClick={() => handleDeleteWarehouse(rowData._id)}
-        />
-      </div>
-    );
-  };
+  const buildWarehouseActions = (rowData: IWarehouse): RowAction[] => [
+    { label: "Eliminar almacén", icon: "pi pi-trash", severity: "danger", onClick: () => handleDeleteWarehouse(rowData._id) },
+  ];
+
+  const actionBodyTemplate = (rowData: IWarehouse) => (
+    <RowActionButtons actions={buildWarehouseActions(rowData)} />
+  );
 
   const handleSelectionChange = (e: DataTableSelectionSingleChangeEvent<IWarehouse[]>) => {
     setCurrentWarehouse(e.value);
@@ -301,23 +294,14 @@ const WarehouseList = () => {
                   </Tag>
                 )}
               </div>
-              <div className="flex justify-end mt-2">
-                <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
-                  <Button
-                    icon="pi pi-pencil"
-                    size="small"
-                    severity="secondary"
-                    raised
-                    onClick={() => handleMobileEdit(item)}
-                  />
-                  <Button
-                    icon="pi pi-trash"
-                    size="small"
-                    severity="danger"
-                    raised
-                    onClick={() => handleDeleteWarehouse(item._id)}
-                  />
-                </div>
+              <div className="flex justify-end mt-2" onClick={(e) => e.stopPropagation()}>
+                <RowActionButtons
+                  size="small"
+                  actions={[
+                    { label: "Editar almacén", icon: "pi pi-pencil", severity: "secondary", onClick: () => handleMobileEdit(item) },
+                    ...buildWarehouseActions(item),
+                  ]}
+                />
               </div>
             </div>
           );

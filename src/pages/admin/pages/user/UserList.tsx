@@ -8,6 +8,7 @@ import { Tag } from "primereact/tag";
 import { useState } from "react";
 import Table from "../../../../components/datatable/Table";
 import LoadingSpinner from "../../../../components/LoadingSpinner/LoadingSpinner";
+import RowActionButtons, { RowAction } from "../../../../components/table/RowActionButtons";
 import {
   CHANGE_USER_STATUS,
   DELETE_USER,
@@ -128,31 +129,30 @@ const UserList = () => {
     }
   };
 
+  const buildUserActions = (rowData: IUser): RowAction[] => [
+    {
+      label: "Cambiar contraseña",
+      icon: "pi pi-lock",
+      severity: "warning",
+      onClick: () => { setCurrentUser(rowData); setVisibleChangePassword(true); },
+    },
+    {
+      label: "Editar usuario",
+      icon: "pi pi-pencil",
+      severity: "info",
+      onClick: () => { setCurrentUser(rowData); setVisibleForm(true); },
+    },
+    {
+      label: "Eliminar usuario",
+      icon: "pi pi-trash",
+      severity: "danger",
+      onClick: () => handleDeleteUser(rowData._id),
+    },
+  ];
+
   const actionBodyTemplate = (rowData: IUser) => (
     <div className="flex justify-center items-center gap-2">
-      <Button
-        icon="pi pi-lock"
-        className="p-button-rounded p-button-warning"
-        onClick={() => { setCurrentUser(rowData); setVisibleChangePassword(true); }}
-        tooltip="Cambiar contraseña"
-        tooltipOptions={{ position: "left" }}
-      />
-      <Button
-        icon="pi pi-pencil"
-        className="p-button-rounded p-button-info"
-        onClick={() => { setCurrentUser(rowData); setVisibleForm(true); }}
-        tooltip="Editar usuario"
-        tooltipOptions={{ position: "left" }}
-      />
-      <Button
-        tooltip="Eliminar usuario"
-        tooltipOptions={{ position: "left" }}
-        icon="pi pi-trash"
-        raised
-        severity="danger"
-        aria-label="Cancel"
-        onClick={() => handleDeleteUser(rowData._id)}
-      />
+      <RowActionButtons actions={buildUserActions(rowData)} />
       <InputSwitch
         checked={rowData.is_active}
         onChange={() => handleChangeUserStatus(rowData._id)}
@@ -267,28 +267,11 @@ const UserList = () => {
                 <p className="text-xs text-gray-400 mt-1 break-words">{item.role.description}</p>
               )}
 
-              <div className="flex items-center gap-2 mt-2 justify-end">
-                <Button
-                  icon="pi pi-lock"
-                  size="small"
-                  severity="warning"
-                  raised
-                  onClick={(e) => { e.stopPropagation(); setCurrentUser(item); setVisibleChangePassword(true); }}
-                />
-                <Button
-                  icon="pi pi-pencil"
-                  size="small"
-                  severity="info"
-                  raised
-                  onClick={(e) => { e.stopPropagation(); setCurrentUser(item); setVisibleForm(true); }}
-                />
-                <Button
-                  icon="pi pi-trash"
-                  size="small"
-                  severity="danger"
-                  raised
-                  onClick={(e) => { e.stopPropagation(); handleDeleteUser(item._id); }}
-                />
+              <div
+                className="flex items-center gap-2 mt-2 justify-end"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <RowActionButtons actions={buildUserActions(item)} size="small" />
                 <InputSwitch
                   checked={item.is_active}
                   onChange={(e) => { e.originalEvent?.stopPropagation(); handleChangeUserStatus(item._id); }}

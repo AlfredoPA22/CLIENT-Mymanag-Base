@@ -1,9 +1,9 @@
 import { useMutation, useQuery } from "@apollo/client";
-import { Button } from "primereact/button";
 import { Card } from "primereact/card";
 import { Tag } from "primereact/tag";
 import { FC, useEffect, useState } from "react";
 import Table from "../../../../components/datatable/Table";
+import RowActionButtons, { RowAction } from "../../../../components/table/RowActionButtons";
 import { ToastSeverity } from "../../../../utils/enums/toast.enum";
 import { IProductSerial } from "../../../../utils/interfaces/ProductSerial";
 import { DataTableColumn } from "../../../../utils/interfaces/Table";
@@ -14,7 +14,6 @@ import {
   LIST_SALE_ORDER_DETAIL,
   LIST_SERIAL_BY_SALE_ORDER_DETAIL,
 } from "../../../../graphql/queries/SaleOrderDetail";
-import { ISaleOrderDetail } from "../../../../utils/interfaces/SaleOrderDetail";
 import useTableGlobalFilter from "../../../../hooks/useTableGlobalFilter";
 import LoadingSpinner from "../../../../components/LoadingSpinner/LoadingSpinner";
 import { useDispatch } from "react-redux";
@@ -66,11 +65,12 @@ const SerialByDetailList: FC<SerialByDetailListProps> = ({
     }
   };
 
-  const actionBodyTemplate = (rowData: ISaleOrderDetail) => (
-    <div className="flex justify-center">
-      <Button tooltip="eliminar serial" icon="pi pi-trash" raised severity="danger"
-        onClick={() => handleDeleteSerial(rowData._id)} />
-    </div>
+  const buildSerialActions = (rowData: IProductSerial): RowAction[] => [
+    { label: "Eliminar serial", icon: "pi pi-trash", severity: "danger", onClick: () => handleDeleteSerial(rowData._id) },
+  ];
+
+  const actionBodyTemplate = (rowData: IProductSerial) => (
+    <RowActionButtons actions={buildSerialActions(rowData)} />
   );
 
   const statusBodyTemplate = (rowData: IProductSerial) => {
@@ -132,8 +132,7 @@ const SerialByDetailList: FC<SerialByDetailListProps> = ({
                     </span>
                   )}
                   {editMode && (
-                    <Button icon="pi pi-trash" size="small" severity="danger" raised
-                      onClick={() => handleDeleteSerial(row._id)} />
+                    <RowActionButtons actions={buildSerialActions(row)} size="small" />
                   )}
                 </div>
               </div>

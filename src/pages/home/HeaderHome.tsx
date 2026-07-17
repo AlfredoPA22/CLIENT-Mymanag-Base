@@ -4,10 +4,9 @@ import useGeneralData from "./hooks/useGeneralData";
 import HeaderHomeSkeleton from "../../components/skeleton/HeaderHomeSkeleton";
 import { ROUTES_MOCK } from "../../routes/RouteMocks";
 import useAuth from "../auth/hooks/useAuth";
-import { formatDateRange } from "../../utils/dateUtils";
 
-const card =
-  "bg-white rounded-2xl border border-slate-100 shadow-sm p-4 flex flex-col items-center justify-center text-center gap-3 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 group";
+const cardBase =
+  "relative bg-white rounded-2xl border border-slate-100 border-t-4 shadow-sm p-4 flex flex-col gap-3 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 group";
 
 interface HeaderHomeProps {
   startDate: Date;
@@ -17,21 +16,15 @@ interface HeaderHomeProps {
 const HeaderHome: FC<HeaderHomeProps> = ({ startDate, endDate }) => {
   const { generalData, loadingGeneralData } = useGeneralData(startDate, endDate);
   const { currency } = useAuth();
-  const rangeLabel = formatDateRange(startDate, endDate);
 
   if (loadingGeneralData) {
     return <HeaderHomeSkeleton />;
   }
 
   return (
-    <div className="flex flex-col gap-2">
-    <p className="text-xs text-slate-400 font-medium">
-      <i className="pi pi-calendar mr-1" />
-      Período: <span className="text-slate-600">{rangeLabel}</span>
-    </p>
     <div className="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-8 gap-3">
-      {/* Ventas del mes */}
-      <Link to={ROUTES_MOCK.SALE_ORDERS} className={card}>
+      {/* Ventas del período */}
+      <Link to={ROUTES_MOCK.SALE_ORDERS} className={`${cardBase} border-t-teal-400`}>
         <div className="w-11 h-11 rounded-xl bg-teal-50 group-hover:bg-teal-100 flex items-center justify-center transition-colors">
           <i className="pi pi-shopping-cart text-teal-500 text-lg" />
         </div>
@@ -46,7 +39,7 @@ const HeaderHome: FC<HeaderHomeProps> = ({ startDate, endDate }) => {
       </Link>
 
       {/* Total de ventas */}
-      <Link to={ROUTES_MOCK.SALE_ORDERS} className={card}>
+      <Link to={ROUTES_MOCK.SALE_ORDERS} className={`${cardBase} border-t-[#A0C82E]`}>
         <div className="w-11 h-11 rounded-xl bg-[#A0C82E]/10 group-hover:bg-[#A0C82E]/20 flex items-center justify-center transition-colors">
           <i className="pi pi-dollar text-[#A0C82E] text-lg" />
         </div>
@@ -66,7 +59,7 @@ const HeaderHome: FC<HeaderHomeProps> = ({ startDate, endDate }) => {
       {/* Productos */}
       <Link
         to={`${ROUTES_MOCK.INVENTORY}${ROUTES_MOCK.PRODUCTS}`}
-        className={card}
+        className={`${cardBase} border-t-indigo-400`}
       >
         <div className="w-11 h-11 rounded-xl bg-indigo-50 group-hover:bg-indigo-100 flex items-center justify-center transition-colors">
           <i className="pi pi-box text-indigo-500 text-lg" />
@@ -84,7 +77,7 @@ const HeaderHome: FC<HeaderHomeProps> = ({ startDate, endDate }) => {
       {/* Stock total */}
       <Link
         to={`${ROUTES_MOCK.INVENTORY}${ROUTES_MOCK.PRODUCTS}`}
-        className={card}
+        className={`${cardBase} border-t-sky-400`}
       >
         <div className="w-11 h-11 rounded-xl bg-sky-50 group-hover:bg-sky-100 flex items-center justify-center transition-colors">
           <i className="pi pi-inbox text-sky-500 text-lg" />
@@ -103,8 +96,13 @@ const HeaderHome: FC<HeaderHomeProps> = ({ startDate, endDate }) => {
       {/* Bajo stock */}
       <Link
         to={`${ROUTES_MOCK.INVENTORY}${ROUTES_MOCK.PRODUCTS}`}
-        className={card}
+        className={`${cardBase} border-t-orange-400`}
       >
+        {generalData.total_products_low > 0 && (
+          <span className="absolute top-3 right-3 text-[10px] font-bold text-orange-500 uppercase tracking-wide">
+            Atención
+          </span>
+        )}
         <div className="w-11 h-11 rounded-xl bg-orange-50 group-hover:bg-orange-100 flex items-center justify-center transition-colors">
           <i className="pi pi-exclamation-triangle text-orange-400 text-lg" />
         </div>
@@ -119,7 +117,7 @@ const HeaderHome: FC<HeaderHomeProps> = ({ startDate, endDate }) => {
       </Link>
 
       {/* Cuentas por cobrar - monto */}
-      <Link to={ROUTES_MOCK.SALE_ORDERS} className={card}>
+      <Link to={ROUTES_MOCK.SALE_ORDERS} className={`${cardBase} border-t-rose-400`}>
         <div className="w-11 h-11 rounded-xl bg-rose-50 group-hover:bg-rose-100 flex items-center justify-center transition-colors">
           <i className="pi pi-credit-card text-rose-500 text-lg" />
         </div>
@@ -137,7 +135,7 @@ const HeaderHome: FC<HeaderHomeProps> = ({ startDate, endDate }) => {
       </Link>
 
       {/* Cuentas por cobrar - cantidad */}
-      <Link to={ROUTES_MOCK.SALE_ORDERS} className={card}>
+      <Link to={ROUTES_MOCK.SALE_ORDERS} className={`${cardBase} border-t-slate-300`}>
         <div className="w-11 h-11 rounded-xl bg-rose-50 group-hover:bg-rose-100 flex items-center justify-center transition-colors">
           <i className="pi pi-file text-rose-400 text-lg" />
         </div>
@@ -155,7 +153,7 @@ const HeaderHome: FC<HeaderHomeProps> = ({ startDate, endDate }) => {
       {generalData.best_product ? (
         <Link
           to={`${ROUTES_MOCK.INVENTORY}${ROUTES_MOCK.PRODUCTS}/detalle/${generalData.best_product._id}`}
-          className={card}
+          className={`${cardBase} border-t-amber-400`}
         >
           <div className="w-11 h-11 rounded-xl bg-amber-50 group-hover:bg-amber-100 flex items-center justify-center transition-colors">
             <i className="pi pi-star text-amber-400 text-lg" />
@@ -173,7 +171,7 @@ const HeaderHome: FC<HeaderHomeProps> = ({ startDate, endDate }) => {
           </div>
         </Link>
       ) : (
-        <div className={card}>
+        <div className={`${cardBase} border-t-slate-200`}>
           <div className="w-11 h-11 rounded-xl bg-slate-100 flex items-center justify-center">
             <i className="pi pi-star text-slate-300 text-lg" />
           </div>
@@ -182,7 +180,6 @@ const HeaderHome: FC<HeaderHomeProps> = ({ startDate, endDate }) => {
           </p>
         </div>
       )}
-    </div>
     </div>
   );
 };

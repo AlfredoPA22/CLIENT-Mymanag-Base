@@ -153,7 +153,7 @@ const CompanySettingsForm = ({ company, canEdit, saveCompany }: CompanyFormProps
       />
 
       {/* Información de solo lectura */}
-      <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200 grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="mb-6 bg-white rounded-xl shadow-sm border border-gray-100 p-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="flex flex-col gap-1">
           <span className="text-xs text-gray-500 uppercase tracking-wide">Empresa</span>
           <span className="font-semibold text-gray-800">{company.name ?? "-"}</span>
@@ -176,7 +176,7 @@ const CompanySettingsForm = ({ company, canEdit, saveCompany }: CompanyFormProps
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="grid gap-6">
+      <form onSubmit={handleSubmit} className="grid gap-6 bg-white rounded-xl shadow-sm border border-gray-100 p-6">
         {/* Logo */}
         <div className="flex flex-col gap-3">
           <span className="text-sm font-medium text-gray-700">Logo de la empresa</span>

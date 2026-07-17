@@ -12,6 +12,7 @@ import { useNavigate } from "react-router-dom";
 import Table from "../../../../components/datatable/Table";
 import LabelInput from "../../../../components/labelInput/LabelInput";
 import LoadingSpinner from "../../../../components/LoadingSpinner/LoadingSpinner";
+import RowActionButtons, { RowAction } from "../../../../components/table/RowActionButtons";
 import { DELETE_SALE_ORDER } from "../../../../graphql/mutations/SaleOrder";
 import { DETAIL_COMPANY } from "../../../../graphql/queries/Company";
 import { LIST_PRODUCT } from "../../../../graphql/queries/Product";
@@ -202,6 +203,10 @@ const SaleOrderList = ({ storeOnly = false }: SaleOrderListProps) => {
     }
   };
 
+  const handleOpenTicket = (saleOrderId: string) => {
+    window.open(`${ROUTES_MOCK.SALE_ORDERS}/detalle/${saleOrderId}/ticket`, "_blank");
+  };
+
   const getWhatsAppUrl = (rowData: ISaleOrder) => {
     const digits = rowData.client?.phoneNumber?.replace(/\D/g, "") || "";
     if (!digits) return null;
@@ -211,68 +216,56 @@ const SaleOrderList = ({ storeOnly = false }: SaleOrderListProps) => {
     return `https://wa.me/${digits}?text=${message}`;
   };
 
-  const whatsAppButton = (rowData: ISaleOrder) => {
-    if (!storeOnly) return null;
-    const url = getWhatsAppUrl(rowData);
-    if (!url) return null;
-    return (
-      <Button
-        tooltip="Contactar por WhatsApp"
-        tooltipOptions={{ position: "left" }}
-        icon="pi pi-whatsapp"
-        raised
-        severity="success"
-        onClick={() => window.open(url, "_blank")}
-      />
-    );
+  const buildSaleOrderActions = (rowData: ISaleOrder): RowAction[] => {
+    const isBorrador = rowData.status === orderStatus.BORRADOR;
+    const isCancelado = rowData.status === orderStatus.CANCELADO || rowData.status === orderStatus.DEVUELTO;
+    const canPrint = isBorrador ? rowData.total > 0 : true;
+
+    const actions: RowAction[] = [];
+
+    if (isBorrador) {
+      actions.push({
+        label: "Completar venta",
+        icon: "pi pi-pencil",
+        severity: "info",
+        onClick: () => navigate(`${ROUTES_MOCK.SALE_ORDERS}${ROUTES_MOCK.EDIT_SALE_ORDER}/${rowData._id}`),
+      });
+    }
+    if (canPrint) {
+      actions.push({ label: "Imprimir venta", icon: "pi pi-download", severity: "warning", onClick: () => handleGeneratePDF(rowData._id) });
+    }
+    if (rowData.status === orderStatus.APROBADO) {
+      actions.push({ label: "Imprimir ticket (térmica)", icon: "pi pi-print", severity: "secondary", onClick: () => handleOpenTicket(rowData._id) });
+    }
+    if (!isBorrador && !isCancelado && rowData.payment_method === paymentMethod.CREDITO) {
+      actions.push({
+        label: "Ver pagos",
+        icon: "pi pi-wallet",
+        severity: "info",
+        onClick: () => navigate(`${ROUTES_MOCK.SALE_ORDERS}${ROUTES_MOCK.SALE_PAYMENT}/${rowData._id}`),
+      });
+    }
+    if (!isCancelado) {
+      actions.push({
+        label: isBorrador ? "Eliminar venta" : "Anular y eliminar venta",
+        icon: "pi pi-trash",
+        severity: "danger",
+        onClick: () => confirmDeleteSaleOrder(rowData._id),
+      });
+    }
+    if (storeOnly) {
+      const url = getWhatsAppUrl(rowData);
+      if (url) actions.push({ label: "Contactar por WhatsApp", icon: "pi pi-whatsapp", severity: "success", onClick: () => window.open(url, "_blank") });
+    }
+
+    return actions;
   };
 
-  const actionBodyTemplate = (rowData: ISaleOrder) => {
-    if (rowData.status === orderStatus.BORRADOR) {
-      return (
-        <div className="flex justify-center gap-2">
-          <Button tooltip="Completar venta" tooltipOptions={{ position: "left" }}
-            icon="pi pi-pencil" raised severity="info"
-            onClick={() => navigate(`${ROUTES_MOCK.SALE_ORDERS}${ROUTES_MOCK.EDIT_SALE_ORDER}/${rowData._id}`)} />
-          {rowData.total > 0 && (
-            <Button tooltip="Imprimir venta" tooltipOptions={{ position: "left" }}
-              icon="pi pi-download" raised severity="warning"
-              onClick={() => handleGeneratePDF(rowData._id)} />
-          )}
-          <Button tooltip="Eliminar venta" tooltipOptions={{ position: "left" }}
-            icon="pi pi-trash" raised severity="danger"
-            onClick={() => confirmDeleteSaleOrder(rowData._id)} />
-          {whatsAppButton(rowData)}
-        </div>
-      );
-    }
-    if (rowData.status === orderStatus.CANCELADO || rowData.status === orderStatus.DEVUELTO) {
-      return (
-        <div className="flex justify-center gap-2">
-          <Button tooltip="Imprimir venta" tooltipOptions={{ position: "left" }}
-            icon="pi pi-download" raised severity="warning"
-            onClick={() => handleGeneratePDF(rowData._id)} />
-          {whatsAppButton(rowData)}
-        </div>
-      );
-    }
-    return (
-      <div className="flex justify-center gap-2">
-        <Button tooltip="Imprimir venta" tooltipOptions={{ position: "left" }}
-          icon="pi pi-download" raised severity="warning"
-          onClick={() => handleGeneratePDF(rowData._id)} />
-        {rowData.payment_method === paymentMethod.CREDITO && (
-          <Button tooltip="Ver Pagos" tooltipOptions={{ position: "left" }}
-            icon="pi pi-wallet" raised severity="info"
-            onClick={() => navigate(`${ROUTES_MOCK.SALE_ORDERS}${ROUTES_MOCK.SALE_PAYMENT}/${rowData._id}`)} />
-        )}
-        <Button tooltip="Anular y eliminar venta" tooltipOptions={{ position: "left" }}
-          icon="pi pi-trash" raised severity="danger"
-          onClick={() => confirmDeleteSaleOrder(rowData._id)} />
-        {whatsAppButton(rowData)}
-      </div>
-    );
-  };
+  const actionBodyTemplate = (rowData: ISaleOrder) => (
+    <div className="flex justify-center">
+      <RowActionButtons actions={buildSaleOrderActions(rowData)} />
+    </div>
+  );
 
   const handleSelectionChange = (e: DataTableSelectionSingleChangeEvent<ISaleOrder[]>) => {
     navigate(`${ROUTES_MOCK.SALE_ORDERS}/detalle/${e.value._id}`);
@@ -425,9 +418,7 @@ const SaleOrderList = ({ storeOnly = false }: SaleOrderListProps) => {
         )}
         {filteredData.slice(0, mobilePage * MOBILE_PAGE_SIZE).map((order: ISaleOrder) => {
           const status = getStatus(order.status);
-          const isBorrador = order.status === orderStatus.BORRADOR;
           const isAprobado = order.status === orderStatus.APROBADO;
-          const isCancelado = order.status === orderStatus.CANCELADO || order.status === orderStatus.DEVUELTO;
 
           return (
             <div
@@ -476,32 +467,8 @@ const SaleOrderList = ({ storeOnly = false }: SaleOrderListProps) => {
               </div>
 
               {/* Acciones */}
-              <div className="flex gap-2 justify-end px-3 pb-3 border-t border-gray-100 pt-2">
-                {isBorrador && (
-                  <Button size="small" icon="pi pi-pencil" raised severity="info"
-                    tooltip="Editar"
-                    onClick={() => navigate(`${ROUTES_MOCK.SALE_ORDERS}${ROUTES_MOCK.EDIT_SALE_ORDER}/${order._id}`)} />
-                )}
-                {(isBorrador ? order.total > 0 : true) && (
-                  <Button size="small" icon="pi pi-download" raised severity="warning"
-                    tooltip="Imprimir"
-                    onClick={() => handleGeneratePDF(order._id)} />
-                )}
-                {isAprobado && order.payment_method === paymentMethod.CREDITO && (
-                  <Button size="small" icon="pi pi-wallet" raised severity="info"
-                    tooltip="Ver pagos"
-                    onClick={() => navigate(`${ROUTES_MOCK.SALE_ORDERS}${ROUTES_MOCK.SALE_PAYMENT}/${order._id}`)} />
-                )}
-                {!isCancelado && (
-                  <Button size="small" icon="pi pi-trash" raised severity="danger"
-                    tooltip="Eliminar"
-                    onClick={() => confirmDeleteSaleOrder(order._id)} />
-                )}
-                {storeOnly && getWhatsAppUrl(order) && (
-                  <Button size="small" icon="pi pi-whatsapp" raised severity="success"
-                    tooltip="Contactar por WhatsApp"
-                    onClick={() => window.open(getWhatsAppUrl(order)!, "_blank")} />
-                )}
+              <div className="flex justify-end px-3 pb-3 border-t border-gray-100 pt-2">
+                <RowActionButtons actions={buildSaleOrderActions(order)} size="small" />
               </div>
             </div>
           );

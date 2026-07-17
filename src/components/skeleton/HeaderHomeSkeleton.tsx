@@ -1,14 +1,16 @@
 const HeaderHomeSkeleton = () => {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-      {[...Array(6)].map((_, i) => (
+    <div className="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-8 gap-3">
+      {[...Array(8)].map((_, i) => (
         <div
           key={i}
-          className="rounded-2xl p-5 flex flex-col items-center justify-center text-center bg-gray-100 animate-pulse shadow-md"
+          className="rounded-2xl border border-slate-100 border-t-4 border-t-slate-200 p-4 flex flex-col gap-3 bg-white shadow-sm animate-pulse"
         >
-          <div className="h-4 w-24 bg-gray-300 rounded mb-2" />
-          <div className="h-8 w-20 bg-gray-400 rounded mb-3" />
-          <div className="h-10 w-10 bg-gray-300 rounded-full mt-2" />
+          <div className="w-11 h-11 rounded-xl bg-gray-200" />
+          <div>
+            <div className="h-6 w-16 bg-gray-300 rounded mb-2" />
+            <div className="h-2.5 w-20 bg-gray-200 rounded" />
+          </div>
         </div>
       ))}
     </div>

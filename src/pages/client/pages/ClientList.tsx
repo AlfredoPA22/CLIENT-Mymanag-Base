@@ -11,6 +11,7 @@ import { InputText } from "primereact/inputtext";
 import { useState } from "react";
 import Table from "../../../components/datatable/Table";
 import LoadingSpinner from "../../../components/LoadingSpinner/LoadingSpinner";
+import RowActionButtons, { RowAction } from "../../../components/table/RowActionButtons";
 import { textEditor } from "../../../components/textEditor/textEditor";
 import {
   DELETE_CLIENT,
@@ -75,18 +76,17 @@ const ClientList = () => {
     }
   };
 
+  const buildClientActions = (rowData: IClient): RowAction[] => [
+    {
+      label: "Eliminar cliente",
+      icon: "pi pi-trash",
+      severity: "danger",
+      onClick: () => handleDeleteClient(rowData._id),
+    },
+  ];
+
   const actionBodyTemplate = (rowData: IClient) => (
-    <div className="flex justify-center gap-2">
-      <Button
-        tooltip="Eliminar cliente"
-        tooltipOptions={{ position: "left" }}
-        icon="pi pi-trash"
-        raised
-        severity="danger"
-        aria-label="Cancel"
-        onClick={() => handleDeleteClient(rowData._id)}
-      />
-    </div>
+    <RowActionButtons actions={buildClientActions(rowData)} />
   );
 
   const onRowEditComplete = async (e: DataTableRowEditCompleteEvent) => {
@@ -316,20 +316,13 @@ const ClientList = () => {
               </div>
             )}
 
-            <div className="flex gap-2 mt-2 justify-end">
-              <Button
-                icon="pi pi-pencil"
+            <div className="flex justify-end mt-2" onClick={(e) => e.stopPropagation()}>
+              <RowActionButtons
                 size="small"
-                severity="secondary"
-                raised
-                onClick={(e) => { e.stopPropagation(); handleMobileEdit(item); }}
-              />
-              <Button
-                icon="pi pi-trash"
-                size="small"
-                severity="danger"
-                raised
-                onClick={(e) => { e.stopPropagation(); handleDeleteClient(item._id); }}
+                actions={[
+                  { label: "Editar cliente", icon: "pi pi-pencil", severity: "secondary", onClick: () => handleMobileEdit(item) },
+                  ...buildClientActions(item),
+                ]}
               />
             </div>
           </div>

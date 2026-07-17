@@ -17,6 +17,7 @@ import ViewPurchaseOrder from "../pages/order/pages/purchaseOrder/viewPurchaseOr
 import CreateSaleOrder from "../pages/order/pages/saleOrder/CreateSaleOrder";
 import EditSaleOrder from "../pages/order/pages/saleOrder/EditSaleOrder";
 import SaleOrderList from "../pages/order/pages/saleOrder/SaleOrderList";
+import SaleOrderTicket from "../pages/order/pages/saleOrder/SaleOrderTicket";
 import ViewSaleOrder from "../pages/order/pages/saleOrder/ViewSaleOrder";
 import ProductRoutes from "../pages/product/ProductRoutes";
 import ProviderList from "../pages/provider/pages/ProviderList";
@@ -36,6 +37,12 @@ const PrivateRoutes: FC = () => {
   return (
     <Routes>
       <Route element={<ProtectedRoute />}>
+        {/* Ticket térmico: página independiente, sin sidebar/topbar, pensada
+            para imprimirse directamente. */}
+        <Route
+          path={`${ROUTES_MOCK.SALE_ORDERS}/detalle/:id/ticket`}
+          element={<SaleOrderTicket />}
+        />
         <Route path="/" element={<Dashboard />}>
           <Route path="unauthorized" element={<UnauthorizedPage />} />
 

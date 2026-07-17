@@ -13,6 +13,7 @@ import { useNavigate } from "react-router-dom";
 import ProductImagePlaceholder from "../../../../components/ProductImagePlaceholder/ProductImagePlaceholder";
 import Table from "../../../../components/datatable/Table";
 import LabelInput from "../../../../components/labelInput/LabelInput";
+import RowActionButtons from "../../../../components/table/RowActionButtons";
 import LoadingSpinner from "../../../../components/LoadingSpinner/LoadingSpinner";
 import { numberEditor } from "../../../../components/numberEditor/numberEditor";
 import { textEditor } from "../../../../components/textEditor/textEditor";
@@ -115,12 +116,12 @@ const ProductCard = memo(({ product, currency, onNavigate, onStockClick, onEdit,
           severity="info"
           onClick={() => onStockClick(product, isSerial)}
         />
-        <div className="flex gap-2">
-          <Button icon="pi pi-pencil" raised size="small" severity="info"
-            onClick={() => onEdit(product)} />
-          <Button icon="pi pi-trash" raised size="small" severity="danger"
-            onClick={() => onDelete(product._id)} />
-        </div>
+        <RowActionButtons
+          actions={[
+            { label: "Editar producto", icon: "pi pi-pencil", severity: "info", onClick: () => onEdit(product) },
+            { label: "Eliminar producto", icon: "pi pi-trash", severity: "danger", onClick: () => onDelete(product._id) },
+          ]}
+        />
       </div>
     </div>
   );
@@ -257,14 +258,12 @@ const ProductList = () => {
   }, []);
 
   const actionBodyTemplate = (rowData: IProduct) => (
-    <div className="flex justify-center gap-2">
-      <Button icon="pi pi-pencil" className="p-button-rounded p-button-info"
-        tooltip="Editar producto" tooltipOptions={{ position: "left" }}
-        onClick={() => { setCurrentProduct(rowData); setVisibleForm(true); }} />
-      <Button icon="pi pi-trash" raised severity="danger" aria-label="Eliminar"
-        tooltip="Eliminar producto" tooltipOptions={{ position: "left" }}
-        onClick={() => handleDeleteProduct(rowData._id)} />
-    </div>
+    <RowActionButtons
+      actions={[
+        { label: "Editar producto", icon: "pi pi-pencil", severity: "info", onClick: () => { setCurrentProduct(rowData); setVisibleForm(true); } },
+        { label: "Eliminar producto", icon: "pi pi-trash", severity: "danger", onClick: () => handleDeleteProduct(rowData._id) },
+      ]}
+    />
   );
 
   const handleSelectionChange = (e: DataTableSelectionSingleChangeEvent<IProduct[]>) => {

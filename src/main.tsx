@@ -6,7 +6,7 @@ import { ApolloProvider } from "@apollo/client";
 
 import "primeicons/primeicons.css";
 import "./index.css";
-import 'primereact/resources/themes/lara-light-blue/theme.css';
+import "primereact/resources/themes/lara-light-blue/theme.css";
 import apolloClient from "./ApolloClient.ts";
 import { Provider } from "react-redux";
 import store from "./redux/store.ts";
