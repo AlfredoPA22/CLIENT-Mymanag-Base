@@ -12,12 +12,7 @@ import useCompanySettings from "./hooks/useCompanySettings";
 import { ICompany, ICompanyInput } from "../../utils/interfaces/Company";
 import { uploadImage } from "../../utils/uploadImage";
 import { schemaCompanySettings } from "./validations/CompanySettingsValidation";
-
-const PLAN_LABELS: Record<string, string> = {
-  FREE: "Gratis",
-  BASIC: "Básico",
-  PRO: "Pro",
-};
+import { PLAN_LABELS } from "../../utils/enums/companyPlan.enum";
 
 const STATUS_LABELS: Record<string, string> = {
   ACTIVE: "Activo",
