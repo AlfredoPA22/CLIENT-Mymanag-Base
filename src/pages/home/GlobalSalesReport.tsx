@@ -6,6 +6,7 @@ import useAuth from "../auth/hooks/useAuth";
 import { LIST_SALE_ORDER } from "../../graphql/queries/SaleOrder";
 import { getDate } from "../order/utils/getDate";
 import { getStatus } from "../order/utils/getStatus";
+import { formatAmount } from "../../utils/currency";
 
 const GlobalSalesReport = () => {
   const { currency } = useAuth();
@@ -80,7 +81,7 @@ const GlobalSalesReport = () => {
         <Column
           field="total"
           header={`Total (${currency})`}
-          body={(row) => `${row.total} ${currency}`}
+          body={(row) => `${formatAmount(row.total)} ${currency}`}
           style={{ minWidth: "120px" }}
           align="right"
         />

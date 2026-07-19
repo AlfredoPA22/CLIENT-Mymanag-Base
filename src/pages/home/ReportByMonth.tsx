@@ -13,6 +13,7 @@ import { getStatus } from "../order/utils/getStatus";
 import useReportByMonth from "./hooks/useReportByMonth";
 import { ROUTES_MOCK } from "../../routes/RouteMocks";
 import useAuth from "../auth/hooks/useAuth";
+import { formatAmount } from "../../utils/currency";
 import { formatDateRange } from "../../utils/dateUtils";
 
 interface ReportByMonthProps {
@@ -94,7 +95,7 @@ const ReportByMonth = ({ startDate, endDate }: ReportByMonthProps) => {
       body: (rowData: ISaleOrder) => (
         <LabelInput
           className="justify-center"
-          label={`${rowData.total} ${currency}`}
+          label={`${formatAmount(rowData.total)} ${currency}`}
         />
       ),
     },

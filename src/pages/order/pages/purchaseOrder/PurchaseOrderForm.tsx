@@ -35,6 +35,7 @@ import { schemaFormPurchaseOrder } from "../../validations/FormPurchaseOrderVali
 import { setIsBlocked } from "../../../../redux/slices/blockUISlice";
 import { ROUTES_MOCK } from "../../../../routes/RouteMocks";
 import useAuth from "../../../auth/hooks/useAuth";
+import { formatAmount } from "../../../../utils/currency";
 
 const PurchaseOrderForm = () => {
   const {
@@ -203,7 +204,7 @@ const PurchaseOrderForm = () => {
             <section className="flex flex-col items-center justify-center text-center">
               <LabelInput name="total" label="Total de compra" />
               <span className="text-xl md:text-2xl font-semibold text-green-600">
-                {`${purchaseOrderData?.total} ${currency}`}
+                {`${formatAmount(purchaseOrderData?.total ?? 0)} ${currency}`}
               </span>
             </section>
           )}

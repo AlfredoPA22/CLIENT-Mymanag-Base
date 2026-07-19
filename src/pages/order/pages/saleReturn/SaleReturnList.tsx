@@ -16,6 +16,7 @@ import {
 import { ROUTES_MOCK } from "../../../../routes/RouteMocks";
 import { DataTableColumn } from "../../../../utils/interfaces/Table";
 import useAuth from "../../../auth/hooks/useAuth";
+import { formatAmount } from "../../../../utils/currency";
 import { getDate } from "../../utils/getDate";
 
 interface ISaleReturn {
@@ -69,7 +70,7 @@ const SaleReturnList = () => {
   );
 
   const totalBodyTemplate = (rowData: ISaleReturn) => (
-    <LabelInput className="justify-center" label={`${rowData.total} ${currency}`} />
+    <LabelInput className="justify-center" label={`${formatAmount(rowData.total)} ${currency}`} />
   );
 
   const [columns] = useState<DataTableColumn<ISaleReturn>[]>([
@@ -99,11 +100,11 @@ const SaleReturnList = () => {
     { field: "quantity", header: "Cantidad", style: { textAlign: "center" } },
     {
       field: "sale_price", header: "Precio unitario", style: { textAlign: "center" },
-      body: (row: ISaleReturnDetail) => `${row.sale_price} ${currency}`,
+      body: (row: ISaleReturnDetail) => `${formatAmount(row.sale_price)} ${currency}`,
     },
     {
       field: "subtotal", header: "Subtotal", style: { textAlign: "center" },
-      body: (row: ISaleReturnDetail) => `${row.subtotal} ${currency}`,
+      body: (row: ISaleReturnDetail) => `${formatAmount(row.subtotal)} ${currency}`,
     },
   ];
 
@@ -160,7 +161,7 @@ const SaleReturnList = () => {
                   <Tag severity="secondary" className="text-[10px]">{getDate(item.date)}</Tag>
                 )}
                 <span className="text-sm font-semibold text-green-600">
-                  {item.total} {currency}
+                  {formatAmount(item.total)} {currency}
                 </span>
               </div>
             </div>
@@ -257,10 +258,10 @@ const SaleReturnList = () => {
                   <p className="text-sm text-gray-700 break-words leading-snug mt-0.5">{row.product?.name}</p>
                   <div className="flex items-center justify-between mt-1.5">
                     <span className="text-xs text-gray-500">
-                      {row.quantity} × {row.sale_price} {currency}
+                      {row.quantity} × {formatAmount(row.sale_price)} {currency}
                     </span>
                     <span className="text-sm font-semibold text-green-600">
-                      {row.subtotal} {currency}
+                      {formatAmount(row.subtotal)} {currency}
                     </span>
                   </div>
                 </div>
@@ -278,7 +279,7 @@ const SaleReturnList = () => {
             </div>
 
             <div className="flex justify-end text-base font-semibold text-green-600">
-              Total devuelto: {selectedReturn?.total} {currency}
+              Total devuelto: {formatAmount(selectedReturn?.total ?? 0)} {currency}
             </div>
           </div>
         )}

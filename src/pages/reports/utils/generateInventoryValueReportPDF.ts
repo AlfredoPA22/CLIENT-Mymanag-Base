@@ -1,6 +1,7 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { IProduct } from "../../../utils/interfaces/Product";
+import { formatAmount } from "../../../utils/currency";
 
 const INK: [number, number, number] = [30, 41, 59];
 const INK_MID: [number, number, number] = [71, 85, 105];
@@ -81,7 +82,7 @@ export const generateInventoryValueReportPDF = (
   doc.setFont("helvetica", "bold");
   doc.setFontSize(10);
   doc.setTextColor(...INK);
-  doc.text(`${totalCosto.toFixed(2)} ${currency}`, PAGE_W - MARGIN, filterY + 6, { align: "right" });
+  doc.text(`${formatAmount(totalCosto)} ${currency}`, PAGE_W - MARGIN, filterY + 6, { align: "right" });
 
   doc.setFont("helvetica", "bold");
   doc.setFontSize(7);
@@ -90,7 +91,7 @@ export const generateInventoryValueReportPDF = (
   doc.setFont("helvetica", "bold");
   doc.setFontSize(10);
   doc.setTextColor(...INK);
-  doc.text(`${totalVenta.toFixed(2)} ${currency}`, PAGE_W - MARGIN, filterY + 19, { align: "right" });
+  doc.text(`${formatAmount(totalVenta)} ${currency}`, PAGE_W - MARGIN, filterY + 19, { align: "right" });
 
   drawRule(doc, filterY + 25, PAGE_W);
 
@@ -120,11 +121,11 @@ export const generateInventoryValueReportPDF = (
       p.name,
       p.category?.name || "-",
       p.brand?.name || "-",
-      Number(p.last_cost_price || 0).toFixed(2),
-      Number(p.sale_price || 0).toFixed(2),
+      formatAmount(Number(p.last_cost_price || 0)),
+      formatAmount(Number(p.sale_price || 0)),
       p.stock ?? 0,
-      (Number(p.last_cost_price || 0) * Number(p.stock || 0)).toFixed(2),
-      (Number(p.sale_price || 0) * Number(p.stock || 0)).toFixed(2),
+      formatAmount(Number(p.last_cost_price || 0) * Number(p.stock || 0)),
+      formatAmount(Number(p.sale_price || 0) * Number(p.stock || 0)),
     ]),
     bodyStyles: { fontSize: 7.5, textColor: INK, cellPadding: 3 },
     alternateRowStyles: { fillColor: ROW_ALT },

@@ -10,6 +10,7 @@ import { IProduct } from "../../../../utils/interfaces/Product";
 import useAuth from "../../../auth/hooks/useAuth";
 import { getStatus } from "../../../order/utils/getStatus";
 import useProductList from "../../hooks/useProductList";
+import { formatAmount } from "../../../../utils/currency";
 
 interface Props {
   onSelect?: () => void;
@@ -193,7 +194,7 @@ const SearchProductForm = ({ onSelect }: Props) => {
 
                   <div className="text-right shrink-0">
                     <p className="text-sm font-bold text-green-700">
-                      {currency} {(product.sale_price ?? 0).toFixed(2)}
+                      {currency} {formatAmount(product.sale_price ?? 0)}
                     </p>
                     <p className="text-xs text-gray-400">Stock: {product.stock}</p>
                   </div>

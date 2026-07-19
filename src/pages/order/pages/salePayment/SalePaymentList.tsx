@@ -31,6 +31,7 @@ import { generatePDF } from "../../utils/generateSalePaymentPDF";
 import { getDate } from "../../utils/getDate";
 import SalePaymentForm from "./SalePaymentForm";
 import useAuth from "../../../auth/hooks/useAuth";
+import { formatAmount } from "../../../../utils/currency";
 
 interface SalePaymentListProps {
   listSalePayment: ISalePayment[];
@@ -125,7 +126,7 @@ const SalePaymentList: FC<SalePaymentListProps> = ({
     {
       field: "amount", header: "Monto", sortable: true,
       body: (rowData: ISalePayment) => (
-        <LabelInput className="justify-center" label={`${rowData.amount} ${currency}`} />
+        <LabelInput className="justify-center" label={`${formatAmount(rowData.amount)} ${currency}`} />
       ),
       style: { width: "20%", textAlign: "center" },
     },
@@ -179,7 +180,7 @@ const SalePaymentList: FC<SalePaymentListProps> = ({
               <p className="text-xs text-gray-500 mt-1.5 break-words">{item.note}</p>
             )}
             <div className="flex items-center justify-between mt-2">
-              <span className="text-base font-bold text-green-700">{item.amount} {currency}</span>
+              <span className="text-base font-bold text-green-700">{formatAmount(item.amount)} {currency}</span>
               <RowActionButtons actions={buildSalePaymentActions(item)} size="small" />
             </div>
           </div>

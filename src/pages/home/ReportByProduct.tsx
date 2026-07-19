@@ -15,6 +15,7 @@ import { REPORT_SALE_ORDER_BY_PRODUCT } from "../../graphql/queries/Home";
 import { ToastSeverity } from "../../utils/enums/toast.enum";
 import { showToast } from "../../utils/toastUtils";
 import useAuth from "../auth/hooks/useAuth";
+import { formatAmount } from "../../utils/currency";
 import { formatDateRange } from "../../utils/dateUtils";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
@@ -86,7 +87,7 @@ const ReportByProduct = ({ startDate, endDate }: ReportByProductProps) => {
     scales: {
       x: {
         beginAtZero: true,
-        ticks: { callback: (value: number | string) => `${value} ${currency}` },
+        ticks: { callback: (value: number | string) => `${formatAmount(Number(value))} ${currency}` },
       },
     },
   };

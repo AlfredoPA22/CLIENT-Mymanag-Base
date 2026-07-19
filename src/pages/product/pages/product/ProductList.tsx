@@ -38,6 +38,7 @@ import { ROUTES_MOCK } from "../../../../routes/RouteMocks";
 import { useDispatch } from "react-redux";
 import { setIsBlocked } from "../../../../redux/slices/blockUISlice";
 import useAuth from "../../../auth/hooks/useAuth";
+import { formatAmount } from "../../../../utils/currency";
 
 const STOCK_TYPE_OPTIONS = [
   { label: "Serializado", value: stockType.SERIALIZADO },
@@ -99,7 +100,7 @@ const ProductCard = memo(({ product, currency, onNavigate, onStockClick, onEdit,
           </div>
           <div className="flex items-center gap-3 mt-1.5">
             <span className="text-sm font-bold text-green-700">
-              {product.sale_price} {currency}
+              {formatAmount(product.sale_price)} {currency}
             </span>
             <span className="text-xs text-gray-400">
               {isSerial ? "Serializado" : "Individual"}
@@ -285,7 +286,7 @@ const ProductList = () => {
     {
       field: "sale_price", header: "Precio de venta", sortable: true, style: { width: "10%" },
       body: (rowData: IProduct) => (
-        <LabelInput className="justify-center" label={`${rowData.sale_price} ${currency}`} />
+        <LabelInput className="justify-center" label={`${formatAmount(rowData.sale_price)} ${currency}`} />
       ),
       fieldEditor: (options: ColumnEditorOptions) => numberEditor(options, true),
     },

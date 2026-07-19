@@ -31,6 +31,7 @@ import { getStatus } from "../../utils/getStatus";
 import { ROUTES_MOCK } from "../../../../routes/RouteMocks";
 import SectionHeader from "../../../../components/sectionHeader/SectionHeader";
 import useAuth from "../../../auth/hooks/useAuth";
+import { formatAmount } from "../../../../utils/currency";
 import { PermissionGuard } from "../../../auth/pages/PermissionGuard";
 
 const DISCOUNT_TYPE_OPTIONS = [
@@ -403,11 +404,11 @@ const SaleOrderDetail: FC<SaleOrderDetailProps> = ({ saleOrderId }) => {
             <>
               <span className="text-xs text-gray-400">Subtotal productos</span>
               <span className="text-sm text-gray-600">
-                {`${((data?.findSaleOrder.total ?? 0) + (data?.findSaleOrder.discount_amount ?? 0)).toFixed(2)} ${currency}`}
+                {`${formatAmount((data?.findSaleOrder.total ?? 0) + (data?.findSaleOrder.discount_amount ?? 0))} ${currency}`}
               </span>
               <div className="flex items-center justify-center gap-1">
                 <span className="text-xs text-orange-500">
-                  Descuento general: -{(data?.findSaleOrder.discount_amount ?? 0).toFixed(2)} {currency}
+                  Descuento general: -{formatAmount(data?.findSaleOrder.discount_amount ?? 0)} {currency}
                   {data?.findSaleOrder.discount_type === "PORCENTUAL"
                     ? ` (${data?.findSaleOrder.discount_value}%)`
                     : ""}
@@ -428,7 +429,7 @@ const SaleOrderDetail: FC<SaleOrderDetailProps> = ({ saleOrderId }) => {
           )}
           <span className="text-xs text-gray-400 mt-1">Total de compra</span>
           <span className="text-2xl font-bold text-green-600">
-            {`${data?.findSaleOrder.total} ${currency}`}
+            {`${formatAmount(data?.findSaleOrder.total ?? 0)} ${currency}`}
           </span>
         </section>
 
@@ -531,14 +532,13 @@ const SaleOrderDetail: FC<SaleOrderDetailProps> = ({ saleOrderId }) => {
           {hasSelectedItems && (
             <div className="flex justify-end text-sm font-medium text-orange-600">
               Total a devolver:{" "}
-              {parseFloat(
+              {formatAmount(
                 Object.entries(returnQuantities)
                   .filter(([, qty]) => qty > 0)
                   .reduce((acc, [id, qty]) => {
                     const detail = details.find((d: any) => d._id === id);
                     return acc + (detail?.sale_price ?? 0) * qty;
                   }, 0)
-                  .toFixed(2)
               )}{" "}
               {currency}
             </div>
@@ -617,19 +617,19 @@ const SaleOrderDetail: FC<SaleOrderDetailProps> = ({ saleOrderId }) => {
           <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 flex flex-col gap-1 text-sm">
             <div className="flex justify-between text-gray-600">
               <span>Subtotal productos:</span>
-              <span className="font-medium">{sumSubtotals.toFixed(2)} {currency}</span>
+              <span className="font-medium">{formatAmount(sumSubtotals)} {currency}</span>
             </div>
             {previewDiscount > 0 && (
               <div className="flex justify-between text-orange-600">
                 <span>
                   Descuento general{orderDiscountType === "PORCENTUAL" ? ` (${orderDiscountValue}%)` : ""}:
                 </span>
-                <span>-{previewDiscount.toFixed(2)} {currency}</span>
+                <span>-{formatAmount(previewDiscount)} {currency}</span>
               </div>
             )}
             <div className="flex justify-between font-semibold text-green-700 border-t pt-1 mt-0.5">
               <span>Total final:</span>
-              <span>{previewTotal.toFixed(2)} {currency}</span>
+              <span>{formatAmount(previewTotal)} {currency}</span>
             </div>
           </div>
         </div>
@@ -717,14 +717,14 @@ const SaleOrderDetail: FC<SaleOrderDetailProps> = ({ saleOrderId }) => {
                     <tr key={item._id} className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}>
                       <td className="px-3 py-2 font-medium text-gray-700 break-words">{item.product?.name ?? "—"}</td>
                       <td className="px-3 py-2 text-center text-gray-500">{item.quantity}</td>
-                      <td className="px-3 py-2 text-right text-gray-700">{item.subtotal} {currency}</td>
+                      <td className="px-3 py-2 text-right text-gray-700">{formatAmount(item.subtotal)} {currency}</td>
                     </tr>
                   ))}
                 </tbody>
                 <tfoot className="bg-orange-50 font-semibold text-orange-700">
                   <tr>
                     <td className="px-3 py-2" colSpan={2}>Total devuelto</td>
-                    <td className="px-3 py-2 text-right">{existingReturn?.total} {currency}</td>
+                    <td className="px-3 py-2 text-right">{formatAmount(existingReturn?.total ?? 0)} {currency}</td>
                   </tr>
                 </tfoot>
               </table>

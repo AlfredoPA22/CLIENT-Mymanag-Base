@@ -13,6 +13,7 @@ import { DataTableColumn } from "../../../../utils/interfaces/Table";
 import { getStatus } from "../../../order/utils/getStatus";
 import useProductListWithParams from "../../hooks/useProductListWithParams";
 import useAuth from "../../../auth/hooks/useAuth";
+import { formatAmount } from "../../../../utils/currency";
 
 interface BrandDetailProps {
   brand: IBrand;
@@ -66,7 +67,7 @@ const BrandDetail: FC<BrandDetailProps> = ({ brand }) => {
       sortable: true,
       style: { width: "10%" },
       body: (rowData: IProduct) => (
-        <LabelInput className="justify-center" label={`${rowData.sale_price} ${currency}`} />
+        <LabelInput className="justify-center" label={`${formatAmount(rowData.sale_price)} ${currency}`} />
       ),
     },
     {
@@ -138,7 +139,7 @@ const BrandDetail: FC<BrandDetailProps> = ({ brand }) => {
                   </div>
                   <div className="flex items-center justify-between mt-2 text-sm">
                     <span className="font-semibold text-blue-600">
-                      {currency} {product.sale_price.toFixed(2)}
+                      {currency} {formatAmount(product.sale_price)}
                     </span>
                     <span className={`font-semibold text-xs ${product.stock > 0 ? "text-green-500" : "text-red-500"}`}>
                       Stock: {product.stock}

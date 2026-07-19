@@ -28,6 +28,7 @@ import usePurchaseOrderList from "../../hooks/usePurchaseOrderList";
 import { generatePDF } from "../../utils/generatePurchaseOrderPDF";
 import { getDate } from "../../utils/getDate";
 import { getStatus } from "../../utils/getStatus";
+import { formatAmount } from "../../../../utils/currency";
 import { ROUTES_MOCK } from "../../../../routes/RouteMocks";
 import { setIsBlocked } from "../../../../redux/slices/blockUISlice";
 import useAuth from "../../../auth/hooks/useAuth";
@@ -180,7 +181,7 @@ const PurchaseOrderList = () => {
       sortable: true,
       style: { textAlign: "center" },
       body: (rowData: IPurchaseOrder) => (
-        <LabelInput className="justify-center" label={`${rowData.total} ${currency}`} />
+        <LabelInput className="justify-center" label={`${formatAmount(rowData.total)} ${currency}`} />
       ),
     },
     {
@@ -243,7 +244,7 @@ const PurchaseOrderList = () => {
                 <span>{item.created_by?.user_name}</span>
               </div>
               <p className="text-sm font-bold text-green-700 mt-1">
-                {item.total} {currency}
+                {formatAmount(item.total)} {currency}
               </p>
               <div className="mt-2" onClick={(e) => e.stopPropagation()}>
                 <RowActionButtons actions={buildPurchaseOrderActions(item)} size="small" />

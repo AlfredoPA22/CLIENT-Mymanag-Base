@@ -4,6 +4,7 @@ import useGeneralData from "./hooks/useGeneralData";
 import HeaderHomeSkeleton from "../../components/skeleton/HeaderHomeSkeleton";
 import { ROUTES_MOCK } from "../../routes/RouteMocks";
 import useAuth from "../auth/hooks/useAuth";
+import { formatAmount } from "../../utils/currency";
 
 const cardBase =
   "relative bg-white rounded-2xl border border-slate-100 border-t-4 shadow-sm p-4 flex flex-col gap-3 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 group";
@@ -45,7 +46,7 @@ const HeaderHome: FC<HeaderHomeProps> = ({ startDate, endDate }) => {
         </div>
         <div>
           <p className="text-2xl font-bold text-slate-800">
-            {generalData.total_sales_value}
+            {formatAmount(generalData.total_sales_value)}
             <span className="text-sm font-medium text-slate-400 ml-1">
               {currency}
             </span>
@@ -117,13 +118,13 @@ const HeaderHome: FC<HeaderHomeProps> = ({ startDate, endDate }) => {
       </Link>
 
       {/* Cuentas por cobrar - monto */}
-      <Link to={ROUTES_MOCK.SALE_ORDERS} className={`${cardBase} border-t-rose-400`}>
+      <Link to={ROUTES_MOCK.PAYMENTS} className={`${cardBase} border-t-rose-400`}>
         <div className="w-11 h-11 rounded-xl bg-rose-50 group-hover:bg-rose-100 flex items-center justify-center transition-colors">
           <i className="pi pi-credit-card text-rose-500 text-lg" />
         </div>
         <div>
           <p className="text-2xl font-bold text-rose-600">
-            {generalData.total_credit_pending ?? 0}
+            {formatAmount(generalData.total_credit_pending ?? 0)}
             <span className="text-sm font-medium text-slate-400 ml-1">
               {currency}
             </span>

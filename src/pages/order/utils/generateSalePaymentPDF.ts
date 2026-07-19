@@ -5,6 +5,7 @@ import {
   ISalePayment,
 } from "../../../utils/interfaces/SalePayment";
 import { getDate } from "./getDate";
+import { formatAmount } from "../../../utils/currency";
 
 // ── Design tokens — sober, white-based ───────────────────────
 const INK: [number, number, number] = [30, 41, 59];
@@ -79,7 +80,7 @@ export const generatePDF = (
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
   doc.setTextColor(...INK);
-  doc.text(`${detail.total_amount} ${currency}`, MARGIN, infoY + 21);
+  doc.text(`${formatAmount(detail.total_amount)} ${currency}`, MARGIN, infoY + 21);
 
   doc.setFont("helvetica", "bold");
   doc.setFontSize(7);
@@ -88,7 +89,7 @@ export const generatePDF = (
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
   doc.setTextColor(...INK);
-  doc.text(`${detail.total_pending} ${currency}`, MARGIN, infoY + 34);
+  doc.text(`${formatAmount(detail.total_pending)} ${currency}`, MARGIN, infoY + 34);
 
   // Right — highlight paid amount
   doc.setFont("helvetica", "bold");
@@ -98,7 +99,7 @@ export const generatePDF = (
   doc.setFont("helvetica", "bold");
   doc.setFontSize(20);
   doc.setTextColor(...INK);
-  doc.text(`${data.amount} ${currency}`, col2X, infoY + 12);
+  doc.text(`${formatAmount(data.amount)} ${currency}`, col2X, infoY + 12);
 
   doc.setFont("helvetica", "normal");
   doc.setFontSize(7.5);
@@ -117,7 +118,7 @@ export const generatePDF = (
         getDate(data.date),
         data.note || "—",
         data.payment_method,
-        `${data.amount} ${currency}`,
+        `${formatAmount(data.amount)} ${currency}`,
       ],
     ],
     startY: infoY + 46,

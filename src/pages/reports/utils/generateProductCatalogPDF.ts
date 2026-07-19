@@ -1,5 +1,6 @@
 import jsPDF from "jspdf";
 import type { IProduct, IFilterProductInput } from "../../../utils/interfaces/Product";
+import { formatAmount } from "../../../utils/currency";
 
 // ── Design tokens ─────────────────────────────────────────────
 const INK: [number, number, number] = [30, 41, 59];
@@ -243,7 +244,7 @@ const drawCard = (
   doc.setFont("helvetica", "bold");
   doc.setFontSize(8.5);
   doc.setTextColor(...GREEN_PRICE);
-  const priceTxt = `${currency} ${(product.sale_price ?? 0).toFixed(2)}`;
+  const priceTxt = `${currency} ${formatAmount(product.sale_price ?? 0)}`;
   doc.text(clip(doc, priceTxt, textW), x + px, PRICE_Y);
 
   // Stock

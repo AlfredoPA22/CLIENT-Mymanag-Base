@@ -4,6 +4,7 @@ import {
   IFilterProductInput,
   IProduct,
 } from "../../../utils/interfaces/Product";
+import { formatAmount } from "../../../utils/currency";
 
 // ── Design tokens — sober, white-based ───────────────────────
 const INK: [number, number, number] = [30, 41, 59];
@@ -97,7 +98,7 @@ export const generateProductReportPDF = (
       p.name,
       p.category.name,
       p.brand.name,
-      p.sale_price,
+      formatAmount(p.sale_price),
       p.stock,
       p.status,
     ]),

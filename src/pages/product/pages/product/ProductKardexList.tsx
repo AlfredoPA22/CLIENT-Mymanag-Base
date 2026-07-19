@@ -9,6 +9,7 @@ import { getDate } from "../../../order/utils/getDate";
 import useKardexByProduct from "../../hooks/useKardexByProduct";
 import useAuth from "../../../auth/hooks/useAuth";
 import { useAbility } from "../../../../casl/AbilityContext";
+import { formatAmount } from "../../../../utils/currency";
 
 interface ProductKardexListProps {
   productId: string;
@@ -52,7 +53,7 @@ const ProductKardexList: FC<ProductKardexListProps> = ({ productId }) => {
     const moneyBody = (field: "unit_price" | "subtotal") => (r: IKardexEntry) => {
       const val = r[field];
       if (!val) return <span className="text-gray-400">—</span>;
-      return <span className="font-medium">{currency} {val.toFixed(2)}</span>;
+      return <span className="font-medium">{currency} {formatAmount(val)}</span>;
     };
 
     const base: DataTableColumn<IKardexEntry>[] = [
@@ -134,11 +135,11 @@ const ProductKardexList: FC<ProductKardexListProps> = ({ productId }) => {
                   <>
                     <div>
                       <p className="text-xs text-gray-400">P. Unit.</p>
-                      <p className="text-sm font-medium">{item.unit_price ? `${currency} ${item.unit_price.toFixed(2)}` : "—"}</p>
+                      <p className="text-sm font-medium">{item.unit_price ? `${currency} ${formatAmount(item.unit_price)}` : "—"}</p>
                     </div>
                     <div>
                       <p className="text-xs text-gray-400">Subtotal</p>
-                      <p className="text-sm font-medium">{item.subtotal ? `${currency} ${item.subtotal.toFixed(2)}` : "—"}</p>
+                      <p className="text-sm font-medium">{item.subtotal ? `${currency} ${formatAmount(item.subtotal)}` : "—"}</p>
                     </div>
                   </>
                 )}

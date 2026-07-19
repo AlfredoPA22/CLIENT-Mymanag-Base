@@ -13,6 +13,7 @@ import { useNavigate } from "react-router-dom";
 import { ROUTES_MOCK } from "../../../../routes/RouteMocks";
 import { IPurchaseOrderByProduct } from "../../../../utils/interfaces/PurchaseOrder";
 import useAuth from "../../../auth/hooks/useAuth";
+import { formatAmount } from "../../../../utils/currency";
 
 interface ListPurchaseOrderByProductProps {
   productId: string;
@@ -38,13 +39,13 @@ const ListPurchaseOrderByProduct: FC<ListPurchaseOrderByProductProps> = ({ produ
     {
       field: "purchaseOrderDetail.purchase_price", header: "Precio de compra", sortable: true,
       body: (rowData) => (
-        <LabelInput className="justify-center" label={`${rowData.purchaseOrderDetail.purchase_price} ${currency}`} />
+        <LabelInput className="justify-center" label={`${formatAmount(rowData.purchaseOrderDetail.purchase_price)} ${currency}`} />
       ),
     },
     {
       field: "purchaseOrderDetail.subtotal", header: "Subtotal", sortable: true,
       body: (rowData) => (
-        <LabelInput className="justify-center" label={`${rowData.purchaseOrderDetail.subtotal} ${currency}`} />
+        <LabelInput className="justify-center" label={`${formatAmount(rowData.purchaseOrderDetail.subtotal)} ${currency}`} />
       ),
     },
     {
@@ -85,10 +86,10 @@ const ListPurchaseOrderByProduct: FC<ListPurchaseOrderByProductProps> = ({ produ
                 <span>·</span>
                 <span>{item.purchaseOrderDetail.quantity} uds.</span>
                 <span>·</span>
-                <span>{item.purchaseOrderDetail.purchase_price} {currency} c/u</span>
+                <span>{formatAmount(item.purchaseOrderDetail.purchase_price)} {currency} c/u</span>
               </div>
               <p className="text-sm font-bold text-blue-700 mt-1">
-                {item.purchaseOrderDetail.subtotal} {currency}
+                {formatAmount(item.purchaseOrderDetail.subtotal)} {currency}
               </p>
             </div>
           );

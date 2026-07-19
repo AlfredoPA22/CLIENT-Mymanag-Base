@@ -4,6 +4,7 @@ import {
   IFilterSaleOrderInput,
   ISaleOrder,
 } from "../../../utils/interfaces/SaleOrder";
+import { formatAmount } from "../../../utils/currency";
 
 // ── Design tokens — sober, white-based ───────────────────────
 const INK: [number, number, number] = [30, 41, 59];
@@ -90,13 +91,13 @@ export const generateSaleOrderReportPDF = (
   doc.setFont("helvetica", "bold");
   doc.setFontSize(13);
   doc.setTextColor(...INK);
-  doc.text(`${total.toFixed(2)} ${currency}`, PAGE_W - MARGIN, filterY + 9, { align: "right" });
+  doc.text(`${formatAmount(total)} ${currency}`, PAGE_W - MARGIN, filterY + 9, { align: "right" });
 
   if (totalDiscount > 0) {
     doc.setFont("helvetica", "normal");
     doc.setFontSize(7);
     doc.setTextColor(...INK_MID);
-    doc.text(`Descuentos: -${totalDiscount.toFixed(2)} ${currency}`, PAGE_W - MARGIN, filterY + 15, { align: "right" });
+    doc.text(`Descuentos: -${formatAmount(totalDiscount)} ${currency}`, PAGE_W - MARGIN, filterY + 15, { align: "right" });
   }
 
   // ── RULE ──────────────────────────────────────────────────
@@ -118,8 +119,8 @@ export const generateSaleOrderReportPDF = (
       new Date(Number(o.date)).toLocaleDateString("es-ES"),
       o.client.fullName,
       o.status,
-      o.discount_amount ? o.discount_amount.toFixed(2) : "-",
-      o.total,
+      o.discount_amount ? formatAmount(o.discount_amount) : "-",
+      formatAmount(o.total),
     ]),
     bodyStyles: { fontSize: 8.5, textColor: INK, cellPadding: 4 },
     alternateRowStyles: { fillColor: ROW_ALT },

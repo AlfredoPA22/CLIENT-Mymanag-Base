@@ -30,6 +30,7 @@ import { DataTableColumn } from "../../../../utils/interfaces/Table";
 import { showToast } from "../../../../utils/toastUtils";
 import SerialToDetail from "./SerialToDetail";
 import useAuth from "../../../auth/hooks/useAuth";
+import { formatAmount } from "../../../../utils/currency";
 
 interface PurchaseOrderDetailListProps {
   purchaseOrderId: string;
@@ -215,7 +216,7 @@ const PurchaseOrderDetailList: FC<PurchaseOrderDetailListProps> = ({
       sortable: true,
       style: { width: "15%" },
       body: (rowData: IPurchaseOrderDetail) => (
-        <LabelInput className="justify-center" label={`${rowData.purchase_price} ${currency}`} />
+        <LabelInput className="justify-center" label={`${formatAmount(rowData.purchase_price)} ${currency}`} />
       ),
       fieldEditor: (options: ColumnEditorOptions) => numberEditor(options, true),
     },
@@ -232,7 +233,7 @@ const PurchaseOrderDetailList: FC<PurchaseOrderDetailListProps> = ({
       sortable: true,
       style: { textAlign: "center", width: "15%" },
       body: (rowData: IPurchaseOrderDetail) => (
-        <LabelInput className="justify-center" label={`${rowData.subtotal} ${currency}`} />
+        <LabelInput className="justify-center" label={`${formatAmount(rowData.subtotal)} ${currency}`} />
       ),
     },
     {
@@ -304,7 +305,7 @@ const PurchaseOrderDetailList: FC<PurchaseOrderDetailListProps> = ({
                   <div className="grid grid-cols-3 gap-2 text-xs text-gray-600 mt-2">
                     <div>
                       <p className="text-gray-400">Precio</p>
-                      <p className="font-semibold text-gray-800">{item.purchase_price} {currency}</p>
+                      <p className="font-semibold text-gray-800">{formatAmount(item.purchase_price)} {currency}</p>
                     </div>
                     <div>
                       <p className="text-gray-400">Cant.</p>
@@ -312,7 +313,7 @@ const PurchaseOrderDetailList: FC<PurchaseOrderDetailListProps> = ({
                     </div>
                     <div>
                       <p className="text-gray-400">Subtotal</p>
-                      <p className="font-semibold text-blue-700">{item.subtotal} {currency}</p>
+                      <p className="font-semibold text-blue-700">{formatAmount(item.subtotal)} {currency}</p>
                     </div>
                   </div>
 

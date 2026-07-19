@@ -21,6 +21,7 @@ import { getDate } from "../../utils/getDate";
 import { getStatus } from "../../utils/getStatus";
 import SectionHeader from "../../../../components/sectionHeader/SectionHeader";
 import useAuth from "../../../auth/hooks/useAuth";
+import { formatAmount } from "../../../../utils/currency";
 
 interface PurchaseOrderDetailProps {
   purchaseOrderId: string;
@@ -116,7 +117,7 @@ const PurchaseOrderDetail: FC<PurchaseOrderDetailProps> = ({ purchaseOrderId }) 
         <section className="flex flex-col items-start md:items-center justify-center">
           <LabelInput name="total" label="Total de compra" />
           <span className="text-xl md:text-2xl font-semibold text-green-600">
-            {`${order?.total} ${currency}`}
+            {`${formatAmount(order?.total ?? 0)} ${currency}`}
           </span>
         </section>
 

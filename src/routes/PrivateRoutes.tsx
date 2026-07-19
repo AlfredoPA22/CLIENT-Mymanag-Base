@@ -25,6 +25,7 @@ import ReportsPage from "../pages/reports/pages/ReportsPage";
 import { ProtectedRoute } from "./ProtectedRoute";
 import { ROUTES_MOCK } from "./RouteMocks";
 import SalePayment from "../pages/order/pages/salePayment/SalePayment";
+import PaymentList from "../pages/order/pages/salePayment/PaymentList";
 import CompanySettings from "../pages/settings/CompanySettings";
 import ProductTransferList from "../pages/transfer/ProductTransferList";
 import CreateProductTransfer from "../pages/transfer/CreateProductTransfer";
@@ -140,6 +141,14 @@ const PrivateRoutes: FC = () => {
             element={
               <PermissionRoute permissions={["LIST_PAYMENT"]}>
                 <SalePayment />
+              </PermissionRoute>
+            }
+          />
+          <Route
+            path={ROUTES_MOCK.PAYMENTS}
+            element={
+              <PermissionRoute permissions={["LIST_PAYMENT"]}>
+                <PaymentList />
               </PermissionRoute>
             }
           />

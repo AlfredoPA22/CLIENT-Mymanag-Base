@@ -4,6 +4,7 @@ import {
   IFilterProfitabilityInput,
   IProfitabilityReport,
 } from "../../../utils/interfaces/Profitability";
+import { formatAmount } from "../../../utils/currency";
 
 // ── Design tokens ─────────────────────────────────────────────
 const INK: [number, number, number]       = [30, 41, 59];
@@ -80,9 +81,9 @@ export const generateProfitabilityReportPDF = (
 
   // KPIs: 4 cajas en la derecha
   const kpis = [
-    { label: "INGRESOS",     value: `${currency} ${data.total_revenue.toFixed(2)}`,      color: INK },
-    { label: "COSTO",        value: `${currency} ${data.total_cost.toFixed(2)}`,          color: INK_MID },
-    { label: "GANANCIA",     value: `${currency} ${data.total_gross_profit.toFixed(2)}`,  color: data.total_gross_profit >= 0 ? GREEN : RED },
+    { label: "INGRESOS",     value: `${currency} ${formatAmount(data.total_revenue)}`,      color: INK },
+    { label: "COSTO",        value: `${currency} ${formatAmount(data.total_cost)}`,          color: INK_MID },
+    { label: "GANANCIA",     value: `${currency} ${formatAmount(data.total_gross_profit)}`,  color: data.total_gross_profit >= 0 ? GREEN : RED },
     { label: "MARGEN",       value: `${data.total_margin_percent.toFixed(1)}%`,           color: marginColor(data.total_margin_percent) },
   ];
 
@@ -124,9 +125,9 @@ export const generateProfitabilityReportPDF = (
       p.category_name,
       p.brand_name,
       p.units_sold,
-      p.revenue.toFixed(2),
-      p.cost.toFixed(2),
-      p.gross_profit.toFixed(2),
+      formatAmount(p.revenue),
+      formatAmount(p.cost),
+      formatAmount(p.gross_profit),
       `${p.margin_percent.toFixed(1)}%`,
     ]),
     bodyStyles: { fontSize: 7.5, textColor: INK, cellPadding: 3 },
@@ -154,7 +155,7 @@ export const generateProfitabilityReportPDF = (
         hookData.cell.styles.fontStyle = "bold";
       }
       if (hookData.section === "body" && hookData.column.index === 7) {
-        const val = parseFloat(String(hookData.cell.raw));
+        const val = data.by_product[hookData.row.index]?.gross_profit ?? 0;
         hookData.cell.styles.textColor = val >= 0 ? GREEN : RED;
       }
     },
@@ -178,9 +179,9 @@ export const generateProfitabilityReportPDF = (
     body: data.by_category.map((c) => [
       c.category_name,
       c.units_sold,
-      c.revenue.toFixed(2),
-      c.cost.toFixed(2),
-      c.gross_profit.toFixed(2),
+      formatAmount(c.revenue),
+      formatAmount(c.cost),
+      formatAmount(c.gross_profit),
       `${c.margin_percent.toFixed(1)}%`,
     ]),
     bodyStyles: { fontSize: 8, textColor: INK, cellPadding: 3 },
@@ -205,7 +206,7 @@ export const generateProfitabilityReportPDF = (
         hookData.cell.styles.fontStyle = "bold";
       }
       if (hookData.section === "body" && hookData.column.index === 4) {
-        const val = parseFloat(String(hookData.cell.raw));
+        const val = data.by_category[hookData.row.index]?.gross_profit ?? 0;
         hookData.cell.styles.textColor = val >= 0 ? GREEN : RED;
       }
     },

@@ -20,6 +20,7 @@ import useProductList from "../../../product/hooks/useProductList";
 import useWarehouseList from "../../../product/hooks/useWarehouseList";
 import { schemaFormSaleOrderDetail } from "../../validations/FormSaleOrderDetailValidation";
 import useAuth from "../../../auth/hooks/useAuth";
+import { formatAmount } from "../../../../utils/currency";
 
 interface SaleOrderDetailFormProps {
   saleOrderId: string;
@@ -116,7 +117,7 @@ const SaleOrderDetailForm: FC<SaleOrderDetailFormProps> = ({ saleOrderId }) => {
     if (discountType === "PORCENTUAL")
       return parseFloat((grossPreview * (Number(values.discount_value) / 100)).toFixed(2));
     if (discountType === "FIJO")
-      return Math.min(Number(values.discount_value), grossPreview);
+      return parseFloat(Math.min(Number(values.discount_value), grossPreview).toFixed(2));
     return null;
   })();
 
@@ -241,11 +242,11 @@ const SaleOrderDetailForm: FC<SaleOrderDetailFormProps> = ({ saleOrderId }) => {
             <div className="flex flex-col gap-0.5 text-sm">
               {discountPreview !== null && discountPreview > 0 && (
                 <span className="text-orange-500 text-xs">
-                  Descuento: -{discountPreview} {currency}
+                  Descuento: -{formatAmount(discountPreview)} {currency}
                 </span>
               )}
               <span className="font-semibold text-green-600">
-                Subtotal: {subtotalPreview} {currency}
+                Subtotal: {formatAmount(subtotalPreview ?? 0)} {currency}
               </span>
             </div>
           )}

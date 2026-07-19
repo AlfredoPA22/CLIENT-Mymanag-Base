@@ -4,6 +4,7 @@ import {
   IFilterPurchaseOrderInput,
   IPurchaseOrder,
 } from "../../../utils/interfaces/PurchaseOrder";
+import { formatAmount } from "../../../utils/currency";
 
 // ── Design tokens — sober, white-based ───────────────────────
 const INK: [number, number, number] = [30, 41, 59];
@@ -88,7 +89,7 @@ export const generatePurchaseOrderReportPDF = (
   doc.setFont("helvetica", "bold");
   doc.setFontSize(13);
   doc.setTextColor(...INK);
-  doc.text(`${total.toFixed(2)} ${currency}`, PAGE_W - MARGIN, filterY + 9, { align: "right" });
+  doc.text(`${formatAmount(total)} ${currency}`, PAGE_W - MARGIN, filterY + 9, { align: "right" });
 
   // ── RULE ──────────────────────────────────────────────────
   drawRule(doc, filterY + 16);
@@ -109,7 +110,7 @@ export const generatePurchaseOrderReportPDF = (
       new Date(Number(o.date)).toLocaleDateString("es-ES"),
       o.provider.name,
       o.status,
-      o.total,
+      formatAmount(o.total),
     ]),
     bodyStyles: { fontSize: 8.5, textColor: INK, cellPadding: 4 },
     alternateRowStyles: { fillColor: ROW_ALT },

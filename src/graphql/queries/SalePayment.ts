@@ -1,5 +1,30 @@
 import { gql } from "@apollo/client";
 
+export const LIST_SALE_PAYMENT = gql`
+  query ListSalePayment {
+    listSalePayment {
+      _id
+      amount
+      date
+      note
+      payment_method
+      sale_order {
+        _id
+        is_paid
+        code
+        status
+        total
+        client {
+          fullName
+        }
+      }
+      created_by {
+        user_name
+      }
+    }
+  }
+`;
+
 export const LIST_SALE_PAYMENT_BY_SALE_ORDER = gql`
   query ListSalePaymentBySaleOrder($saleOrderId: String!) {
     listSalePaymentBySaleOrder(saleOrderId: $saleOrderId) {

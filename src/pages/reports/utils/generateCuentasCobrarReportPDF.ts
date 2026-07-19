@@ -1,6 +1,7 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { ISaleOrder } from "../../../utils/interfaces/SaleOrder";
+import { formatAmount } from "../../../utils/currency";
 
 const INK: [number, number, number] = [30, 41, 59];
 const INK_MID: [number, number, number] = [71, 85, 105];
@@ -72,7 +73,7 @@ export const generateCuentasCobrarReportPDF = (
   doc.setFont("helvetica", "bold");
   doc.setFontSize(13);
   doc.setTextColor(220, 38, 38);
-  doc.text(`${total.toFixed(2)} ${currency}`, PAGE_W - MARGIN, filterY + 9, { align: "right" });
+  doc.text(`${formatAmount(total)} ${currency}`, PAGE_W - MARGIN, filterY + 9, { align: "right" });
 
   drawRule(doc, filterY + 16);
 
@@ -90,7 +91,7 @@ export const generateCuentasCobrarReportPDF = (
       o.code,
       new Date(Number(o.date)).toLocaleDateString("es-ES"),
       o.client?.fullName || "-",
-      Number(o.total || 0).toFixed(2),
+      formatAmount(Number(o.total || 0)),
     ]),
     bodyStyles: { fontSize: 8.5, textColor: INK, cellPadding: 4 },
     alternateRowStyles: { fillColor: ROW_ALT },

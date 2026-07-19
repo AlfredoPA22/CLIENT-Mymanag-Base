@@ -28,6 +28,7 @@ import { showToast } from "../../../../utils/toastUtils";
 import SerialToDetail from "./SerialToDetail";
 import { setIsBlocked } from "../../../../redux/slices/blockUISlice";
 import useAuth from "../../../auth/hooks/useAuth";
+import { formatAmount } from "../../../../utils/currency";
 import TextLink from "../../../../components/TextLink/TextLink";
 import { ROUTES_MOCK } from "../../../../routes/RouteMocks";
 import RowActionButtons, { RowAction } from "../../../../components/table/RowActionButtons";
@@ -267,7 +268,7 @@ const SaleOrderDetailList: FC<SaleOrderDetailListProps> = ({
       sortable: true,
       style: { width: "12%" },
       body: (rowData: ISaleOrderDetail) => (
-        <LabelInput className="justify-center" label={`${rowData.sale_price} ${currency}`} />
+        <LabelInput className="justify-center" label={`${formatAmount(rowData.sale_price)} ${currency}`} />
       ),
       fieldEditor: (options: ColumnEditorOptions) => numberEditor(options, true),
     },
@@ -288,7 +289,7 @@ const SaleOrderDetailList: FC<SaleOrderDetailListProps> = ({
           return <span className="text-gray-400 text-xs">—</span>;
         if (rowData.discount_type === "PORCENTUAL")
           return <span className="text-xs text-orange-600">{rowData.discount_value}%</span>;
-        return <span className="text-xs text-orange-600">{rowData.discount_value} {currency}</span>;
+        return <span className="text-xs text-orange-600">{formatAmount(rowData.discount_value ?? 0)} {currency}</span>;
       },
       fieldEditor: (options: ColumnEditorOptions) => (
         <Dropdown
@@ -309,7 +310,7 @@ const SaleOrderDetailList: FC<SaleOrderDetailListProps> = ({
       body: (rowData: ISaleOrderDetail) => {
         const amt = rowData.discount_amount ?? 0;
         if (amt === 0) return <span className="text-gray-400 text-xs">—</span>;
-        return <span className="text-xs text-orange-500">-{amt} {currency}</span>;
+        return <span className="text-xs text-orange-500">-{formatAmount(amt)} {currency}</span>;
       },
       fieldEditor: (options: ColumnEditorOptions) => numberEditor(options, true),
     },
@@ -319,7 +320,7 @@ const SaleOrderDetailList: FC<SaleOrderDetailListProps> = ({
       sortable: true,
       style: { textAlign: "center", width: "12%" },
       body: (rowData: ISaleOrderDetail) => (
-        <LabelInput className="justify-center" label={`${rowData.subtotal} ${currency}`} />
+        <LabelInput className="justify-center" label={`${formatAmount(rowData.subtotal)} ${currency}`} />
       ),
     },
     {
@@ -377,18 +378,18 @@ const SaleOrderDetailList: FC<SaleOrderDetailListProps> = ({
                 </p>
               </div>
               <span className="text-base font-bold text-green-700 whitespace-nowrap">
-                {detail.subtotal} {currency}
+                {formatAmount(detail.subtotal)} {currency}
               </span>
             </div>
 
             {/* Detalles: precio × cantidad, descuento */}
             <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500">
               <span>
-                {detail.sale_price} {currency} × {detail.quantity} uds.
+                {formatAmount(detail.sale_price)} {currency} × {detail.quantity} uds.
               </span>
               {(detail.discount_amount ?? 0) > 0 && (
                 <span className="text-orange-500">
-                  Desc: -{detail.discount_amount} {currency}
+                  Desc: -{formatAmount(detail.discount_amount ?? 0)} {currency}
                   {detail.discount_type === "PORCENTUAL"
                     ? ` (${detail.discount_value}%)`
                     : detail.discount_type === "FIJO"

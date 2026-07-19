@@ -26,4 +26,5 @@ export const ROUTES_MOCK = {
   NEW_TRANSFER: "/nueva-transferencia",
   EDIT_TRANSFER: "/editar-transferencia",
   SALE_RETURNS: "/devoluciones",
+  PAYMENTS: "/pagos",
 };

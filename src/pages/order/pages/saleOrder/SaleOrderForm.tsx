@@ -39,6 +39,7 @@ import { AutoCompleteChangeEvent } from "primereact/autocomplete";
 import { setIsBlocked } from "../../../../redux/slices/blockUISlice";
 import { ROUTES_MOCK } from "../../../../routes/RouteMocks";
 import useAuth from "../../../auth/hooks/useAuth";
+import { formatAmount } from "../../../../utils/currency";
 
 const SaleOrderForm = () => {
   const {
@@ -309,7 +310,7 @@ const SaleOrderForm = () => {
             <section className="flex flex-col items-center justify-center">
               <LabelInput name="total" label="Total de venta" />
               <span className="text-2xl font-semibold text-green-600">
-                {`${saleOrderData?.total} ${currency}`}
+                {`${formatAmount(saleOrderData?.total ?? 0)} ${currency}`}
               </span>
             </section>
           )}

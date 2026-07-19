@@ -30,6 +30,7 @@ import { ISaleOrder } from "../../../../utils/interfaces/SaleOrder";
 import { DataTableColumn } from "../../../../utils/interfaces/Table";
 import { showToast } from "../../../../utils/toastUtils";
 import useAuth from "../../../auth/hooks/useAuth";
+import { formatAmount } from "../../../../utils/currency";
 import useSaleOrderList from "../../hooks/useSaleOrderList";
 import { generatePDF } from "../../utils/generateSaleOrderPDF";
 import { getDate } from "../../utils/getDate";
@@ -287,7 +288,7 @@ const SaleOrderList = ({ storeOnly = false }: SaleOrderListProps) => {
     {
       field: "total", header: "Total", sortable: true, style: { textAlign: "center" },
       body: (rowData: ISaleOrder) => (
-        <LabelInput className="justify-center" label={`${rowData.total} ${currency}`} />
+        <LabelInput className="justify-center" label={`${formatAmount(rowData.total)} ${currency}`} />
       ),
     },
     { field: "status", header: "Estado", sortable: true, body: statusBodyTemplate, style: { textAlign: "center" } },
@@ -462,7 +463,7 @@ const SaleOrderList = ({ storeOnly = false }: SaleOrderListProps) => {
                   )}
                 </div>
                 <p className="text-base font-bold text-green-700 mt-1">
-                  {order.total} {currency}
+                  {formatAmount(order.total)} {currency}
                 </p>
               </div>
 

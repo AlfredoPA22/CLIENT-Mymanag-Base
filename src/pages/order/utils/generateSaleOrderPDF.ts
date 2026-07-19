@@ -4,6 +4,7 @@ import { ICompany } from "../../../utils/interfaces/Company";
 import { ISaleOrderToPDF } from "../../../utils/interfaces/SaleOrder";
 import { getDate } from "./getDate";
 import { buildSerialsRows, drawPaginatedFooter, withBottomRule } from "./pdfSerialsGrid";
+import { formatAmount } from "../../../utils/currency";
 
 // ── Design tokens — sober, white-based ───────────────────────
 const INK: [number, number, number] = [30, 41, 59];        // slate-800 — main text
@@ -159,8 +160,8 @@ export const generatePDF = async (
       d.product.name,
       d.product.brand.name,
       d.quantity,
-      d.sale_price,
-      d.subtotal,
+      formatAmount(d.sale_price),
+      formatAmount(d.subtotal),
     ];
 
     const extraRows: any[] = [];
@@ -168,8 +169,8 @@ export const generatePDF = async (
     if (detailDiscount > 0) {
       const label =
         d.discount_type === "percentage"
-          ? `Descuento (${d.discount_value}%): -${detailDiscount.toFixed(2)} ${currency}`
-          : `Descuento: -${detailDiscount.toFixed(2)} ${currency}`;
+          ? `Descuento (${d.discount_value}%): -${formatAmount(detailDiscount)} ${currency}`
+          : `Descuento: -${formatAmount(detailDiscount)} ${currency}`;
       extraRows.push([
         {
           content: label,
@@ -237,14 +238,14 @@ export const generatePDF = async (
     doc.setFontSize(8.5);
     doc.setTextColor(...INK_MID);
     doc.text(
-      `Subtotal:   ${subtotalBruto.toFixed(2)} ${currency}`,
+      `Subtotal:   ${formatAmount(subtotalBruto)} ${currency}`,
       PAGE_W - MARGIN,
       finalY + 6,
       { align: "right" }
     );
     doc.setTextColor(...RED);
     doc.text(
-      `${discountFooterLabel}   -${discountAmount.toFixed(2)} ${currency}`,
+      `${discountFooterLabel}   -${formatAmount(discountAmount)} ${currency}`,
       PAGE_W - MARGIN,
       finalY + 12,
       { align: "right" }
@@ -253,7 +254,7 @@ export const generatePDF = async (
     doc.setFontSize(9.5);
     doc.setTextColor(...INK);
     doc.text(
-      `TOTAL:   ${data.saleOrder.total} ${currency}`,
+      `TOTAL:   ${formatAmount(data.saleOrder.total)} ${currency}`,
       PAGE_W - MARGIN,
       finalY + 20,
       { align: "right" }
@@ -263,7 +264,7 @@ export const generatePDF = async (
     doc.setFontSize(9.5);
     doc.setTextColor(...INK);
     doc.text(
-      `TOTAL:   ${data.saleOrder.total} ${currency}`,
+      `TOTAL:   ${formatAmount(data.saleOrder.total)} ${currency}`,
       PAGE_W - MARGIN,
       finalY + 8,
       { align: "right" }

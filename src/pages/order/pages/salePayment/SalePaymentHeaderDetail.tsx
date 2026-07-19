@@ -6,9 +6,11 @@ import { IDetailSalePayment } from "../../../../utils/interfaces/SalePayment";
 import { getStatus } from "../../utils/getStatus";
 import { Button } from "primereact/button";
 import { useNavigate } from "react-router-dom";
-import { ROUTES_MOCK } from "../../../../routes/RouteMocks";
 import SectionHeader from "../../../../components/sectionHeader/SectionHeader";
+import TextLink from "../../../../components/TextLink/TextLink";
+import { ROUTES_MOCK } from "../../../../routes/RouteMocks";
 import useAuth from "../../../auth/hooks/useAuth";
+import { formatAmount } from "../../../../utils/currency";
 
 interface SalePaymentHeaderDetailProps {
   detailSalePayment: IDetailSalePayment;
@@ -22,12 +24,6 @@ const SalePaymentHeaderDetail: FC<SalePaymentHeaderDetailProps> = ({
   const navigate = useNavigate();
   const { currency } = useAuth();
 
-  const goBackToSale = () => {
-    navigate(
-      `${ROUTES_MOCK.SALE_ORDERS}/detalle/${detailSalePayment.sale_order._id}`
-    );
-  };
-
   if (loadingDetailSalePayment) {
     return <PaymentSkeleton />;
   }
@@ -40,10 +36,10 @@ const SalePaymentHeaderDetail: FC<SalePaymentHeaderDetailProps> = ({
         subtitle="Información general de los pagos realizados para esta venta."
         actions={
           <Button
-            label="Volver a la venta"
+            label="Volver"
             icon="pi pi-arrow-left"
             className="p-button-outlined"
-            onClick={goBackToSale}
+            onClick={() => navigate(-1)}
           />
         }
       />
@@ -53,14 +49,14 @@ const SalePaymentHeaderDetail: FC<SalePaymentHeaderDetailProps> = ({
         <section className="flex flex-col items-center gap-2 p-4 border rounded-md shadow-sm">
           <LabelInput name="total_amount" label="Total a pagar" />
           <span className="text-xl font-semibold text-gray-700">
-            {`${detailSalePayment.total_amount} ${currency}`}
+            {`${formatAmount(detailSalePayment.total_amount)} ${currency}`}
           </span>
         </section>
 
         <section className="flex flex-col items-center gap-2 p-4 border rounded-md shadow-sm">
           <LabelInput name="total_paid" label="Total pagado" />
           <span className="text-xl font-semibold text-green-600">
-            {`${detailSalePayment.total_paid} ${currency}`}
+            {`${formatAmount(detailSalePayment.total_paid)} ${currency}`}
           </span>
         </section>
 
@@ -79,8 +75,8 @@ const SalePaymentHeaderDetail: FC<SalePaymentHeaderDetailProps> = ({
             }`}
           >
             {detailSalePayment.total_pending < 0
-              ? `${Math.abs(detailSalePayment.total_pending)} ${currency}`
-              : `${detailSalePayment.total_pending} ${currency}`}
+              ? `${formatAmount(Math.abs(detailSalePayment.total_pending))} ${currency}`
+              : `${formatAmount(detailSalePayment.total_pending)} ${currency}`}
           </span>
         </section>
       </div>
@@ -89,9 +85,13 @@ const SalePaymentHeaderDetail: FC<SalePaymentHeaderDetailProps> = ({
       <div className="mt-8 flex flex-col md:flex-row justify-between items-center gap-6">
         <div className="flex flex-col items-center">
           <LabelInput name="code" label="Código de venta" />
-          <span className="text-lg font-bold text-gray-800">
-            {detailSalePayment.sale_order.code}
-          </span>
+          <TextLink
+            to={`${ROUTES_MOCK.SALE_ORDERS}/detalle/${detailSalePayment.sale_order._id}`}
+          >
+            <span className="text-lg font-bold text-gray-800">
+              {detailSalePayment.sale_order.code}
+            </span>
+          </TextLink>
         </div>
 
         <div className="flex flex-col items-center">
@@ -113,7 +113,7 @@ const SalePaymentHeaderDetail: FC<SalePaymentHeaderDetailProps> = ({
       {/* Estado de pago */}
       <div className="mt-6 flex justify-center">
         {detailSalePayment.total_pending < 0 ? (
-          <Tag severity="info" value={`Saldo a favor: ${Math.abs(detailSalePayment.total_pending)} ${currency}`} />
+          <Tag severity="info" value={`Saldo a favor: ${formatAmount(Math.abs(detailSalePayment.total_pending))} ${currency}`} />
         ) : detailSalePayment.sale_order.is_paid ? (
           <Tag severity="success" value="Venta totalmente pagada" />
         ) : (

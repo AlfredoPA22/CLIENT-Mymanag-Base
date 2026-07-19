@@ -17,6 +17,7 @@ import { REPORT_MONTHLY_SALES } from "../../graphql/queries/Home";
 import { ToastSeverity } from "../../utils/enums/toast.enum";
 import { showToast } from "../../utils/toastUtils";
 import useAuth from "../auth/hooks/useAuth";
+import { formatAmount } from "../../utils/currency";
 
 ChartJS.register(CategoryScale, LinearScale, LineElement, PointElement, Title, Tooltip, Legend, Filler);
 
@@ -70,14 +71,14 @@ const ReportMonthlySales = () => {
       tooltip: {
         callbacks: {
           label: (ctx: { parsed: { y: number } }) =>
-            ` ${ctx.parsed.y.toLocaleString("es-ES", { minimumFractionDigits: 2 })} ${currency}`,
+            ` ${formatAmount(ctx.parsed.y)} ${currency}`,
         },
       },
     },
     scales: {
       y: {
         beginAtZero: true,
-        ticks: { callback: (value: number | string) => `${value} ${currency}` },
+        ticks: { callback: (value: number | string) => `${formatAmount(Number(value))} ${currency}` },
       },
     },
   };

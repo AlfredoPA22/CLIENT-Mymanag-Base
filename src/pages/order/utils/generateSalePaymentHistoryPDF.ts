@@ -5,6 +5,7 @@ import {
   ISalePayment,
 } from "../../../utils/interfaces/SalePayment";
 import { getDate } from "./getDate";
+import { formatAmount } from "../../../utils/currency";
 
 // ── Design tokens — sober, white-based ───────────────────────
 const INK: [number, number, number] = [30, 41, 59];
@@ -65,8 +66,8 @@ export const generateHistoryPDF = (
 
   const summaryItems = [
     { label: "CLIENTE", value: detail.sale_order.client.fullName },
-    { label: "TOTAL DE VENTA", value: `${detail.total_amount} ${currency}` },
-    { label: "TOTAL PAGADO", value: `${detail.total_paid} ${currency}` },
+    { label: "TOTAL DE VENTA", value: `${formatAmount(detail.total_amount)} ${currency}` },
+    { label: "TOTAL PAGADO", value: `${formatAmount(detail.total_paid)} ${currency}` },
   ];
 
   summaryItems.forEach((item, i) => {
@@ -89,7 +90,7 @@ export const generateHistoryPDF = (
   doc.setFont("helvetica", "bold");
   doc.setFontSize(12);
   doc.setTextColor(...INK);
-  doc.text(`${detail.total_pending} ${currency}`, PAGE_W - MARGIN, infoY + 8, { align: "right" });
+  doc.text(`${formatAmount(detail.total_pending)} ${currency}`, PAGE_W - MARGIN, infoY + 8, { align: "right" });
 
   // ── RULE ──────────────────────────────────────────────────
   drawRule(doc, infoY + 18);
@@ -136,7 +137,7 @@ export const generateHistoryPDF = (
   doc.setFontSize(9.5);
   doc.setTextColor(...INK);
   doc.text(
-    `TOTAL PAGADO:   ${detail.total_paid} ${currency}`,
+    `TOTAL PAGADO:   ${formatAmount(detail.total_paid)} ${currency}`,
     PAGE_W - MARGIN,
     finalY + 8,
     { align: "right" }

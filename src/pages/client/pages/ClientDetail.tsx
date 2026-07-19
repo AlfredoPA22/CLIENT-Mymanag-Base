@@ -13,6 +13,7 @@ import { IClient } from "../../../utils/interfaces/Client";
 import { ISaleOrder } from "../../../utils/interfaces/SaleOrder";
 import { DataTableColumn } from "../../../utils/interfaces/Table";
 import { showToast } from "../../../utils/toastUtils";
+import { formatAmount } from "../../../utils/currency";
 import { getStatus } from "../../order/utils/getStatus";
 import { ROUTES_MOCK } from "../../../routes/RouteMocks";
 import useAuth from "../../auth/hooks/useAuth";
@@ -103,7 +104,7 @@ const ClientDetail: FC<ClientDetailProps> = ({ client }) => {
       body: (rowData: ISaleOrder) => (
         <LabelInput
           className="justify-center"
-          label={`${rowData.total} ${currency}`}
+          label={`${formatAmount(rowData.total)} ${currency}`}
         />
       ),
     },
@@ -158,7 +159,7 @@ const ClientDetail: FC<ClientDetailProps> = ({ client }) => {
                       {order.code}
                     </TextLink>
                     <p className="text-sm font-semibold text-blue-600 mt-0.5">
-                      {order.total} {currency}
+                      {formatAmount(order.total)} {currency}
                     </p>
                   </div>
                   {status && (
@@ -171,7 +172,7 @@ const ClientDetail: FC<ClientDetailProps> = ({ client }) => {
             })}
             {saleOrders.length > 0 && (
               <p className="text-right text-sm font-semibold text-gray-700 pr-1">
-                Total vendido: {total} {currency}
+                Total vendido: {formatAmount(total)} {currency}
               </p>
             )}
           </div>
@@ -185,7 +186,7 @@ const ClientDetail: FC<ClientDetailProps> = ({ client }) => {
               size="small"
               dataFilters={filters}
               tableHeader={renderFilterInput}
-              footer={`Total vendido: ${total} ${currency}`}
+              footer={`Total vendido: ${formatAmount(total)} ${currency}`}
             />
           </div>
         </Card>

@@ -8,6 +8,7 @@ import { IProduct } from "../../../../utils/interfaces/Product";
 import { getStatus } from "../../../order/utils/getStatus";
 import useAuth from "../../../auth/hooks/useAuth";
 import { PermissionGuard } from "../../../auth/pages/PermissionGuard";
+import { formatAmount } from "../../../../utils/currency";
 
 interface ProductCardProps {
   productData: IProduct;
@@ -95,7 +96,7 @@ const ProductCard: FC<ProductCardProps> = ({ productData }) => {
               className="bg-blue-50"
               value={
                 <p className="text-xl font-bold text-blue-600">
-                  {currency} {productData.sale_price.toFixed(2)}
+                  {currency} {formatAmount(productData.sale_price)}
                 </p>
               }
             />
@@ -106,7 +107,7 @@ const ProductCard: FC<ProductCardProps> = ({ productData }) => {
                 className="bg-gray-50"
                 value={
                   <p className="text-xl font-bold text-gray-600">
-                    {currency} {productData.last_cost_price.toFixed(2)}
+                    {currency} {formatAmount(productData.last_cost_price)}
                   </p>
                 }
               />

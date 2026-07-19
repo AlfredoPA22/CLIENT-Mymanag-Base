@@ -13,6 +13,7 @@ import { DataTableSelectionSingleChangeEvent } from "primereact/datatable";
 import { useNavigate } from "react-router-dom";
 import { ROUTES_MOCK } from "../../../../routes/RouteMocks";
 import useAuth from "../../../auth/hooks/useAuth";
+import { formatAmount } from "../../../../utils/currency";
 
 interface ListSaleOrderByProductProps {
   productId: string;
@@ -38,13 +39,13 @@ const ListSaleOrderByProduct: FC<ListSaleOrderByProductProps> = ({ productId }) 
     {
       field: "saleOrderDetail.sale_price", header: "Precio de venta", sortable: true,
       body: (rowData) => (
-        <LabelInput className="justify-center" label={`${rowData.saleOrderDetail.sale_price} ${currency}`} />
+        <LabelInput className="justify-center" label={`${formatAmount(rowData.saleOrderDetail.sale_price)} ${currency}`} />
       ),
     },
     {
       field: "saleOrderDetail.subtotal", header: "Subtotal", sortable: true,
       body: (rowData) => (
-        <LabelInput className="justify-center" label={`${rowData.saleOrderDetail.subtotal} ${currency}`} />
+        <LabelInput className="justify-center" label={`${formatAmount(rowData.saleOrderDetail.subtotal)} ${currency}`} />
       ),
     },
     {
@@ -85,10 +86,10 @@ const ListSaleOrderByProduct: FC<ListSaleOrderByProductProps> = ({ productId }) 
                 <span>·</span>
                 <span>{item.saleOrderDetail.quantity} uds.</span>
                 <span>·</span>
-                <span>{item.saleOrderDetail.sale_price} {currency} c/u</span>
+                <span>{formatAmount(item.saleOrderDetail.sale_price)} {currency} c/u</span>
               </div>
               <p className="text-sm font-bold text-green-700 mt-1">
-                {item.saleOrderDetail.subtotal} {currency}
+                {formatAmount(item.saleOrderDetail.subtotal)} {currency}
               </p>
             </div>
           );

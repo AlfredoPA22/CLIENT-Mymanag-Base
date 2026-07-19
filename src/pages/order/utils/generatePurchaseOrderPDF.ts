@@ -4,6 +4,7 @@ import { ICompany } from "../../../utils/interfaces/Company";
 import { IPurchaseOrderToPDF } from "../../../utils/interfaces/PurchaseOrder";
 import { getDate } from "./getDate";
 import { buildSerialsRows, drawPaginatedFooter, withBottomRule } from "./pdfSerialsGrid";
+import { formatAmount } from "../../../utils/currency";
 
 // ── Design tokens — sober, white-based ───────────────────────
 const INK: [number, number, number] = [30, 41, 59];
@@ -117,7 +118,7 @@ export const generatePDF = async (
   doc.setFont("helvetica", "bold");
   doc.setFontSize(14);
   doc.setTextColor(...INK);
-  doc.text(`${data.purchaseOrder.total} ${currency}`, PAGE_W - MARGIN, infoY + 9, { align: "right" });
+  doc.text(`${formatAmount(data.purchaseOrder.total)} ${currency}`, PAGE_W - MARGIN, infoY + 9, { align: "right" });
 
   // ── SECTION RULE ─────────────────────────────────────────
   drawRule(doc, infoY + 25);
@@ -138,8 +139,8 @@ export const generatePDF = async (
       detail.purchaseOrderDetail.product.name,
       detail.purchaseOrderDetail.product.brand.name,
       detail.purchaseOrderDetail.quantity,
-      detail.purchaseOrderDetail.purchase_price,
-      detail.purchaseOrderDetail.subtotal,
+      formatAmount(detail.purchaseOrderDetail.purchase_price),
+      formatAmount(detail.purchaseOrderDetail.subtotal),
     ];
 
     const serials = detail.productSerial.map((s) => s.serial);
