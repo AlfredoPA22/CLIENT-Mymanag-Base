@@ -19,6 +19,9 @@ import { resetNavbar } from "../../../redux/slices/navbarSlice";
 import { resetPurchaseOrder } from "../../../redux/slices/purchaseOrderSlice";
 import { resetSaleOrder } from "../../../redux/slices/saleOrderSlice";
 import { resetProductTransfer } from "../../../redux/slices/productTransferSlice";
+import apolloClient from "../../../ApolloClient";
+
+export type CompanyAccessBlockedReason = "expired" | "suspended" | null;
 
 const useAuth = () => {
   const navigate = useNavigate();
@@ -36,6 +39,8 @@ const useAuth = () => {
     isGlobal,
   } = useSelector((state: RootState) => state.authSlice);
   const [loadingLogin, setLoadingLogin] = useState<boolean>(false);
+  const [companyAccessBlocked, setCompanyAccessBlocked] =
+    useState<CompanyAccessBlockedReason>(null);
   const [loginMutation] = useMutation(LOGIN);
 
   const login = async (credentials: ILoginInput) => {
@@ -46,6 +51,9 @@ const useAuth = () => {
 
       if (token) {
         const decoded: DecodedToken = jwtDecode(token);
+        // Limpia cualquier dato en caché de una sesión anterior en esta misma
+        // pestaña (otra empresa/usuario) antes de cargar la nueva sesión.
+        await apolloClient.clearStore();
         dispatch(
           setLogin({
             token,
@@ -67,7 +75,14 @@ const useAuth = () => {
         });
       }
     } catch (error: any) {
-      showToast({ detail: error.message, severity: ToastSeverity.Error });
+      const message: string = error.message ?? "";
+      if (message.includes("venció")) {
+        setCompanyAccessBlocked("expired");
+      } else if (message.includes("suspendida")) {
+        setCompanyAccessBlocked("suspended");
+      } else {
+        showToast({ detail: message, severity: ToastSeverity.Error });
+      }
     } finally {
       setLoadingLogin(false);
     }
@@ -80,6 +95,7 @@ const useAuth = () => {
     dispatch(resetSaleOrder());
     dispatch(resetProductTransfer());
     localStorage.clear();
+    await apolloClient.clearStore();
     navigate("/login");
   };
 
@@ -139,6 +155,8 @@ const useAuth = () => {
     isGlobal,
     loadingLogin,
     isAuthenticated,
+    companyAccessBlocked,
+    clearCompanyAccessBlocked: () => setCompanyAccessBlocked(null),
     login,
     logout,
     checkAuthentication,

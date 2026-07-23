@@ -5,9 +5,10 @@ import { useFormikForm } from "../../../hooks/useFormikForm";
 import { ILoginInput } from "../../../utils/interfaces/User";
 import useAuth from "../hooks/useAuth";
 import { schemaLogin } from "../utils/validations/LoginValidation";
+import CompanyAccessBlockedModal from "./CompanyAccessBlockedModal";
 
 const Login = () => {
-  const { login } = useAuth();
+  const { login, companyAccessBlocked, clearCompanyAccessBlocked } = useAuth();
 
   const initialLoginValues: ILoginInput = {
     user_name: "",
@@ -127,6 +128,11 @@ const Login = () => {
           </div>
         </div>
       </div>
+
+      <CompanyAccessBlockedModal
+        reason={companyAccessBlocked}
+        onClose={clearCompanyAccessBlocked}
+      />
     </div>
   );
 };

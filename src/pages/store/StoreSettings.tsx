@@ -23,7 +23,8 @@ import {
 const DEFAULT_THEME = STORE_THEME_PRESETS[0].theme;
 
 const StoreSettings = () => {
-  const { company, loadingCompany, loadingUpdate, saveCompany } = useCompanySettings();
+  const { company, loadingCompany, errorCompany, refetchCompany, loadingUpdate, saveCompany } =
+    useCompanySettings();
   const { currency } = useAuth();
   const qrRef = useRef<HTMLCanvasElement>(null);
   const [uploadingBanner, setUploadingBanner] = useState(false);
@@ -41,8 +42,21 @@ const StoreSettings = () => {
     }
   }, [company?.store_theme?.primary]);
 
-  if (loadingCompany || !company) {
+  if (loadingCompany) {
     return <LoadingSpinner />;
+  }
+
+  if (errorCompany || !company) {
+    return (
+      <div className="p-4 max-w-3xl mx-auto">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 flex flex-col items-center gap-3 text-center">
+          <p className="text-gray-600">
+            No se pudo cargar la configuración de la tienda.
+          </p>
+          <Button label="Reintentar" icon="pi pi-refresh" onClick={() => refetchCompany()} />
+        </div>
+      </div>
+    );
   }
 
   const storeUrl = `${import.meta.env.VITE_STORE_BASE_URL}/${company.slug}`;

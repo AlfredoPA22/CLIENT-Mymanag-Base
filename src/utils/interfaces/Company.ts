@@ -17,6 +17,8 @@ export interface ICompany {
   store_theme?: IStoreTheme;
   plan: string;
   status: string;
+  trial_expires_at?: string | null;
+  subscription_expires_at?: string | null;
 }
 
 export interface ICompanyInput {

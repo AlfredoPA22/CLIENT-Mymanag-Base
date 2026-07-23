@@ -10,7 +10,7 @@ import { ToastSeverity } from "../../../utils/enums/toast.enum";
 const useCompanySettings = () => {
   const dispatch = useDispatch();
 
-  const { data, loading: loadingCompany } = useQuery(DETAIL_COMPANY, {
+  const { data, loading: loadingCompany, error: errorCompany, refetch: refetchCompany } = useQuery(DETAIL_COMPANY, {
     fetchPolicy: "network-only",
   });
 
@@ -39,6 +39,8 @@ const useCompanySettings = () => {
   return {
     company,
     loadingCompany,
+    errorCompany,
+    refetchCompany,
     loadingUpdate,
     saveCompany,
   };

@@ -26,6 +26,8 @@ export const DETAIL_COMPANY = gql`
       }
       plan
       status
+      trial_expires_at
+      subscription_expires_at
     }
   }
 `;

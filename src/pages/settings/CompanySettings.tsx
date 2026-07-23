@@ -12,7 +12,8 @@ import useCompanySettings from "./hooks/useCompanySettings";
 import { ICompany, ICompanyInput } from "../../utils/interfaces/Company";
 import { uploadImage } from "../../utils/uploadImage";
 import { schemaCompanySettings } from "./validations/CompanySettingsValidation";
-import { PLAN_LABELS } from "../../utils/enums/companyPlan.enum";
+import { PLAN_LABELS, companyPlan } from "../../utils/enums/companyPlan.enum";
+import { getDate } from "../order/utils/getDate";
 
 const STATUS_LABELS: Record<string, string> = {
   ACTIVE: "Activo",
@@ -140,6 +141,32 @@ const CompanySettingsForm = ({ company, canEdit, saveCompany }: CompanyFormProps
 
   const isDirty = dirty || !!selectedImage;
 
+  const expiresAtRaw =
+    company.plan === companyPlan.FREE
+      ? company.trial_expires_at
+      : company.subscription_expires_at;
+
+  const expiresAt =
+    expiresAtRaw && !isNaN(Number(expiresAtRaw))
+      ? new Date(Number(expiresAtRaw))
+      : null;
+
+  const remainingDays = expiresAt
+    ? Math.max(
+        Math.ceil((expiresAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24)),
+        0
+      )
+    : 0;
+
+  const remainingDaysCls =
+    remainingDays === 0
+      ? "text-red-600"
+      : remainingDays <= 3
+      ? "text-red-600"
+      : remainingDays <= 7
+      ? "text-yellow-600"
+      : "text-green-600";
+
   return (
     <div className="p-4 max-w-3xl mx-auto">
       <SectionHeader
@@ -148,7 +175,7 @@ const CompanySettingsForm = ({ company, canEdit, saveCompany }: CompanyFormProps
       />
 
       {/* Información de solo lectura */}
-      <div className="mb-6 bg-white rounded-xl shadow-sm border border-gray-100 p-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="mb-6 bg-white rounded-xl shadow-sm border border-gray-100 p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="flex flex-col gap-1">
           <span className="text-xs text-gray-500 uppercase tracking-wide">Empresa</span>
           <span className="font-semibold text-gray-800">{company.name ?? "-"}</span>
@@ -168,6 +195,23 @@ const CompanySettingsForm = ({ company, canEdit, saveCompany }: CompanyFormProps
           >
             {STATUS_LABELS[company.status ?? ""] ?? company.status ?? "-"}
           </span>
+        </div>
+        <div className="flex flex-col gap-1">
+          <span className="text-xs text-gray-500 uppercase tracking-wide">
+            {company.plan === companyPlan.FREE ? "Vence prueba" : "Vence plan"}
+          </span>
+          {expiresAt ? (
+            <>
+              <span className={`font-semibold ${remainingDaysCls}`}>
+                {remainingDays === 0
+                  ? "Vencido"
+                  : `${remainingDays} día${remainingDays === 1 ? "" : "s"} restante${remainingDays === 1 ? "" : "s"}`}
+              </span>
+              <span className="text-xs text-gray-400">{getDate(expiresAt.getTime())}</span>
+            </>
+          ) : (
+            <span className="font-semibold text-gray-400">-</span>
+          )}
         </div>
       </div>
 
@@ -337,11 +381,25 @@ const CompanySettingsForm = ({ company, canEdit, saveCompany }: CompanyFormProps
 
 const CompanySettings = () => {
   const { permissions } = useAuth();
-  const { company, loadingCompany, saveCompany } = useCompanySettings();
+  const { company, loadingCompany, errorCompany, refetchCompany, saveCompany } =
+    useCompanySettings();
 
   const canEdit = permissions.includes("UPDATE_COMPANY");
 
-  if (loadingCompany || !company) return <LoadingSpinner />;
+  if (loadingCompany) return <LoadingSpinner />;
+
+  if (errorCompany || !company) {
+    return (
+      <div className="p-4 max-w-3xl mx-auto">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 flex flex-col items-center gap-3 text-center">
+          <p className="text-gray-600">
+            No se pudo cargar la información de la empresa.
+          </p>
+          <Button label="Reintentar" icon="pi pi-refresh" onClick={() => refetchCompany()} />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <CompanySettingsForm
