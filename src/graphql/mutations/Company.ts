@@ -12,6 +12,7 @@ export const UPDATE_COMPANY = gql`
       country
       image
       currency
+      exchange_rate
       store_enabled
       store_banner_image
       store_theme {

@@ -34,7 +34,8 @@ import { getStatus } from "../../utils/getStatus";
 import { schemaFormSaleOrder } from "../../validations/FormSaleOrderValidation";
 import DropdownInput from "../../../../components/dropdownInput/DropdownInput";
 import { saleOrderPaymentMethodOptions } from "../../utils/saleOrderPaymentMethodMock";
-import { salePaymentMethodOptions } from "../../utils/salePaymentMethodMock";
+import { getSalePaymentMethodOptions } from "../../utils/salePaymentMethodMock";
+import useQrPaymentAvailable from "../../../../hooks/useQrPaymentAvailable";
 import { AutoCompleteChangeEvent } from "primereact/autocomplete";
 import { setIsBlocked } from "../../../../redux/slices/blockUISlice";
 import { ROUTES_MOCK } from "../../../../routes/RouteMocks";
@@ -53,6 +54,7 @@ const SaleOrderForm = () => {
 
   const { listClientSelect } = useClientList();
   const { currency } = useAuth();
+  const qrAvailable = useQrPaymentAvailable();
 
   const [selectedClient, setSelectedClient] = useState<IReactSelect | null>(
     null
@@ -270,7 +272,8 @@ const SaleOrderForm = () => {
               optionLabel="label"
               placeholder="¿Cómo paga?"
               mandatory
-              options={salePaymentMethodOptions}
+              options={getSalePaymentMethodOptions(qrAvailable)}
+              optionDisabled="disabled"
               value={selectedContadoPaymentMethod}
               error={
                 errors.contado_payment_method

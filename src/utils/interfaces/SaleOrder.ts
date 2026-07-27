@@ -17,6 +17,7 @@ export interface ISaleOrder {
   discount_type?: string | null;
   discount_value?: number;
   discount_amount?: number;
+  source?: string;
 }
 
 export interface ISaleOrderInput {
@@ -26,9 +27,17 @@ export interface ISaleOrderInput {
   contado_payment_method?: string;
 }
 
+export interface IQrPaymentInfo {
+  amount: number;
+  currency: string;
+  amount_bob?: number;
+  exchange_rate?: number;
+}
+
 export interface ISaleOrderToPDF {
   saleOrder: ISaleOrder;
   saleOrderDetail: ISaleOrderDetailToPDF[];
+  qr_payment_info?: IQrPaymentInfo | null;
 }
 
 export interface ISaleOrderByYear {

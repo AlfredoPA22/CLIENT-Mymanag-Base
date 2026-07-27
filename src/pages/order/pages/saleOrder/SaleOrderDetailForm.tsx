@@ -56,6 +56,10 @@ const SaleOrderDetailForm: FC<SaleOrderDetailFormProps> = ({ saleOrderId }) => {
   const [selectedProduct, setSelectedProduct] = useState<IProduct | null>(null);
   const [selectedWarehouse, setSelectedWarehouse] = useState<IWarehouse | null>(null);
   const [discountType, setDiscountType] = useState<string>("NONE");
+  // Cambiar la key fuerza a PrimeReact a remontar los dropdowns tras agregar
+  // el producto, para que también se limpie el texto de búsqueda interno del
+  // filtro (setear value=null no alcanza para eso).
+  const [productFieldsKey, setProductFieldsKey] = useState(0);
 
   const onSubmit = async () => {
     const vars: any = {
@@ -71,6 +75,7 @@ const SaleOrderDetailForm: FC<SaleOrderDetailFormProps> = ({ saleOrderId }) => {
     setSelectedProduct(null);
     setSelectedWarehouse(null);
     setDiscountType("NONE");
+    setProductFieldsKey((k) => k + 1);
   };
 
   const handleProductChange = async (e: AutoCompleteChangeEvent) => {
@@ -79,7 +84,7 @@ const SaleOrderDetailForm: FC<SaleOrderDetailFormProps> = ({ saleOrderId }) => {
     e.target.value = value ? value._id : null;
     setFieldValue(e.target.name, e.target.value);
     setTimeout(() => {
-      setFieldValue("sale_price", e.value.sale_price || "");
+      setFieldValue("sale_price", value?.sale_price || "");
     }, 0);
   };
 
@@ -146,6 +151,7 @@ const SaleOrderDetailForm: FC<SaleOrderDetailFormProps> = ({ saleOrderId }) => {
             } grid-cols-1 gap-2 justify-center items-start`}
           >
             <DropdownInput
+              key={`product-${productFieldsKey}`}
               className={`${
                 selectedProduct && selectedProduct.stock_type === stockType.INDIVIDUAL
                   ? "2xl:w-[400px] md:col-span-2"
@@ -165,6 +171,7 @@ const SaleOrderDetailForm: FC<SaleOrderDetailFormProps> = ({ saleOrderId }) => {
             />
             {selectedProduct && selectedProduct.stock_type === stockType.INDIVIDUAL && (
               <DropdownInput
+                key={`warehouse-${productFieldsKey}`}
                 className="2xl:w-[400px] md:col-span-2"
                 label="Almacén"
                 name="warehouse"

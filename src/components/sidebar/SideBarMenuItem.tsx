@@ -8,6 +8,7 @@ interface SidebarMenuItemProps {
   handleNavigate: (to: string) => void;
   location: any;
   collapsed?: boolean;
+  mobile?: boolean;
 }
 
 export const SidebarMenuItem = ({
@@ -15,6 +16,7 @@ export const SidebarMenuItem = ({
   handleNavigate,
   location,
   collapsed = false,
+  mobile = false,
 }: SidebarMenuItemProps) => {
   const [open, setOpen] = useState(false);
   const { permissions } = useAuth();
@@ -22,7 +24,7 @@ export const SidebarMenuItem = ({
   const isActive =
     item.to &&
     (location.pathname === item.to ||
-      (item.to.length > 1 && location.pathname.startsWith(item.to)));
+      (!item.exact && item.to.length > 1 && location.pathname.startsWith(item.to)));
 
   const isChildActive = item.items?.some(
     (child: any) =>
@@ -52,24 +54,33 @@ export const SidebarMenuItem = ({
       <motion.button
         onClick={onClick}
         whileHover={{ x: collapsed ? 0 : 2 }}
+        whileTap={{ scale: mobile ? 0.98 : 1 }}
         transition={{ type: "spring", stiffness: 400, damping: 25 }}
-        className={`relative flex items-center w-full gap-3 rounded-xl text-sm font-medium transition-colors duration-200 ${
-          collapsed ? "justify-center px-0 py-3" : "justify-between px-3 py-2.5"
+        className={`relative flex items-center w-full gap-3 rounded-xl font-medium transition-colors duration-200 ${
+          mobile ? "text-base" : "text-sm"
+        } ${
+          collapsed
+            ? "justify-center px-0 py-3"
+            : mobile
+            ? "justify-between px-3.5 py-3.5"
+            : "justify-between px-3 py-2.5"
         } ${
           active
             ? "bg-[#A0C82E]/15 text-[#A0C82E]"
-            : "text-slate-300 hover:bg-white/5 hover:text-white"
+            : "text-slate-300 hover:bg-white/5 hover:text-white active:bg-white/10"
         }`}
       >
         {/* Accent bar */}
         <AnimatePresence>
           {active && !collapsed && (
             <motion.span
-              layoutId="activeBar"
+              layoutId={mobile ? "activeBarMobile" : "activeBar"}
               initial={{ opacity: 0, scaleY: 0 }}
               animate={{ opacity: 1, scaleY: 1 }}
               exit={{ opacity: 0, scaleY: 0 }}
-              className="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-full bg-[#A0C82E]"
+              className={`absolute left-0 top-1.5 bottom-1.5 rounded-full bg-[#A0C82E] ${
+                mobile ? "w-1" : "w-0.5"
+              }`}
             />
           )}
         </AnimatePresence>
@@ -77,7 +88,9 @@ export const SidebarMenuItem = ({
         {/* Icon + Label */}
         <div className={`flex items-center gap-3 ${collapsed ? "" : "pl-1"}`}>
           <span
-            className={`text-lg flex-shrink-0 transition-colors duration-200 ${
+            className={`flex-shrink-0 transition-colors duration-200 ${
+              mobile ? "text-2xl" : "text-lg"
+            } ${
               active ? "text-[#A0C82E]" : "text-slate-400 group-hover/item:text-white"
             }`}
           >
@@ -101,14 +114,14 @@ export const SidebarMenuItem = ({
           <motion.span
             animate={{ rotate: open ? 180 : 0 }}
             transition={{ type: "spring", stiffness: 300, damping: 25 }}
-            className="text-slate-500 flex-shrink-0"
+            className={`text-slate-500 flex-shrink-0 ${mobile ? "text-base" : "text-xs"}`}
           >
-            <FiChevronDown className="text-xs" />
+            <FiChevronDown />
           </motion.span>
         )}
       </motion.button>
 
-      {/* Tooltip when collapsed */}
+      {/* Tooltip when collapsed (desktop only — mobile never collapses) */}
       {collapsed && (
         <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3 px-2.5 py-1.5 bg-slate-700 border border-white/10 text-white text-xs rounded-lg whitespace-nowrap opacity-0 group-hover/item:opacity-100 transition-opacity duration-150 pointer-events-none z-[200] shadow-lg">
           {item.label}
@@ -127,7 +140,11 @@ export const SidebarMenuItem = ({
             transition={{ duration: 0.22, ease: "easeInOut" }}
             style={{ overflow: "hidden" }}
           >
-            <div className="ml-4 mt-0.5 mb-1 border-l border-white/10 pl-3 flex flex-col gap-0.5">
+            <div
+              className={`mt-0.5 mb-1 border-l border-white/10 flex flex-col gap-0.5 ${
+                mobile ? "ml-5 pl-3.5" : "ml-4 pl-3"
+              }`}
+            >
               {item.items.map((child: any, i: number) => (
                 <SidebarMenuItem
                   key={i}
@@ -135,6 +152,7 @@ export const SidebarMenuItem = ({
                   handleNavigate={handleNavigate}
                   location={location}
                   collapsed={false}
+                  mobile={mobile}
                 />
               ))}
             </div>

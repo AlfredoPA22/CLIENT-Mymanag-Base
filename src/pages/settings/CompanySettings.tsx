@@ -2,6 +2,7 @@ import { Button } from "primereact/button";
 import { DropdownChangeEvent } from "primereact/dropdown";
 import { useState } from "react";
 import DropdownInput from "../../components/dropdownInput/DropdownInput";
+import FieldNumberInput from "../../components/FieldNumberInput/FieldNumberInput";
 import FieldSimpleFileUpload from "../../components/fileuploadInput/FileUploadInput";
 import LoadingSpinner from "../../components/LoadingSpinner/LoadingSpinner";
 import SectionHeader from "../../components/sectionHeader/SectionHeader";
@@ -46,21 +47,6 @@ const COUNTRY_OPTIONS = [
 const CURRENCY_OPTIONS = [
   { label: "Bs — Boliviano (Bolivia)", value: "Bs" },
   { label: "$ — Dólar estadounidense", value: "$" },
-  { label: "€ — Euro", value: "€" },
-  { label: "COP — Peso colombiano", value: "COP" },
-  { label: "MXN — Peso mexicano", value: "MXN" },
-  { label: "S/ — Sol peruano", value: "S/" },
-  { label: "CLP — Peso chileno", value: "CLP" },
-  { label: "ARS — Peso argentino", value: "ARS" },
-  { label: "GTQ — Quetzal guatemalteco", value: "GTQ" },
-  { label: "HNL — Lempira hondureño", value: "HNL" },
-  { label: "NIO — Córdoba nicaragüense", value: "NIO" },
-  { label: "DOP — Peso dominicano", value: "DOP" },
-  { label: "PAB — Balboa panameño", value: "PAB" },
-  { label: "CRC — Colón costarricense", value: "CRC" },
-  { label: "PYG — Guaraní paraguayo", value: "PYG" },
-  { label: "UYU — Peso uruguayo", value: "UYU" },
-  { label: "VES — Bolívar venezolano", value: "VES" },
 ];
 
 interface CompanyFormProps {
@@ -80,6 +66,7 @@ const CompanySettingsForm = ({ company, canEdit, saveCompany }: CompanyFormProps
     address: company.address ?? "",
     country: company.country ?? "",
     currency: company.currency ?? "",
+    exchange_rate: company.exchange_rate ?? null,
     image: company.image ?? "",
   };
 
@@ -360,6 +347,20 @@ const CompanySettingsForm = ({ company, canEdit, saveCompany }: CompanyFormProps
             disabled={!canEdit}
             filter
           />
+          {values.currency === "$" && (
+            <FieldNumberInput
+              label="Tipo de cambio (Bs por $)"
+              name="exchange_rate"
+              mandatory
+              placeholder="Ej. 6.96"
+              value={values.exchange_rate ?? null}
+              error={errors.exchange_rate}
+              onValueChange={(e) => setFieldValue("exchange_rate", e.value ?? null)}
+              disabled={!canEdit}
+              minFractionDigits={2}
+              maxFractionDigits={4}
+            />
+          )}
         </div>
 
         {canEdit && (

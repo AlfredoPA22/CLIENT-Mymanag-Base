@@ -13,6 +13,7 @@ import { IProductInventory } from "../../../../utils/interfaces/ProductInventory
 import { DataTableColumn } from "../../../../utils/interfaces/Table";
 import { showToast } from "../../../../utils/toastUtils";
 import { getStatus } from "../../../order/utils/getStatus";
+import { ROUTES_MOCK } from "../../../../routes/RouteMocks";
 
 interface ProductInventoryListProps {
   product: IProduct;
@@ -52,7 +53,13 @@ const ProductInventoryList: FC<ProductInventoryListProps> = ({ product }) => {
     const isApproved = purchaseOrder.status === orderStatus.APROBADO;
 
     return (
-      <TextLink to={`/order/${isApproved ? "viewPurchaseOrder" : "editPurchaseOrder"}/${purchaseOrder._id}`}>
+      <TextLink
+        to={
+          isApproved
+            ? `${ROUTES_MOCK.PURCHASE_ORDERS}/detalle/${purchaseOrder._id}`
+            : `${ROUTES_MOCK.PURCHASE_ORDERS}${ROUTES_MOCK.EDIT_PURCHASE_ORDER}/${purchaseOrder._id}`
+        }
+      >
         {purchaseOrder.code}
       </TextLink>
     );
@@ -112,7 +119,13 @@ const ProductInventoryList: FC<ProductInventoryListProps> = ({ product }) => {
               {purchaseOrder ? (
                 <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
                   <i className="pi pi-shopping-cart text-[10px]" />
-                  <TextLink to={`/order/${isApproved ? "viewPurchaseOrder" : "editPurchaseOrder"}/${purchaseOrder._id}`}>
+                  <TextLink
+        to={
+          isApproved
+            ? `${ROUTES_MOCK.PURCHASE_ORDERS}/detalle/${purchaseOrder._id}`
+            : `${ROUTES_MOCK.PURCHASE_ORDERS}${ROUTES_MOCK.EDIT_PURCHASE_ORDER}/${purchaseOrder._id}`
+        }
+      >
                     {purchaseOrder.code}
                   </TextLink>
                 </p>

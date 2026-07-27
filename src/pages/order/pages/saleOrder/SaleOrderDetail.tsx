@@ -1,4 +1,4 @@
-import { useLazyQuery, useMutation, useQuery } from "@apollo/client";
+import { useApolloClient, useLazyQuery, useMutation, useQuery } from "@apollo/client";
 import { Button } from "primereact/button";
 import { Dialog } from "primereact/dialog";
 import { SelectButton } from "primereact/selectbutton";
@@ -16,11 +16,13 @@ import {
 } from "../../../../graphql/mutations/SaleOrder";
 import DropdownInput from "../../../../components/dropdownInput/DropdownInput";
 import { saleOrderPaymentMethodOptions } from "../../utils/saleOrderPaymentMethodMock";
-import { salePaymentMethodOptions } from "../../utils/salePaymentMethodMock";
+import { getSalePaymentMethodOptions } from "../../utils/salePaymentMethodMock";
+import useQrPaymentAvailable from "../../../../hooks/useQrPaymentAvailable";
 import { CREATE_SALE_RETURN } from "../../../../graphql/mutations/SaleReturn";
 import { LIST_PRODUCT } from "../../../../graphql/queries/Product";
-import { FIND_SALE_ORDER, LIST_SALE_ORDER } from "../../../../graphql/queries/SaleOrder";
+import { FIND_QR_PAYMENT_INFO_BY_SALE_ORDER, FIND_SALE_ORDER, LIST_SALE_ORDER } from "../../../../graphql/queries/SaleOrder";
 import { LIST_SALE_ORDER_DETAIL } from "../../../../graphql/queries/SaleOrderDetail";
+import { LIST_SALE_PAYMENT_BY_SALE_ORDER } from "../../../../graphql/queries/SalePayment";
 import { FIND_SALE_RETURN_BY_SALE_ORDER, LIST_SALE_RETURN, LIST_SALE_RETURN_DETAIL } from "../../../../graphql/queries/SaleReturn";
 import { setIsBlocked } from "../../../../redux/slices/blockUISlice";
 import { orderStatus } from "../../../../utils/enums/orderStatus.enum";
@@ -33,6 +35,8 @@ import SectionHeader from "../../../../components/sectionHeader/SectionHeader";
 import useAuth from "../../../auth/hooks/useAuth";
 import { formatAmount } from "../../../../utils/currency";
 import { PermissionGuard } from "../../../auth/pages/PermissionGuard";
+import QrPaymentModal from "../../../../components/qrPayment/QrPaymentModal";
+import { getSocket } from "../../../../utils/socket";
 
 const DISCOUNT_TYPE_OPTIONS = [
   { label: "Ninguno", value: "NONE" },
@@ -55,9 +59,19 @@ const SaleOrderDetail: FC<SaleOrderDetailProps> = ({ saleOrderId }) => {
     fetchPolicy: "cache-and-network",
   });
 
+  const apolloClient = useApolloClient();
+  const markSaleOrderPaid = () => {
+    apolloClient.cache.modify({
+      id: apolloClient.cache.identify({ __typename: "SaleOrder", _id: saleOrderId }),
+      fields: { is_paid: () => true },
+    });
+    refetchSaleOrder();
+  };
+
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { currency } = useAuth();
+  const qrAvailable = useQrPaymentAvailable();
 
   const [showReturnDialog, setShowReturnDialog] = useState(false);
   const [showReturnDetailDialog, setShowReturnDetailDialog] = useState(false);
@@ -67,6 +81,8 @@ const SaleOrderDetail: FC<SaleOrderDetailProps> = ({ saleOrderId }) => {
 
   const [orderDiscountType, setOrderDiscountType] = useState<string>("NONE");
   const [orderDiscountValue, setOrderDiscountValue] = useState<number | null>(null);
+
+  const [showQrDialog, setShowQrDialog] = useState(false);
 
   const [showEditPaymentMethodDialog, setShowEditPaymentMethodDialog] = useState(false);
   const [editPaymentMethod, setEditPaymentMethod] = useState("Contado");
@@ -91,6 +107,21 @@ const SaleOrderDetail: FC<SaleOrderDetailProps> = ({ saleOrderId }) => {
   );
 
   const returnDetails: any[] = returnDetailData?.listSaleReturnDetail ?? [];
+
+  const { data: salePaymentData } = useQuery(LIST_SALE_PAYMENT_BY_SALE_ORDER, {
+    variables: { saleOrderId },
+    skip: data?.findSaleOrder.payment_method !== "Credito",
+  });
+  const salePayments: any[] = salePaymentData?.listSalePaymentBySaleOrder ?? [];
+
+  const { data: qrPaymentInfoData } = useQuery(FIND_QR_PAYMENT_INFO_BY_SALE_ORDER, {
+    variables: { saleOrderId },
+    skip:
+      !data?.findSaleOrder.is_paid ||
+      data?.findSaleOrder.payment_method !== "Contado" ||
+      data?.findSaleOrder.contado_payment_method !== "QR",
+  });
+  const qrPaymentInfo = qrPaymentInfoData?.findQrPaymentInfoBySaleOrder;
 
   const handleOpenReturnDetail = () => {
     if (existingReturn) {
@@ -245,7 +276,43 @@ const SaleOrderDetail: FC<SaleOrderDetailProps> = ({ saleOrderId }) => {
     }
   }, [errorSaleOrder]);
 
+  useEffect(() => {
+    const socket = getSocket();
+    const join = () => socket.emit("join_sale_order", saleOrderId);
+    join();
+    socket.on("connect", join);
+
+    const handleUpdate = (payload: { saleOrderId: string; status: string }) => {
+      if (payload.saleOrderId === saleOrderId && payload.status === "completed_transaction") {
+        markSaleOrderPaid();
+      }
+    };
+
+    socket.on("sale_order_payment_update", handleUpdate);
+    return () => {
+      socket.off("connect", join);
+      socket.off("sale_order_payment_update", handleUpdate);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [saleOrderId]);
+
   const hasSelectedItems = Object.values(returnQuantities).some((qty) => qty > 0);
+
+  const returnTotal = Object.entries(returnQuantities)
+    .filter(([, qty]) => qty > 0)
+    .reduce((acc, [id, qty]) => {
+      const detail = details.find((d: any) => d._id === id);
+      return acc + (detail?.sale_price ?? 0) * qty;
+    }, 0);
+
+  let refundAmount = 0;
+  if (data?.findSaleOrder.payment_method === "Contado" && data?.findSaleOrder.is_paid) {
+    refundAmount = returnTotal;
+  } else if (data?.findSaleOrder.payment_method === "Credito") {
+    const totalPaid = salePayments.reduce((acc, p) => acc + p.amount, 0);
+    const newTotal = (data?.findSaleOrder.total ?? 0) - returnTotal;
+    refundAmount = Math.max(totalPaid - Math.max(newTotal, 0), 0);
+  }
 
   const handleSelectAll = () => {
     const all: Record<string, number> = {};
@@ -264,7 +331,7 @@ const SaleOrderDetail: FC<SaleOrderDetailProps> = ({ saleOrderId }) => {
 
   const date = getDate(data?.findSaleOrder.date) || "";
 
-  if (loadingSaleOrder) return <OrderSkeleton />;
+  if (loadingSaleOrder && !data) return <OrderSkeleton />;
 
   return (
     <div className="p-5 shadow-lg rounded-lg border border-gray-200 bg-white mb-2">
@@ -285,19 +352,49 @@ const SaleOrderDetail: FC<SaleOrderDetailProps> = ({ saleOrderId }) => {
 
         {/* Código / estado / acciones — order-1 en mobile para que aparezca primero */}
         <section className="flex flex-col gap-4 rounded-md order-1 md:order-3">
-          <div className="flex items-center justify-between md:flex-col md:items-center gap-2 bg-gray-100 px-4 py-3 md:p-4 rounded-xl">
-            <div className="flex flex-col md:items-center gap-0.5">
+          <div className="flex flex-col items-center gap-3 md:gap-2 bg-gray-100 px-4 py-3 md:p-4 rounded-xl">
+            <div className="flex flex-col items-center gap-0.5">
               <span className="text-gray-500 text-xs">Código de Orden</span>
               <span className="text-lg md:text-xl font-bold text-gray-800">
                 {data?.findSaleOrder.code}
               </span>
+              {data?.findSaleOrder.source === "tienda_online" && (
+                <Tag severity="info" icon="pi pi-shopping-bag">Pedido de la tienda</Tag>
+              )}
             </div>
-            <Tag
-              severity={getStatus(data?.findSaleOrder.status)?.severity as "danger" | "success" | "info" | "warning"}
-            >
-              {getStatus(data?.findSaleOrder.status)?.label}
-            </Tag>
+            <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 md:flex-col md:flex-nowrap md:gap-2">
+              <div className="flex flex-col items-center gap-0.5">
+                <span className="text-gray-500 text-xs">Estado de venta</span>
+                <Tag
+                  severity={getStatus(data?.findSaleOrder.status)?.severity as "danger" | "success" | "info" | "warning"}
+                >
+                  {getStatus(data?.findSaleOrder.status)?.label}
+                </Tag>
+              </div>
+              {((data?.findSaleOrder.payment_method === "Contado" &&
+                data?.findSaleOrder.contado_payment_method === "QR") ||
+                data?.findSaleOrder.payment_method === "Credito") && (
+                  <div className="flex flex-col items-center gap-0.5">
+                    <span className="text-gray-500 text-xs">Estado de pago</span>
+                    <Tag severity={data?.findSaleOrder.is_paid ? "success" : "warning"}>
+                      {data?.findSaleOrder.is_paid ? "Pagado" : "Pendiente"}
+                    </Tag>
+                  </div>
+                )}
+            </div>
           </div>
+
+          {qrPaymentInfo?.exchange_rate && (
+            <div className="flex flex-col items-center gap-1 rounded-xl bg-blue-50 border border-blue-100 px-4 py-2">
+              <span className="text-blue-700 text-xs font-medium">
+                TC: 1 $ = {formatAmount(qrPaymentInfo.exchange_rate)} Bs
+              </span>
+              <span className="text-blue-900 text-sm font-semibold">
+                {formatAmount(qrPaymentInfo.amount)} $ × {formatAmount(qrPaymentInfo.exchange_rate)} ={" "}
+                {formatAmount(qrPaymentInfo.amount_bob ?? 0)} Bs
+              </span>
+            </div>
+          )}
 
           {data?.findSaleOrder.status === orderStatus.BORRADOR && (
             <PermissionGuard permissions={["CREATE_SALE", "EDIT_SALE"]}>
@@ -314,6 +411,47 @@ const SaleOrderDetail: FC<SaleOrderDetailProps> = ({ saleOrderId }) => {
 
           {data?.findSaleOrder.status === orderStatus.APROBADO && (
             <div className="flex flex-col gap-2">
+              {data?.findSaleOrder.payment_method === "Contado" &&
+                data?.findSaleOrder.contado_payment_method === "QR" &&
+                !data?.findSaleOrder.is_paid && (
+                  <PermissionGuard permissions={["CREATE_SALE", "EDIT_SALE"]}>
+                    {qrAvailable ? (
+                      <Button
+                        icon="pi pi-qrcode"
+                        type="button"
+                        severity="info"
+                        label="Generar QR de cobro"
+                        onClick={() => setShowQrDialog(true)}
+                        className="w-full"
+                      />
+                    ) : (
+                      <Button
+                        icon="pi pi-qrcode"
+                        type="button"
+                        severity="info"
+                        label="QR de cobro (Próximamente)"
+                        disabled
+                        className="w-full"
+                        tooltip="El cobro por QR no está disponible en este momento"
+                      />
+                    )}
+                  </PermissionGuard>
+                )}
+              {data?.findSaleOrder.payment_method === "Credito" && (
+                <PermissionGuard permissions={["LIST_PAYMENT"]}>
+                  <Button
+                    icon="pi pi-wallet"
+                    type="button"
+                    severity="info"
+                    label="Ver pagos"
+                    outlined
+                    onClick={() =>
+                      navigate(`${ROUTES_MOCK.SALE_ORDERS}${ROUTES_MOCK.SALE_PAYMENT}/${saleOrderId}`)
+                    }
+                    className="w-full"
+                  />
+                </PermissionGuard>
+              )}
               <PermissionGuard permissions={["DETAIL_SALE"]}>
                 {existingReturn && (
                   <Button
@@ -341,18 +479,37 @@ const SaleOrderDetail: FC<SaleOrderDetailProps> = ({ saleOrderId }) => {
             </div>
           )}
 
-          {data?.findSaleOrder.status === orderStatus.DEVUELTO && existingReturn && (
-            <PermissionGuard permissions={["DETAIL_SALE"]}>
-              <Button
-                icon="pi pi-replay"
-                type="button"
-                severity="warning"
-                label={`Devolución: ${existingReturn.code}`}
-                onClick={handleOpenReturnDetail}
-                outlined
-                className="w-full"
-              />
-            </PermissionGuard>
+          {data?.findSaleOrder.status === orderStatus.DEVUELTO && (
+            <div className="flex flex-col gap-2">
+              {existingReturn && (
+                <PermissionGuard permissions={["DETAIL_SALE"]}>
+                  <Button
+                    icon="pi pi-replay"
+                    type="button"
+                    severity="warning"
+                    label={`Devolución: ${existingReturn.code}`}
+                    onClick={handleOpenReturnDetail}
+                    outlined
+                    className="w-full"
+                  />
+                </PermissionGuard>
+              )}
+              {data?.findSaleOrder.payment_method === "Credito" && (
+                <PermissionGuard permissions={["LIST_PAYMENT"]}>
+                  <Button
+                    icon="pi pi-wallet"
+                    type="button"
+                    severity="info"
+                    label="Ver pagos"
+                    outlined
+                    onClick={() =>
+                      navigate(`${ROUTES_MOCK.SALE_ORDERS}${ROUTES_MOCK.SALE_PAYMENT}/${saleOrderId}`)
+                    }
+                    className="w-full"
+                  />
+                </PermissionGuard>
+              )}
+            </div>
           )}
         </section>
 
@@ -531,16 +688,20 @@ const SaleOrderDetail: FC<SaleOrderDetailProps> = ({ saleOrderId }) => {
           {/* Resumen de lo seleccionado */}
           {hasSelectedItems && (
             <div className="flex justify-end text-sm font-medium text-orange-600">
-              Total a devolver:{" "}
-              {formatAmount(
-                Object.entries(returnQuantities)
-                  .filter(([, qty]) => qty > 0)
-                  .reduce((acc, [id, qty]) => {
-                    const detail = details.find((d: any) => d._id === id);
-                    return acc + (detail?.sale_price ?? 0) * qty;
-                  }, 0)
-              )}{" "}
-              {currency}
+              Total a devolver: {formatAmount(returnTotal)} {currency}
+            </div>
+          )}
+
+          {hasSelectedItems && refundAmount > 0 && (
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-2 text-red-600 font-bold text-base">
+                <i className="pi pi-exclamation-triangle text-2xl" />
+                <span>¡Esta devolución genera saldo a favor del cliente!</span>
+              </div>
+              <p className="text-sm bg-red-50 border border-red-200 rounded px-3 py-2 text-red-700">
+                Esta devolución implica reembolsar{" "}
+                <strong>{formatAmount(refundAmount)} {currency}</strong> al cliente, y ese reembolso debe gestionarse manualmente.
+              </p>
             </div>
           )}
 
@@ -670,7 +831,8 @@ const SaleOrderDetail: FC<SaleOrderDetailProps> = ({ saleOrderId }) => {
               name="editContadoPaymentMethod"
               optionLabel="label"
               mandatory
-              options={salePaymentMethodOptions}
+              options={getSalePaymentMethodOptions(qrAvailable)}
+              optionDisabled="disabled"
               value={editContadoPaymentMethod}
               onChange={(e) => setEditContadoPaymentMethod(e.value)}
             />
@@ -732,6 +894,17 @@ const SaleOrderDetail: FC<SaleOrderDetailProps> = ({ saleOrderId }) => {
           )}
         </div>
       </Dialog>
+
+      <QrPaymentModal
+        visible={showQrDialog}
+        onHide={() => setShowQrDialog(false)}
+        amount={data?.findSaleOrder.total ?? 0}
+        referenceId={`VENTA-${data?.findSaleOrder.code ?? saleOrderId}`}
+        description={`Pago venta ${data?.findSaleOrder.code ?? ""}`}
+        saleOrderId={saleOrderId}
+        type="venta_contado"
+        onConfirmed={markSaleOrderPaid}
+      />
     </div>
   );
 };

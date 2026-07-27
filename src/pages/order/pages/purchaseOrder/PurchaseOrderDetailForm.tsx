@@ -65,6 +65,10 @@ const PurchaseOrderDetailForm: FC<PurchaseOrderDetailFormProps> = ({
   const [selectedProduct, setSelectedProduct] = useState<IProduct | null>(null);
   const [selectedWarehouse, setSelectedWarehouse] =
     useState<IReactSelect | null>(null);
+  // Cambiar la key fuerza a los dropdowns a remontarse tras agregar el
+  // producto, para que también se limpie el texto de búsqueda interno del
+  // filtro (setear value=null no alcanza para eso).
+  const [productFieldsKey, setProductFieldsKey] = useState(0);
 
   const onSubmit = async () => {
     const { data } = await createPurchaseOrderDetail({ variables: values });
@@ -72,6 +76,7 @@ const PurchaseOrderDetailForm: FC<PurchaseOrderDetailFormProps> = ({
     dispatch(setPurchaseOrder(data.createPurchaseOrderDetail.purchase_order));
     setSelectedProduct(null);
     setSelectedWarehouse(null);
+    setProductFieldsKey((k) => k + 1);
   };
 
   const handleProductChange = async (e: AutoCompleteChangeEvent) => {
@@ -81,6 +86,9 @@ const PurchaseOrderDetailForm: FC<PurchaseOrderDetailFormProps> = ({
     setFieldValue("warehouse", "");
     e.target.value = value ? value._id : null;
     setFieldValue(e.target.name, e.target.value);
+    setTimeout(() => {
+      setFieldValue("purchase_price", value?.last_cost_price || "");
+    }, 0);
   };
 
   const handleWarehouseChange = async (
@@ -157,6 +165,7 @@ const PurchaseOrderDetailForm: FC<PurchaseOrderDetailFormProps> = ({
           }  grid-cols-1 gap-2 justify-center items-start`}
         >
           <DropdownInput
+            key={`product-${productFieldsKey}`}
             className={` ${
               selectedProduct &&
               selectedProduct.stock_type === stockType.INDIVIDUAL
@@ -179,6 +188,7 @@ const PurchaseOrderDetailForm: FC<PurchaseOrderDetailFormProps> = ({
           {selectedProduct &&
             selectedProduct.stock_type === stockType.INDIVIDUAL && (
               <SelectInput
+                key={`warehouse-${productFieldsKey}`}
                 className="2xl:w-[400px] md:col-span-2"
                 label="Almacén"
                 name="warehouse"

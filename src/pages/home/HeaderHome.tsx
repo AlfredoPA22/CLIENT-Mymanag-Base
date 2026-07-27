@@ -132,6 +132,9 @@ const HeaderHome: FC<HeaderHomeProps> = ({ startDate, endDate }) => {
           <p className="text-[10px] text-slate-400 mt-0.5 font-semibold uppercase tracking-wide">
             Por cobrar
           </p>
+          <p className="text-xs text-emerald-600 font-semibold mt-1">
+            Cobrado: {formatAmount(generalData.total_credit_collected ?? 0)} {currency}
+          </p>
         </div>
       </Link>
 

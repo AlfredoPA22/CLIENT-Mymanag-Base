@@ -18,6 +18,7 @@ export const GENERAL_DATA = gql`
       best_product_sales_number
       total_credit_pending
       total_credit_pending_count
+      total_credit_collected
     }
   }
 `;
@@ -59,8 +60,8 @@ export const REPORT_SALE_ORDER_BY_PRODUCT = gql`
 `;
 
 export const REPORT_MONTHLY_SALES = gql`
-  query ReportMonthlySales {
-    reportMonthlySales {
+  query ReportMonthlySales($startDate: Date, $endDate: Date) {
+    reportMonthlySales(startDate: $startDate, endDate: $endDate) {
       month
       total
     }

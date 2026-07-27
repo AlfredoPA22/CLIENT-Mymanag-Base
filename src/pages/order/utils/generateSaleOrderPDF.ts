@@ -138,8 +138,37 @@ export const generatePDF = async (
     doc.text(subInfo, MARGIN, infoY + 13);
   }
 
+  // Estado de pago
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(7);
+  doc.setTextColor(...INK_MID);
+  doc.text("ESTADO DE PAGO", COL2, infoY + 13);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8.5);
+  doc.setTextColor(...(data.saleOrder.is_paid ? ACCENT : INK));
+  doc.text(data.saleOrder.is_paid ? "Pagado" : "Pendiente", COL2, infoY + 18);
+
+  const qrInfo = data.qr_payment_info;
+  const showExchangeRate =
+    data.saleOrder.is_paid && !!qrInfo?.exchange_rate && currency === "$";
+
+  if (showExchangeRate) {
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(7);
+    doc.setTextColor(...INK_MID);
+    doc.text("TIPO DE CAMBIO (COBRO QR)", COL3, infoY + 13);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8.5);
+    doc.setTextColor(...INK);
+    doc.text(
+      `1 $ = ${formatAmount(qrInfo!.exchange_rate!)} Bs  ·  Cobrado: ${formatAmount(qrInfo!.amount_bob ?? 0)} Bs`,
+      COL3,
+      infoY + 18
+    );
+  }
+
   // ── SECTION RULE ─────────────────────────────────────────
-  drawRule(doc, infoY + 20);
+  drawRule(doc, infoY + 24);
 
   // ── TABLE ────────────────────────────────────────────────
   const columns = [
@@ -208,7 +237,7 @@ export const generatePDF = async (
     },
     body: rows,
     bodyStyles: { fontSize: 8, textColor: INK, cellPadding: 3 },
-    startY: infoY + 25,
+    startY: infoY + 29,
     theme: "plain",
     rowPageBreak: "avoid",
     columnStyles: {

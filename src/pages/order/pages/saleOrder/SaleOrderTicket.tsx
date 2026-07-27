@@ -25,8 +25,9 @@ const SaleOrderTicket = () => {
     return <LoadingSpinner />;
   }
 
-  const { saleOrder, saleOrderDetail } = data.findSaleOrderToPDF;
+  const { saleOrder, saleOrderDetail, qr_payment_info: qrInfo } = data.findSaleOrderToPDF;
   const company = companyData?.detailCompany;
+  const showExchangeRate = saleOrder.is_paid && !!qrInfo?.exchange_rate && currency === "$";
 
   return (
     <div className="min-h-screen bg-gray-200 py-6 print:bg-white print:py-0">
@@ -60,6 +61,12 @@ const SaleOrderTicket = () => {
           Pago: {saleOrder.payment_method}
           {saleOrder.contado_payment_method ? ` · ${saleOrder.contado_payment_method}` : ""}
         </p>
+        <p>Estado de pago: {saleOrder.is_paid ? "Pagado" : "Pendiente"}</p>
+        {showExchangeRate && (
+          <p>
+            T.C.: 1 $ = {qrInfo.exchange_rate!.toFixed(2)} Bs (cobrado: {(qrInfo.amount_bob ?? 0).toFixed(2)} Bs)
+          </p>
+        )}
 
         <div className="border-t border-dashed border-black my-1" />
 

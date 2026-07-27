@@ -15,17 +15,19 @@ const Navbar = ({ onToggleSidebar }: Props) => {
   const [searchOpen, setSearchOpen] = useState(false);
 
   return (
-    <div className="flex items-center justify-between p-4 shadow-md bg-[#1e293b]">
+    <div className="relative flex items-center justify-between p-4 shadow-md bg-[#1e293b]">
       {/* Botón de menú */}
       <button
         onClick={onToggleSidebar}
-        className="text-2xl text-white hover:text-[#7aa6d3]"
+        className="relative z-10 text-2xl text-white hover:text-[#7aa6d3]"
       >
         <HiMenuAlt2 />
       </button>
 
-      {/* Logo */}
-      <Link to="/" className="flex items-center">
+      <Link
+        to="/"
+        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center"
+      >
         <div className="bg-white rounded-xl shadow-md px-3 py-1.5 flex items-center justify-center">
           <img
             src={
@@ -38,7 +40,7 @@ const Navbar = ({ onToggleSidebar }: Props) => {
         </div>
       </Link>
 
-      <div className="flex items-center gap-1">
+      <div className="relative z-10 flex items-center gap-1">
         <button
           type="button"
           onClick={() => setSearchOpen(true)}

@@ -130,7 +130,8 @@ const SaleOrderList = ({ storeOnly = false }: SaleOrderListProps) => {
       if (paymentMethodFilter && order.payment_method !== paymentMethodFilter) return false;
       if (contadoPaymentMethodFilter && order.contado_payment_method !== contadoPaymentMethodFilter) return false;
       if (isPaidFilter) {
-        if (order.status !== orderStatus.APROBADO) return false;
+        const isConfirmedQrPayment = order.is_paid && order.contado_payment_method === "QR";
+        if (order.status !== orderStatus.APROBADO && !isConfirmedQrPayment) return false;
         if (isPaidFilter === "Pagada" && !order.is_paid) return false;
         if (isPaidFilter === "Pendiente" && order.is_paid) return false;
       }
@@ -178,16 +179,33 @@ const SaleOrderList = ({ storeOnly = false }: SaleOrderListProps) => {
     }
   };
 
-  const confirmDeleteSaleOrder = (saleOrderId: string) => {
+  const confirmDeleteSaleOrder = (rowData: ISaleOrder) => {
+    const isQrPaid =
+      rowData.payment_method === paymentMethod.CONTADO &&
+      rowData.contado_payment_method === "QR" &&
+      rowData.is_paid;
     confirmDialog({
-      message: "¿Esta seguro que desea eliminar la venta?",
+      message: isQrPaid ? (
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-2 text-red-600 font-bold text-base">
+            <i className="pi pi-exclamation-triangle text-2xl" />
+            <span>¡Esta venta se cobró por QR!</span>
+          </div>
+          <p className="text-sm bg-red-50 border border-red-200 rounded px-3 py-2 text-red-700">
+            El dinero de <strong>{formatAmount(rowData.total)} {currency}</strong> ya se recibió y la devolución de ese monto debe gestionarse manualmente.
+          </p>
+          <p className="text-sm text-gray-700">¿Deseas eliminarla de todas formas?</p>
+        </div>
+      ) : (
+        "¿Esta seguro que desea eliminar la venta?"
+      ),
       header: "Confirmacion",
       icon: "pi pi-info-circle",
       defaultFocus: "reject",
       acceptClassName: "p-button-danger",
       rejectLabel: "Cancelar",
       acceptLabel: "Aceptar",
-      accept: () => handleDeleteSaleOrder(saleOrderId),
+      accept: () => handleDeleteSaleOrder(rowData._id),
     });
   };
 
@@ -251,7 +269,7 @@ const SaleOrderList = ({ storeOnly = false }: SaleOrderListProps) => {
         label: isBorrador ? "Eliminar venta" : "Anular y eliminar venta",
         icon: "pi pi-trash",
         severity: "danger",
-        onClick: () => confirmDeleteSaleOrder(rowData._id),
+        onClick: () => confirmDeleteSaleOrder(rowData),
       });
     }
     if (storeOnly) {
@@ -277,6 +295,13 @@ const SaleOrderList = ({ storeOnly = false }: SaleOrderListProps) => {
     { field: "date", header: "Fecha", sortable: true, body: dateBodyTemplate },
     { field: "client.firstName", header: "Cliente", sortable: true, body: clientBodyTemplate },
     { field: "created_by.user_name", header: "Vendedor", sortable: true },
+    {
+      field: "source", header: "Origen", sortable: true, style: { textAlign: "center" },
+      body: (rowData: ISaleOrder) =>
+        rowData.source === "tienda_online"
+          ? <Tag severity="info" icon="pi pi-shopping-bag">Tienda</Tag>
+          : <Tag severity="secondary" icon="pi pi-user-edit">Manual</Tag>,
+    },
     { field: "payment_method", header: "Metodo de pago", sortable: true },
     {
       field: "contado_payment_method", header: "Forma de pago", sortable: true, style: { textAlign: "center" },
@@ -302,7 +327,9 @@ const SaleOrderList = ({ storeOnly = false }: SaleOrderListProps) => {
     {
       field: "is_paid", header: "Estado de pago", sortable: true, style: { textAlign: "center" },
       body: (rowData: ISaleOrder) => {
-        if (rowData.status !== orderStatus.APROBADO)
+        const isConfirmedQrPayment =
+          rowData.is_paid && rowData.contado_payment_method === "QR";
+        if (!isConfirmedQrPayment && rowData.status !== orderStatus.APROBADO)
           return <span style={{ color: "#6B7280" }}>Borrador</span>;
         return rowData.is_paid
           ? <span style={{ color: "green" }}>Pagada</span>
@@ -433,6 +460,9 @@ const SaleOrderList = ({ storeOnly = false }: SaleOrderListProps) => {
               >
                 <div className="flex items-center gap-2">
                   <span className="font-bold text-gray-800 text-sm">{order.code}</span>
+                  {order.source === "tienda_online" && (
+                    <Tag severity="info" icon="pi pi-shopping-bag" className="text-xs">Tienda</Tag>
+                  )}
                   {order.has_return && (
                     <Tag severity="warning" icon="pi pi-replay" className="text-xs" />
                   )}
@@ -456,7 +486,7 @@ const SaleOrderList = ({ storeOnly = false }: SaleOrderListProps) => {
                   {order.payment_method === paymentMethod.CONTADO && order.contado_payment_method && (
                     <span className="text-gray-400">· {order.contado_payment_method}</span>
                   )}
-                  {isAprobado && (
+                  {(isAprobado || (order.is_paid && order.contado_payment_method === "QR")) && (
                     <span className={order.is_paid ? "text-green-600 font-medium" : "text-red-500 font-medium"}>
                       {order.is_paid ? "Pagada" : "Pendiente"}
                     </span>

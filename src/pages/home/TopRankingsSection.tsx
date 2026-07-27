@@ -18,7 +18,7 @@ const TopRankingsSection = ({ startDate, endDate }: TopRankingsSectionProps) => 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
         <PermissionGuard permissions={["REPORT_SALE_ORDER_BY_MONTH"]}>
           <div className="lg:col-span-2">
-            <ReportMonthlySales />
+            <ReportMonthlySales startDate={startDate} endDate={endDate} />
           </div>
         </PermissionGuard>
         <PermissionGuard permissions={["REPORT_SALE_ORDER_BY_CATEGORY"]}>

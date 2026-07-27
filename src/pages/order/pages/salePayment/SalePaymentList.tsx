@@ -1,4 +1,4 @@
-import { useMutation } from "@apollo/client";
+import { useApolloClient, useMutation } from "@apollo/client";
 import { Button } from "primereact/button";
 import { Card } from "primereact/card";
 import { confirmDialog } from "primereact/confirmdialog";
@@ -6,6 +6,7 @@ import { Dialog } from "primereact/dialog";
 import { Tag } from "primereact/tag";
 import { FC, useState } from "react";
 import { useDispatch } from "react-redux";
+import QrPaymentModal from "../../../../components/qrPayment/QrPaymentModal";
 import Table from "../../../../components/datatable/Table";
 import LabelInput from "../../../../components/labelInput/LabelInput";
 import RowActionButtons, { RowAction } from "../../../../components/table/RowActionButtons";
@@ -49,8 +50,11 @@ const SalePaymentList: FC<SalePaymentListProps> = ({
   saleOrderId,
 }) => {
   const [visibleForm, setVisibleForm] = useState<boolean>(false);
+  const [showQrDialog, setShowQrDialog] = useState(false);
+  const [qrAmount, setQrAmount] = useState(0);
   const dispatch = useDispatch();
   const { currency } = useAuth();
+  const apolloClient = useApolloClient();
 
   const [DeleteSalePayment] = useMutation(DELETE_SALE_PAYMENT, {
     refetchQueries: [
@@ -59,6 +63,18 @@ const SalePaymentList: FC<SalePaymentListProps> = ({
       { query: DETAIL_SALE_PAYMENT_BY_SALE_ORDER, variables: { saleOrderId } },
     ],
   });
+
+  const handleRequestQr = (amount: number) => {
+    setQrAmount(amount);
+    setShowQrDialog(true);
+  };
+
+  const handleQrConfirmed = () => {
+    setVisibleForm(false);
+    apolloClient.refetchQueries({
+      include: [LIST_SALE_ORDER, LIST_SALE_PAYMENT_BY_SALE_ORDER, DETAIL_SALE_PAYMENT_BY_SALE_ORDER],
+    });
+  };
 
   const canAddPayment =
     !detailSalePayment?.sale_order?.is_paid &&
@@ -97,22 +113,36 @@ const SalePaymentList: FC<SalePaymentListProps> = ({
     }
   };
 
-  const confirmDeleteSalePayment = (salePaymentId: string) => {
+  const confirmDeleteSalePayment = (rowData: ISalePayment) => {
+    const isQr = rowData.payment_method === "QR";
     confirmDialog({
-      message: "¿Esta seguro que desea eliminar el pago?",
+      message: isQr ? (
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-2 text-red-600 font-bold text-base">
+            <i className="pi pi-exclamation-triangle text-2xl" />
+            <span>¡Este pago se cobró por QR!</span>
+          </div>
+          <p className="text-sm bg-red-50 border border-red-200 rounded px-3 py-2 text-red-700">
+            El dinero de <strong>{formatAmount(rowData.amount)} {currency}</strong> ya se recibió y la devolución de ese monto debe gestionarse manualmente.
+          </p>
+          <p className="text-sm text-gray-700">¿Deseas eliminarlo de todas formas?</p>
+        </div>
+      ) : (
+        "¿Esta seguro que desea eliminar el pago?"
+      ),
       header: "Confirmacion",
       icon: "pi pi-info-circle",
       defaultFocus: "reject",
       acceptClassName: "p-button-danger",
       rejectLabel: "Cancelar",
       acceptLabel: "Aceptar",
-      accept: () => handleDeleteSalePayment(salePaymentId),
+      accept: () => handleDeleteSalePayment(rowData._id),
     });
   };
 
   const buildSalePaymentActions = (rowData: ISalePayment): RowAction[] => [
     { label: "Imprimir comprobante", icon: "pi pi-download", severity: "warning", onClick: () => generatePDF(rowData, currency, detailSalePayment) },
-    { label: "Anular y eliminar pago", icon: "pi pi-trash", severity: "danger", onClick: () => confirmDeleteSalePayment(rowData._id) },
+    { label: "Anular y eliminar pago", icon: "pi pi-trash", severity: "danger", onClick: () => confirmDeleteSalePayment(rowData) },
   ];
 
   const actionBodyTemplate = (rowData: ISalePayment) => (
@@ -146,6 +176,8 @@ const SalePaymentList: FC<SalePaymentListProps> = ({
       <SalePaymentForm
         setVisibleSalePaymentForm={setVisibleForm}
         saleOrderId={detailSalePayment.sale_order._id}
+        detailSalePayment={detailSalePayment}
+        onRequestQr={handleRequestQr}
       />
     </Dialog>
   );
@@ -201,6 +233,17 @@ const SalePaymentList: FC<SalePaymentListProps> = ({
       </Card>
 
       {paymentDialog}
+
+      <QrPaymentModal
+        visible={showQrDialog}
+        onHide={() => setShowQrDialog(false)}
+        amount={qrAmount}
+        referenceId={`ABONO-${saleOrderId}`}
+        description={`Abono a venta ${saleOrderId}`}
+        saleOrderId={saleOrderId}
+        type="abono_credito"
+        onConfirmed={handleQrConfirmed}
+      />
     </>
   );
 };

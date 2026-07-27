@@ -1,12 +1,13 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { Sidebar } from "primereact/sidebar";
+import { useMemo, useState } from "react";
 import {
   AiOutlineShoppingCart,
   AiOutlineTags,
   AiOutlineUser,
 } from "react-icons/ai";
 import { BiImport, BiTransfer, BiRevision } from "react-icons/bi";
-import { FiChevronLeft, FiCreditCard, FiPackage, FiShoppingBag, FiTruck } from "react-icons/fi";
+import { FiChevronLeft, FiCreditCard, FiPackage, FiSearch, FiShoppingBag, FiTruck, FiX } from "react-icons/fi";
 import { HiOutlineUsers } from "react-icons/hi";
 import {
   MdCategory,
@@ -196,6 +197,7 @@ const SidebarMenu = ({
                 icon: <FiShoppingBag />,
                 to: ROUTES_MOCK.STORE,
                 permission: ["UPDATE_COMPANY"],
+                exact: true,
               },
               {
                 label: "Pedidos de la tienda",
@@ -232,6 +234,47 @@ const SidebarMenu = ({
 
   const hasPermission = (requiredPermissions: string[] = []) =>
     requiredPermissions.length === 0 || canDoAny(ability, requiredPermissions);
+
+  // Buscador de menú — solo tiene sentido en el panel overlay de móvil, para
+  // no tener que navegar secciones/acordeones con el dedo.
+  const isMobileDrawer = overlay;
+  const [menuSearch, setMenuSearch] = useState("");
+
+  const searchResults = useMemo(() => {
+    if (!isMobileDrawer || !menuSearch.trim()) return null;
+
+    const term = menuSearch.trim().toLowerCase();
+    const results: { label: string; icon: React.ReactNode; to: string; sectionTitle: string }[] = [];
+
+    for (const section of menuSections) {
+      for (const item of section.items as any[]) {
+        if (!hasPermission(item.permission)) continue;
+
+        if (item.items) {
+          for (const child of item.items) {
+            if (!hasPermission(child.permission)) continue;
+            if (child.label.toLowerCase().includes(term)) {
+              results.push({
+                label: child.label,
+                icon: child.icon,
+                to: child.to,
+                sectionTitle: `${section.title} / ${item.label}`,
+              });
+            }
+          }
+        } else if (item.label.toLowerCase().includes(term)) {
+          results.push({
+            label: item.label,
+            icon: item.icon,
+            to: item.to,
+            sectionTitle: section.title,
+          });
+        }
+      }
+    }
+
+    return results;
+  }, [isMobileDrawer, menuSearch, menuSections]);
 
   const initials =
     (userName ?? "")
@@ -306,54 +349,107 @@ const SidebarMenu = ({
         )}
       </div>
 
+      {/* Buscador de menú — solo en el panel móvil */}
+      {isMobileDrawer && (
+        <div className="px-4 pt-3 pb-1">
+          <div className="relative">
+            <FiSearch className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+            <input
+              type="text"
+              value={menuSearch}
+              onChange={(e) => setMenuSearch(e.target.value)}
+              placeholder="Buscar en el menú..."
+              className="w-full rounded-xl border border-white/10 bg-white/5 py-3 pl-10 pr-9 text-base text-white placeholder:text-slate-500 focus:border-[#A0C82E]/50 focus:outline-none"
+            />
+            {menuSearch && (
+              <button
+                type="button"
+                onClick={() => setMenuSearch("")}
+                aria-label="Limpiar búsqueda"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 flex h-6 w-6 items-center justify-center rounded-full text-slate-400 hover:bg-white/10 hover:text-white"
+              >
+                <FiX />
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Menu */}
       <div
         className={`flex-grow overflow-y-auto sidebar-scroll py-3 ${collapsed ? "px-1.5" : "px-3"
           }`}
       >
-        <nav className="flex flex-col gap-0.5">
-          {menuSections.map((section, i) => {
-            const visibleItems = section.items.filter(
-              (item) =>
-                hasPermission(item.permission) ||
-                item.items?.some((sub) => hasPermission(sub.permission))
-            );
+        {searchResults ? (
+          <nav className="flex flex-col gap-0.5">
+            {searchResults.length === 0 ? (
+              <p className="px-3 py-6 text-center text-sm text-slate-500">
+                No se encontró nada con "{menuSearch}".
+              </p>
+            ) : (
+              searchResults.map((result, i) => (
+                <button
+                  key={i}
+                  onClick={() => handleNavigate(result.to)}
+                  className="flex w-full items-center gap-3 rounded-xl px-3.5 py-3.5 text-left text-base font-medium text-slate-300 transition-colors duration-200 hover:bg-white/5 hover:text-white active:bg-white/10"
+                >
+                  <span className="flex-shrink-0 text-2xl text-slate-400">{result.icon}</span>
+                  <span className="flex min-w-0 flex-col leading-tight">
+                    <span className="truncate">{result.label}</span>
+                    <span className="truncate text-xs text-slate-500">{result.sectionTitle}</span>
+                  </span>
+                </button>
+              ))
+            )}
+          </nav>
+        ) : (
+          <nav className="flex flex-col gap-0.5">
+            {menuSections.map((section, i) => {
+              const visibleItems = section.items.filter(
+                (item: any) =>
+                  hasPermission(item.permission) ||
+                  item.items?.some((sub: any) => hasPermission(sub.permission))
+              );
 
-            if (visibleItems.length === 0) return null;
+              if (visibleItems.length === 0) return null;
 
-            return (
-              <div key={i} className={i > 0 ? "mt-4" : ""}>
-                <AnimatePresence>
-                  {!collapsed && (
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      transition={{ duration: 0.15 }}
-                      className="uppercase text-[10px] text-slate-500 font-semibold mb-1.5 px-3 tracking-widest"
-                    >
-                      {section.title}
-                    </motion.div>
+              return (
+                <div key={i} className={i > 0 ? "mt-4" : ""}>
+                  <AnimatePresence>
+                    {!collapsed && (
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.15 }}
+                        className={`uppercase text-slate-500 font-semibold tracking-widest ${
+                          isMobileDrawer ? "text-xs mb-2 px-3.5" : "text-[10px] mb-1.5 px-3"
+                        }`}
+                      >
+                        {section.title}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  {collapsed && i > 0 && (
+                    <div className="h-px bg-white/5 mx-1 mb-3" />
                   )}
-                </AnimatePresence>
 
-                {collapsed && i > 0 && (
-                  <div className="h-px bg-white/5 mx-1 mb-3" />
-                )}
-
-                {visibleItems.map((item, j) => (
-                  <SidebarMenuItem
-                    key={j}
-                    item={item}
-                    handleNavigate={handleNavigate}
-                    location={location}
-                    collapsed={collapsed}
-                  />
-                ))}
-              </div>
-            );
-          })}
-        </nav>
+                  {visibleItems.map((item, j) => (
+                    <SidebarMenuItem
+                      key={j}
+                      item={item}
+                      handleNavigate={handleNavigate}
+                      location={location}
+                      collapsed={collapsed}
+                      mobile={isMobileDrawer}
+                    />
+                  ))}
+                </div>
+              );
+            })}
+          </nav>
+        )}
       </div>
 
       {/* Logout */}
@@ -366,10 +462,13 @@ const SidebarMenu = ({
             onClick={handleLogout}
             whileHover={{ x: collapsed ? 0 : 2 }}
             transition={{ type: "spring", stiffness: 400, damping: 25 }}
-            className={`w-full flex items-center gap-3 rounded-xl text-sm font-medium text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-colors duration-200 ${collapsed ? "justify-center px-0 py-3" : "py-2.5 px-3"
+            className={`w-full flex items-center gap-3 rounded-xl font-medium text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-colors duration-200 ${
+              isMobileDrawer ? "text-base" : "text-sm"
+            } ${
+              collapsed ? "justify-center px-0 py-3" : isMobileDrawer ? "py-3.5 px-3.5" : "py-2.5 px-3"
               }`}
           >
-            <PiSignOut className="text-lg flex-shrink-0" />
+            <PiSignOut className={`flex-shrink-0 ${isMobileDrawer ? "text-2xl" : "text-lg"}`} />
             {!collapsed && <span>Cerrar sesión</span>}
           </motion.button>
           {collapsed && (
@@ -415,7 +514,7 @@ const SidebarMenu = ({
       visible={visible}
       onHide={onHide || (() => { })}
       position="left"
-      className="w-64 shadow-2xl p-0"
+      className="w-[85vw] max-w-[340px] shadow-2xl p-0"
       style={{ background: "#0f172a", zIndex: 999 }}
       showCloseIcon
     >

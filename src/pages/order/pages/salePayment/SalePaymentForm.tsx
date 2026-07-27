@@ -12,25 +12,37 @@ import FieldTextareaInput from "../../../../components/textAreaInput/FieldTextar
 import { CREATE_SALE_PAYMENT } from "../../../../graphql/mutations/SalePayment";
 import { LIST_SALE_ORDER } from "../../../../graphql/queries/SaleOrder";
 import { useFormikForm } from "../../../../hooks/useFormikForm";
-import { ISalePaymentInput } from "../../../../utils/interfaces/SalePayment";
-import { salePaymentMethodOptions } from "../../utils/salePaymentMethodMock";
+import { IDetailSalePayment, ISalePaymentInput } from "../../../../utils/interfaces/SalePayment";
+import { getSalePaymentMethodOptions } from "../../utils/salePaymentMethodMock";
+import useQrPaymentAvailable from "../../../../hooks/useQrPaymentAvailable";
 import { schemaFormSalePayment } from "../../validations/FormSalePaymentValidation";
 import {
   DETAIL_SALE_PAYMENT_BY_SALE_ORDER,
   LIST_SALE_PAYMENT_BY_SALE_ORDER,
 } from "../../../../graphql/queries/SalePayment";
+import useAuth from "../../../auth/hooks/useAuth";
+import { formatAmount, round2 } from "../../../../utils/currency";
 
 interface SalePaymentFormProps {
   setVisibleSalePaymentForm: (isVisible: boolean) => void;
   saleOrderId: string;
+  detailSalePayment: IDetailSalePayment;
+  onRequestQr: (amount: number) => void;
 }
 
 const SalePaymentForm: FC<SalePaymentFormProps> = ({
   setVisibleSalePaymentForm,
   saleOrderId,
+  detailSalePayment,
+  onRequestQr,
 }) => {
   const [selectedPaymentMethod, setSelectedPaymentMethod] =
     useState("Efectivo");
+  const { currency } = useAuth();
+  const qrAvailable = useQrPaymentAvailable();
+
+  const saldoPendiente = round2(detailSalePayment?.total_pending ?? 0);
+  const isQr = selectedPaymentMethod === "QR";
 
   const [createSalePayment] = useMutation(CREATE_SALE_PAYMENT, {
     refetchQueries: [
@@ -89,6 +101,9 @@ const SalePaymentForm: FC<SalePaymentFormProps> = ({
     validationSchema: schemaFormSalePayment,
   });
 
+  const amountExceedsSaldo = round2(values.amount || 0) > saldoPendiente;
+  const nuevoSaldo = round2(saldoPendiente - (values.amount || 0));
+
   return (
     <form onSubmit={handleSubmit} className="grid gap-4">
       <section className="grid grid-cols-1 md:grid-cols-3 w-full md:w-[600px] gap-4">
@@ -109,21 +124,39 @@ const SalePaymentForm: FC<SalePaymentFormProps> = ({
           optionLabel="label"
           placeholder="Seleccionar metodo de pago"
           mandatory
-          options={salePaymentMethodOptions}
+          options={getSalePaymentMethodOptions(qrAvailable)}
+          optionDisabled="disabled"
           value={selectedPaymentMethod}
           error={errors.payment_method ? errors.payment_method : ""}
           onChange={handlePaymentMethodChange}
         />
 
-        <FieldNumberInput
-          label="Monto"
-          name="amount"
-          mandatory
-          placeholder="Monto de pago"
-          value={values.amount}
-          error={errors.amount ? errors.amount : ""}
-          onChange={handleAmountChange}
-        />
+        <div className="flex flex-col gap-1">
+          <FieldNumberInput
+            label="Monto"
+            name="amount"
+            mandatory
+            placeholder="Monto de pago"
+            value={values.amount}
+            error={errors.amount ? errors.amount : ""}
+            onChange={handleAmountChange}
+          />
+          <div className="flex flex-col text-xs gap-0.5">
+            <span className="text-gray-400">
+              Saldo pendiente: {formatAmount(saldoPendiente)} {currency}
+            </span>
+            {amountExceedsSaldo ? (
+              <span className="text-red-500">
+                El monto no puede ser mayor al saldo pendiente ({formatAmount(saldoPendiente)} {currency})
+              </span>
+            ) : (
+              <span className="text-gray-500">
+                Nuevo saldo:{" "}
+                <span className="font-semibold">{formatAmount(nuevoSaldo)} {currency}</span>
+              </span>
+            )}
+          </div>
+        </div>
 
         <FieldTextareaInput
           className="md:col-span-3"
@@ -139,13 +172,25 @@ const SalePaymentForm: FC<SalePaymentFormProps> = ({
       </section>
 
       <section className="flex justify-center">
-        <Button
-          type="submit"
-          severity="success"
-          label="Guardar"
-          className="w-full md:w-auto"
-          disabled={!dirty || !isValid || isSubmitting}
-        />
+        {isQr ? (
+          <Button
+            type="button"
+            severity="info"
+            icon="pi pi-qrcode"
+            label="Generar QR"
+            className="w-full md:w-auto"
+            disabled={!qrAvailable || !values.amount || values.amount <= 0 || amountExceedsSaldo}
+            onClick={() => onRequestQr(values.amount || 0)}
+          />
+        ) : (
+          <Button
+            type="submit"
+            severity="success"
+            label="Guardar"
+            className="w-full md:w-auto"
+            disabled={!dirty || !isValid || isSubmitting || amountExceedsSaldo}
+          />
+        )}
       </section>
     </form>
   );

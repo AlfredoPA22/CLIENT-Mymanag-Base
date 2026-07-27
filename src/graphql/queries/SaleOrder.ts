@@ -22,6 +22,7 @@ export const LIST_SALE_ORDER = gql`
       status
       total
       has_return
+      source
     }
   }
 `;
@@ -85,10 +86,23 @@ export const FIND_SALE_ORDER = gql`
       total
       payment_method
       contado_payment_method
+      is_paid
       has_return
       discount_type
       discount_value
       discount_amount
+      source
+    }
+  }
+`;
+
+export const FIND_QR_PAYMENT_INFO_BY_SALE_ORDER = gql`
+  query FindQrPaymentInfoBySaleOrder($saleOrderId: String!) {
+    findQrPaymentInfoBySaleOrder(saleOrderId: $saleOrderId) {
+      amount
+      currency
+      amount_bob
+      exchange_rate
     }
   }
 `;
@@ -110,6 +124,7 @@ export const FIND_SALE_ORDER_TO_PDF = gql`
         total
         payment_method
         contado_payment_method
+        is_paid
         discount_type
         discount_value
         discount_amount
@@ -136,6 +151,12 @@ export const FIND_SALE_ORDER_TO_PDF = gql`
           discount_value
           discount_amount
         }
+      }
+      qr_payment_info {
+        amount
+        currency
+        amount_bob
+        exchange_rate
       }
     }
   }

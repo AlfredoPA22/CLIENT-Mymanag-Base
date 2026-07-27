@@ -42,6 +42,7 @@ const DropdownInput: FC<DropdownInputProps> = ({
         filter={filter}
         optionLabel={optionLabel}
         onChange={onChange}
+        appendTo="self"
         panelStyle={{ maxWidth: '95vw' }}
         panelClassName="[&_.p-dropdown-item]:whitespace-normal [&_.p-dropdown-item]:leading-snug"
         {...props}
