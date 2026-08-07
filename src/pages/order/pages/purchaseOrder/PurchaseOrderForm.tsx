@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from "@apollo/client";
+import { useApolloClient, useMutation, useQuery } from "@apollo/client";
 import { Button } from "primereact/button";
 import { Calendar } from "primereact/calendar";
 import { Tag } from "primereact/tag";
@@ -14,9 +14,13 @@ import {
   CREATE_PURCHASE_ORDER,
 } from "../../../../graphql/mutations/PurchaseOrder";
 import { GENERATE_CODE } from "../../../../graphql/queries/CodeGenerator";
+import { DETAIL_COMPANY } from "../../../../graphql/queries/Company";
 import { LIST_PRODUCT } from "../../../../graphql/queries/Product";
 import { LIST_PROVIDER } from "../../../../graphql/queries/Provider";
-import { LIST_PURCHASE_ORDER } from "../../../../graphql/queries/PurchaseOrder";
+import {
+  FIND_PURCHASE_ORDER_TO_PDF,
+  LIST_PURCHASE_ORDER,
+} from "../../../../graphql/queries/PurchaseOrder";
 import { useFormikForm } from "../../../../hooks/useFormikForm";
 import {
   resetPurchaseOrder,
@@ -36,6 +40,7 @@ import { setIsBlocked } from "../../../../redux/slices/blockUISlice";
 import { ROUTES_MOCK } from "../../../../routes/RouteMocks";
 import useAuth from "../../../auth/hooks/useAuth";
 import { formatAmount } from "../../../../utils/currency";
+import { generatePDF } from "../../utils/generatePurchaseOrderPDF";
 
 const PurchaseOrderForm = () => {
   const {
@@ -49,6 +54,7 @@ const PurchaseOrderForm = () => {
 
   const { listProviderSelect } = useProviderList();
   const { currency } = useAuth();
+  const client = useApolloClient();
 
   const [selectedProvider, setSelectedProvider] = useState<IReactSelect | null>(null);
 
@@ -112,6 +118,27 @@ const PurchaseOrderForm = () => {
     }
   };
 
+  const handleGeneratePDF = async () => {
+    if (!purchaseOrderData?._id) return;
+    try {
+      dispatch(setIsBlocked(true));
+      const { data } = await client.query({
+        query: FIND_PURCHASE_ORDER_TO_PDF,
+        variables: { purchaseOrderId: purchaseOrderData._id },
+        fetchPolicy: "network-only",
+      });
+      const { data: dataCompany } = await client.query({
+        query: DETAIL_COMPANY,
+        fetchPolicy: "network-only",
+      });
+      generatePDF(data.findPurchaseOrderToPDF, dataCompany.detailCompany, currency);
+    } catch (error: any) {
+      showToast({ detail: error.message, severity: ToastSeverity.Error });
+    } finally {
+      dispatch(setIsBlocked(false));
+    }
+  };
+
   const handleProviderChange = async (event: SingleValue<IReactSelect>, action: ActionMeta<IReactSelect>) => {
     setSelectedProvider(event);
     setFieldValue(action.name || "", event ? event.value : "");
@@ -161,9 +188,9 @@ const PurchaseOrderForm = () => {
         <p className="text-gray-500 text-sm">Completa los detalles para registrar la compra</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 items-center">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 items-center">
         {/* Fecha y proveedor */}
-        <section className="flex flex-col gap-3 md:border-r md:border-r-gray-300 md:pr-6">
+        <section className="flex flex-col gap-3 lg:border-r lg:border-r-gray-300 lg:pr-6">
           <div className="flex flex-col">
             <LabelInput name="date" label="Fecha de compra" />
             <Calendar
@@ -197,7 +224,7 @@ const PurchaseOrderForm = () => {
               type="submit"
               severity="success"
               label="Crear compra"
-              className="w-full md:w-auto"
+              className="w-full lg:w-auto"
               disabled={!isValid || isSubmitting}
             />
           ) : (
@@ -237,6 +264,14 @@ const PurchaseOrderForm = () => {
                 severity="success"
                 label="Aprobar Compra"
                 onClick={setApprovePurchaseOrder}
+                className="w-full"
+              />
+              <Button
+                icon="pi pi-download"
+                type="button"
+                severity="secondary"
+                label="Imprimir"
+                onClick={handleGeneratePDF}
                 className="w-full"
               />
             </div>

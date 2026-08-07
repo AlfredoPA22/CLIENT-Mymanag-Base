@@ -133,8 +133,8 @@ const ProductTransferDetail: FC<ProductTransferDetailProps> = ({
         }
       />
 
-      {/* ── Mobile: código + estado destacado ─────────────── */}
-      <div className="md:hidden flex items-center justify-between bg-gray-100 rounded-lg px-4 py-3 mb-4">
+      {/* ── Mobile/tablet: código + estado destacado ─────────────── */}
+      <div className="lg:hidden flex items-center justify-between bg-gray-100 rounded-lg px-4 py-3 mb-4">
         <span className="text-lg font-bold text-gray-800">{transfer?.code}</span>
         {status && (
           <Tag
@@ -145,39 +145,39 @@ const ProductTransferDetail: FC<ProductTransferDetailProps> = ({
         )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 items-start">
         {/* Ruta y fecha */}
-        <section className="flex flex-col gap-3 md:border-r md:border-r-gray-300 md:pr-6">
+        <section className="flex flex-col gap-3 lg:border-r lg:border-r-gray-300 lg:pr-6">
           <div className="flex flex-col">
             <LabelInput name="date" label="Fecha" />
-            <span className="text-base md:text-lg font-medium text-gray-700">{date}</span>
+            <span className="text-base lg:text-lg font-medium text-gray-700">{date}</span>
           </div>
           <div className="flex flex-col">
             <LabelInput name="origin" label="Almacén origen" />
-            <span className="text-base md:text-lg font-medium text-gray-700 break-words">
+            <span className="text-base lg:text-lg font-medium text-gray-700 break-words">
               {transfer?.origin_warehouse?.name}
             </span>
           </div>
           <div className="flex flex-col">
             <LabelInput name="destination" label="Almacén destino" />
-            <span className="text-base md:text-lg font-medium text-gray-700 break-words">
+            <span className="text-base lg:text-lg font-medium text-gray-700 break-words">
               {transfer?.destination_warehouse?.name}
             </span>
           </div>
         </section>
 
         {/* Creado por */}
-        <section className="flex flex-col items-start md:items-center justify-center">
+        <section className="flex flex-col items-start lg:items-center justify-center">
           <LabelInput name="user" label="Creado por" />
-          <span className="text-base md:text-xl font-semibold text-gray-700 break-words">
+          <span className="text-base lg:text-xl font-semibold text-gray-700 break-words">
             {transfer?.created_by?.user_name}
           </span>
         </section>
 
         {/* Estado y acciones */}
         <section className="flex flex-col gap-4 rounded-md">
-          {/* Code/status card — hidden on mobile (shown above) */}
-          <div className="hidden md:flex flex-col items-center gap-2 bg-gray-100 p-4 rounded-md">
+          {/* Code/status card — hidden on mobile/tablet (shown above) */}
+          <div className="hidden lg:flex flex-col items-center gap-2 bg-gray-100 p-4 rounded-md">
             <span className="text-gray-600 text-sm">Código</span>
             <span className="text-xl font-bold text-gray-800">{transfer?.code}</span>
             {status && (

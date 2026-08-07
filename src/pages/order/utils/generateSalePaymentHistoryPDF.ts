@@ -32,6 +32,10 @@ export const generateHistoryPDF = (
 ) => {
   const doc = new jsPDF();
 
+  // Los totales de la venta se muestran en la moneda de la venta; cada pago
+  // individual en la tabla se muestra en la suya propia (pueden ser mixtas).
+  const orderCurrency = detail.sale_order.currency ?? currency;
+
   // ── TOP ACCENT LINE ───────────────────────────────────────
   doc.setFillColor(...ACCENT);
   doc.rect(0, 0, PAGE_W, 3, "F");
@@ -66,8 +70,8 @@ export const generateHistoryPDF = (
 
   const summaryItems = [
     { label: "CLIENTE", value: detail.sale_order.client.fullName },
-    { label: "TOTAL DE VENTA", value: `${formatAmount(detail.total_amount)} ${currency}` },
-    { label: "TOTAL PAGADO", value: `${formatAmount(detail.total_paid)} ${currency}` },
+    { label: "TOTAL DE VENTA", value: `${formatAmount(detail.total_amount)} ${orderCurrency}` },
+    { label: "TOTAL PAGADO", value: `${formatAmount(detail.total_paid)} ${orderCurrency}` },
   ];
 
   summaryItems.forEach((item, i) => {
@@ -90,21 +94,27 @@ export const generateHistoryPDF = (
   doc.setFont("helvetica", "bold");
   doc.setFontSize(12);
   doc.setTextColor(...INK);
-  doc.text(`${formatAmount(detail.total_pending)} ${currency}`, PAGE_W - MARGIN, infoY + 8, { align: "right" });
+  doc.text(`${formatAmount(detail.total_pending)} ${orderCurrency}`, PAGE_W - MARGIN, infoY + 8, { align: "right" });
 
   // ── RULE ──────────────────────────────────────────────────
   drawRule(doc, infoY + 18);
 
   // ── TABLE ────────────────────────────────────────────────
   autoTable(doc, {
-    head: [["Fecha", "Nota", "Método de Pago", `Monto (${currency})`, "Registrado por"]],
-    body: data.map((payment) => [
-      getDate(payment.date),
-      payment.note || "—",
-      payment.payment_method,
-      payment.amount,
-      payment.created_by.user_name,
-    ]),
+    head: [["Fecha", "Nota", "Método de Pago", "Monto", "T.C. (Bs)", "Registrado por"]],
+    body: data.map((payment) => {
+      const paymentCurrency = payment.currency ?? currency;
+      return [
+        getDate(payment.date),
+        payment.note || "—",
+        payment.payment_method,
+        `${formatAmount(payment.amount)} ${paymentCurrency}`,
+        payment.currency === "Bs" && payment.exchange_rate
+          ? `1 $ = ${formatAmount(payment.exchange_rate)} Bs`
+          : "—",
+        payment.created_by.user_name,
+      ];
+    }),
     startY: infoY + 24,
     theme: "plain",
     headStyles: {
@@ -118,11 +128,12 @@ export const generateHistoryPDF = (
     bodyStyles: { fontSize: 8.5, textColor: INK, cellPadding: 4 },
     alternateRowStyles: { fillColor: ROW_ALT },
     columnStyles: {
-      0: { cellWidth: 30, halign: "center" },
-      1: { cellWidth: 50 },
-      2: { cellWidth: 38, halign: "center" },
-      3: { cellWidth: 30, halign: "right" },
-      4: { cellWidth: 34 },
+      0: { cellWidth: 26, halign: "center" },
+      1: { cellWidth: 42 },
+      2: { cellWidth: 32, halign: "center" },
+      3: { cellWidth: 28, halign: "right" },
+      4: { cellWidth: 24, halign: "center", fontSize: 7 },
+      5: { cellWidth: 30 },
     },
     margin: { left: MARGIN, right: MARGIN },
     tableLineColor: RULE,
@@ -137,7 +148,7 @@ export const generateHistoryPDF = (
   doc.setFontSize(9.5);
   doc.setTextColor(...INK);
   doc.text(
-    `TOTAL PAGADO:   ${formatAmount(detail.total_paid)} ${currency}`,
+    `TOTAL PAGADO:   ${formatAmount(detail.total_paid)} ${orderCurrency}`,
     PAGE_W - MARGIN,
     finalY + 8,
     { align: "right" }

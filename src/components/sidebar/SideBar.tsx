@@ -14,6 +14,7 @@ import {
   MdDashboard,
   MdInventory,
   MdOutlineInventory,
+  MdOutlinePointOfSale,
   MdSettings,
   MdWarehouse,
 } from "react-icons/md";
@@ -134,6 +135,12 @@ const SidebarMenu = ({
           icon: <RiStore3Line />,
           to: ROUTES_MOCK.SALE_ORDERS,
           permission: ["LIST_SALE"],
+        },
+        {
+          label: "Caja",
+          icon: <MdOutlinePointOfSale />,
+          to: ROUTES_MOCK.CASH_REGISTER,
+          permission: ["LIST_CASH_REGISTER"],
         },
         {
           label: "Clientes",
@@ -498,13 +505,13 @@ const SidebarMenu = ({
           onClick={onToggleCollapse}
           whileHover={{ scale: 1.15 }}
           whileTap={{ scale: 0.9 }}
-          className="absolute top-14 -right-3 z-50 w-6 h-6 rounded-full bg-slate-700 border border-white/15 flex items-center justify-center shadow-lg hover:bg-[#A0C82E] hover:border-[#A0C82E] transition-colors duration-200"
+          className="absolute top-14 -right-4 z-50 w-8 h-8 rounded-full bg-slate-700 border border-white/15 flex items-center justify-center shadow-lg hover:bg-[#A0C82E] hover:border-[#A0C82E] transition-colors duration-200"
         >
           <motion.span
             animate={{ rotate: collapsed ? 180 : 0 }}
             transition={{ type: "spring", stiffness: 300, damping: 25 }}
           >
-            <FiChevronLeft className="text-[10px] text-white" />
+            <FiChevronLeft className="text-xs text-white" />
           </motion.span>
         </motion.button>
       )}

@@ -6,7 +6,8 @@ import { DataTableRowEditCompleteEvent } from "primereact/datatable";
 import { Dialog } from "primereact/dialog";
 import { Dropdown } from "primereact/dropdown";
 import { SelectButton } from "primereact/selectbutton";
-import { FC, useEffect, useState } from "react";
+import { Tag } from "primereact/tag";
+import { FC, useEffect, useMemo, useState } from "react";
 import { useDispatch } from "react-redux";
 import Table from "../../../../components/datatable/Table";
 import LabelInput from "../../../../components/labelInput/LabelInput";
@@ -28,7 +29,7 @@ import { showToast } from "../../../../utils/toastUtils";
 import SerialToDetail from "./SerialToDetail";
 import { setIsBlocked } from "../../../../redux/slices/blockUISlice";
 import useAuth from "../../../auth/hooks/useAuth";
-import { formatAmount } from "../../../../utils/currency";
+import { convertCurrency, formatAmount } from "../../../../utils/currency";
 import TextLink from "../../../../components/TextLink/TextLink";
 import { ROUTES_MOCK } from "../../../../routes/RouteMocks";
 import RowActionButtons, { RowAction } from "../../../../components/table/RowActionButtons";
@@ -36,6 +37,7 @@ import RowActionButtons, { RowAction } from "../../../../components/table/RowAct
 interface SaleOrderDetailListProps {
   saleOrderId: string;
   editMode?: boolean;
+  viewCurrency?: string | null;
 }
 
 interface MobileEditState {
@@ -49,6 +51,7 @@ interface MobileEditState {
 const SaleOrderDetailList: FC<SaleOrderDetailListProps> = ({
   saleOrderId,
   editMode = true,
+  viewCurrency = null,
 }) => {
   const [visibleForm, setVisibleForm] = useState<boolean>(false);
   const [currentSaleOrderDetail, setCurrentSaleOrderDetail] =
@@ -85,6 +88,17 @@ const SaleOrderDetailList: FC<SaleOrderDetailListProps> = ({
     variables: { saleOrderId },
     fetchPolicy: "network-only",
   });
+
+  // Moneda nativa de esta nota (puede diferir de la moneda base de la
+  // empresa si se vendió en la alterna) — los sale_price/subtotal guardados
+  // ya están en esta moneda. Si el padre pasó un `viewCurrency` (el toggle
+  // del Detalle), los montos que se MUESTRAN se convierten a esa moneda —
+  // pero solo para lectura: al editar siempre se usa/guarda el valor nativo.
+  const noteCurrency = listSaleOrderDetail?.[0]?.sale_order?.currency ?? currency;
+  const noteExchangeRate = listSaleOrderDetail?.[0]?.sale_order?.exchange_rate;
+  const displayCurrency = viewCurrency ?? noteCurrency;
+  const convertForDisplay = (amount: number) =>
+    convertCurrency(amount, noteCurrency, displayCurrency, noteExchangeRate);
 
   const discountTypeOptions = [
     { label: "Sin desc.", value: "" },
@@ -167,7 +181,7 @@ const SaleOrderDetailList: FC<SaleOrderDetailListProps> = ({
     includeEdit: boolean
   ): RowAction[] => {
     const actions: RowAction[] = [];
-    if (rowData.product.stock_type === stockType.SERIALIZADO) {
+    if (rowData.product?.stock_type === stockType.SERIALIZADO) {
       actions.push({
         label: editMode ? "Agregar seriales" : "Ver seriales",
         icon: "pi pi-cart-plus",
@@ -175,7 +189,8 @@ const SaleOrderDetailList: FC<SaleOrderDetailListProps> = ({
         onClick: () => { setCurrentSaleOrderDetail(rowData); setVisibleForm(true); },
       });
     }
-    if (editMode && includeEdit) {
+    // Los ítems sin inventario no se editan aquí: se eliminan y se agregan de nuevo.
+    if (editMode && includeEdit && rowData.product) {
       actions.push({
         label: "Editar",
         icon: "pi pi-pencil",
@@ -244,23 +259,27 @@ const SaleOrderDetailList: FC<SaleOrderDetailListProps> = ({
     }
   };
 
-  const [columns] = useState<DataTableColumn<ISaleOrderDetail>[]>([
+  const columns = useMemo<DataTableColumn<ISaleOrderDetail>[]>(() => [
     {
       field: "product.code",
       header: "Código",
       sortable: true,
       style: { width: "8%" },
-      body: (rowData: ISaleOrderDetail) => (
-        <TextLink to={`${ROUTES_MOCK.INVENTORY}${ROUTES_MOCK.PRODUCTS}/detalle/${rowData.product._id}`}>
-          {rowData.product.code}
-        </TextLink>
-      ),
+      body: (rowData: ISaleOrderDetail) =>
+        rowData.product ? (
+          <TextLink to={`${ROUTES_MOCK.INVENTORY}${ROUTES_MOCK.PRODUCTS}/detalle/${rowData.product._id}`}>
+            {rowData.product.code}
+          </TextLink>
+        ) : (
+          <Tag severity="secondary" className="text-xs">Sin inventario</Tag>
+        ),
     },
     {
       field: "product.name",
       header: "Producto",
       sortable: true,
       style: { width: "22%" },
+      body: (rowData: ISaleOrderDetail) => rowData.product?.name ?? rowData.custom_name,
     },
     {
       field: "sale_price",
@@ -268,7 +287,7 @@ const SaleOrderDetailList: FC<SaleOrderDetailListProps> = ({
       sortable: true,
       style: { width: "12%" },
       body: (rowData: ISaleOrderDetail) => (
-        <LabelInput className="justify-center" label={`${formatAmount(rowData.sale_price)} ${currency}`} />
+        <LabelInput className="justify-center" label={`${formatAmount(convertForDisplay(rowData.sale_price))} ${displayCurrency}`} />
       ),
       fieldEditor: (options: ColumnEditorOptions) => numberEditor(options, true),
     },
@@ -289,7 +308,7 @@ const SaleOrderDetailList: FC<SaleOrderDetailListProps> = ({
           return <span className="text-gray-400 text-xs">—</span>;
         if (rowData.discount_type === "PORCENTUAL")
           return <span className="text-xs text-orange-600">{rowData.discount_value}%</span>;
-        return <span className="text-xs text-orange-600">{formatAmount(rowData.discount_value ?? 0)} {currency}</span>;
+        return <span className="text-xs text-orange-600">{formatAmount(convertForDisplay(rowData.discount_value ?? 0))} {displayCurrency}</span>;
       },
       fieldEditor: (options: ColumnEditorOptions) => (
         <Dropdown
@@ -310,7 +329,7 @@ const SaleOrderDetailList: FC<SaleOrderDetailListProps> = ({
       body: (rowData: ISaleOrderDetail) => {
         const amt = rowData.discount_amount ?? 0;
         if (amt === 0) return <span className="text-gray-400 text-xs">—</span>;
-        return <span className="text-xs text-orange-500">-{formatAmount(amt)} {currency}</span>;
+        return <span className="text-xs text-orange-500">-{formatAmount(convertForDisplay(amt))} {displayCurrency}</span>;
       },
       fieldEditor: (options: ColumnEditorOptions) => numberEditor(options, true),
     },
@@ -320,7 +339,7 @@ const SaleOrderDetailList: FC<SaleOrderDetailListProps> = ({
       sortable: true,
       style: { textAlign: "center", width: "12%" },
       body: (rowData: ISaleOrderDetail) => (
-        <LabelInput className="justify-center" label={`${formatAmount(rowData.subtotal)} ${currency}`} />
+        <LabelInput className="justify-center" label={`${formatAmount(convertForDisplay(rowData.subtotal))} ${displayCurrency}`} />
       ),
     },
     {
@@ -329,13 +348,13 @@ const SaleOrderDetailList: FC<SaleOrderDetailListProps> = ({
       sortable: true,
       style: { textAlign: "center", width: "8%" },
       body: (rowData: ISaleOrderDetail) => {
-        if (rowData.product.stock_type === stockType.SERIALIZADO) {
+        if (rowData.product?.stock_type === stockType.SERIALIZADO) {
           return <span>{rowData.serials}</span>;
         }
         return <>—</>;
       },
     },
-  ]);
+  ], [noteCurrency, displayCurrency]);
 
   const { filters, renderFilterInput } = useTableGlobalFilter(columns);
 
@@ -354,7 +373,7 @@ const SaleOrderDetailList: FC<SaleOrderDetailListProps> = ({
       title={`Productos de la venta (${listSaleOrderDetail ? listSaleOrderDetail.length : ""})`}
     >
       {/* ── Vista mobile: cards ─────────────────────────────────── */}
-      <div className="block md:hidden space-y-3">
+      <div className="block lg:hidden space-y-3">
         {(!listSaleOrderDetail || listSaleOrderDetail.length === 0) && (
           <p className="text-center text-gray-400 py-6 text-sm">Venta sin productos.</p>
         )}
@@ -366,30 +385,34 @@ const SaleOrderDetailList: FC<SaleOrderDetailListProps> = ({
             {/* Cabecera: código + nombre + subtotal */}
             <div className="flex justify-between items-start gap-2">
               <div className="flex-1 min-w-0">
-                <TextLink
-                  to={`${ROUTES_MOCK.INVENTORY}${ROUTES_MOCK.PRODUCTS}/detalle/${detail.product._id}`}
-                >
-                  <span className="text-xs font-mono text-blue-600 hover:underline">
-                    {detail.product.code}
-                  </span>
-                </TextLink>
+                {detail.product ? (
+                  <TextLink
+                    to={`${ROUTES_MOCK.INVENTORY}${ROUTES_MOCK.PRODUCTS}/detalle/${detail.product._id}`}
+                  >
+                    <span className="text-xs font-mono text-blue-600 hover:underline">
+                      {detail.product.code}
+                    </span>
+                  </TextLink>
+                ) : (
+                  <Tag severity="secondary" className="text-xs">Sin inventario</Tag>
+                )}
                 <p className="font-semibold text-gray-800 text-sm leading-tight truncate">
-                  {detail.product.name}
+                  {detail.product?.name ?? detail.custom_name}
                 </p>
               </div>
               <span className="text-base font-bold text-green-700 whitespace-nowrap">
-                {formatAmount(detail.subtotal)} {currency}
+                {formatAmount(convertForDisplay(detail.subtotal))} {displayCurrency}
               </span>
             </div>
 
             {/* Detalles: precio × cantidad, descuento */}
             <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500">
               <span>
-                {formatAmount(detail.sale_price)} {currency} × {detail.quantity} uds.
+                {formatAmount(convertForDisplay(detail.sale_price))} {displayCurrency} × {detail.quantity} uds.
               </span>
               {(detail.discount_amount ?? 0) > 0 && (
                 <span className="text-orange-500">
-                  Desc: -{formatAmount(detail.discount_amount ?? 0)} {currency}
+                  Desc: -{formatAmount(convertForDisplay(detail.discount_amount ?? 0))} {displayCurrency}
                   {detail.discount_type === "PORCENTUAL"
                     ? ` (${detail.discount_value}%)`
                     : detail.discount_type === "FIJO"
@@ -397,7 +420,7 @@ const SaleOrderDetailList: FC<SaleOrderDetailListProps> = ({
                       : ""}
                 </span>
               )}
-              {detail.product.stock_type === stockType.SERIALIZADO && (
+              {detail.product?.stock_type === stockType.SERIALIZADO && (
                 <span className="text-gray-400">
                   Seriales: <strong className="text-gray-700">{detail.serials}</strong>
                 </span>
@@ -405,7 +428,7 @@ const SaleOrderDetailList: FC<SaleOrderDetailListProps> = ({
             </div>
 
             {/* Acciones */}
-            {(editMode || detail.product.stock_type === stockType.SERIALIZADO) && (
+            {(editMode || detail.product?.stock_type === stockType.SERIALIZADO) && (
               <div className="flex justify-end mt-3 border-t pt-2">
                 <RowActionButtons actions={buildDetailActions(detail, true)} size="small" />
               </div>
@@ -415,7 +438,7 @@ const SaleOrderDetailList: FC<SaleOrderDetailListProps> = ({
       </div>
 
       {/* ── Vista desktop: tabla ────────────────────────────────── */}
-      <div className="hidden md:block">
+      <div className="hidden lg:block">
         <Table
           columns={columns}
           data={listSaleOrderDetail}
@@ -456,7 +479,7 @@ const SaleOrderDetailList: FC<SaleOrderDetailListProps> = ({
           <div className="flex flex-col gap-4 pt-2">
             <div className="flex flex-col gap-1">
               <label className="text-sm font-medium text-gray-700">
-                Precio de venta ({currency})
+                Precio de venta ({noteCurrency})
               </label>
               <input
                 type="number"
@@ -500,14 +523,14 @@ const SaleOrderDetailList: FC<SaleOrderDetailListProps> = ({
                       : null
                   );
                 }}
-                className="w-full"
+                className="w-full flex [&_.p-button]:flex-1 [&_.p-button]:justify-center"
               />
             </div>
             {mobileEditData?.discount_type && (
               <div className="flex flex-col gap-1">
                 <label className="text-sm font-medium text-gray-700">
                   Valor del descuento{" "}
-                  {mobileEditData.discount_type === "PORCENTUAL" ? "(%)" : `(${currency})`}
+                  {mobileEditData.discount_type === "PORCENTUAL" ? "(%)" : `(${noteCurrency})`}
                 </label>
                 <input
                   type="number"

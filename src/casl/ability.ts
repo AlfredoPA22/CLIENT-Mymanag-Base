@@ -261,6 +261,21 @@ export function buildAbility(permissions: string[]): AppAbility {
       case "DELETE_TRANSFER":
         can("delete", "Transfer");
         break;
+
+      // ── Caja ────────────────────────────────────────────────────────────────
+      case "ALL_CASH_REGISTER":
+        can("manage", "CashRegister");
+        break;
+      case "LIST_CASH_REGISTER":
+        can("list", "CashRegister");
+        can("read", "CashRegister");
+        break;
+      case "OPEN_CASH_REGISTER":
+        can("create", "CashRegister");
+        break;
+      case "CLOSE_CASH_REGISTER":
+        can("update", "CashRegister");
+        break;
     }
   }
 
@@ -347,6 +362,10 @@ const PERMISSION_MAP: Record<string, Array<[string, string]>> = {
   DETAIL_TRANSFER: [["read", "Transfer"]],
   EDIT_TRANSFER: [["update", "Transfer"]],
   DELETE_TRANSFER: [["delete", "Transfer"]],
+  ALL_CASH_REGISTER: [["manage", "CashRegister"]],
+  LIST_CASH_REGISTER: [["list", "CashRegister"]],
+  OPEN_CASH_REGISTER: [["create", "CashRegister"]],
+  CLOSE_CASH_REGISTER: [["update", "CashRegister"]],
 };
 
 /**

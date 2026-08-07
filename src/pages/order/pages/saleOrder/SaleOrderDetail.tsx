@@ -1,7 +1,6 @@
 import { useApolloClient, useLazyQuery, useMutation, useQuery } from "@apollo/client";
 import { Button } from "primereact/button";
 import { Dialog } from "primereact/dialog";
-import { SelectButton } from "primereact/selectbutton";
 import { InputNumber } from "primereact/inputnumber";
 import { InputTextarea } from "primereact/inputtextarea";
 import { Tag } from "primereact/tag";
@@ -19,8 +18,14 @@ import { saleOrderPaymentMethodOptions } from "../../utils/saleOrderPaymentMetho
 import { getSalePaymentMethodOptions } from "../../utils/salePaymentMethodMock";
 import useQrPaymentAvailable from "../../../../hooks/useQrPaymentAvailable";
 import { CREATE_SALE_RETURN } from "../../../../graphql/mutations/SaleReturn";
+import { DETAIL_COMPANY } from "../../../../graphql/queries/Company";
 import { LIST_PRODUCT } from "../../../../graphql/queries/Product";
-import { FIND_QR_PAYMENT_INFO_BY_SALE_ORDER, FIND_SALE_ORDER, LIST_SALE_ORDER } from "../../../../graphql/queries/SaleOrder";
+import {
+  FIND_QR_PAYMENT_INFO_BY_SALE_ORDER,
+  FIND_SALE_ORDER,
+  FIND_SALE_ORDER_TO_PDF,
+  LIST_SALE_ORDER,
+} from "../../../../graphql/queries/SaleOrder";
 import { LIST_SALE_ORDER_DETAIL } from "../../../../graphql/queries/SaleOrderDetail";
 import { LIST_SALE_PAYMENT_BY_SALE_ORDER } from "../../../../graphql/queries/SalePayment";
 import { FIND_SALE_RETURN_BY_SALE_ORDER, LIST_SALE_RETURN, LIST_SALE_RETURN_DETAIL } from "../../../../graphql/queries/SaleReturn";
@@ -33,19 +38,17 @@ import { getStatus } from "../../utils/getStatus";
 import { ROUTES_MOCK } from "../../../../routes/RouteMocks";
 import SectionHeader from "../../../../components/sectionHeader/SectionHeader";
 import useAuth from "../../../auth/hooks/useAuth";
-import { formatAmount } from "../../../../utils/currency";
+import { convertCurrency, formatAmount } from "../../../../utils/currency";
 import { PermissionGuard } from "../../../auth/pages/PermissionGuard";
 import QrPaymentModal from "../../../../components/qrPayment/QrPaymentModal";
 import { getSocket } from "../../../../utils/socket";
-
-const DISCOUNT_TYPE_OPTIONS = [
-  { label: "Ninguno", value: "NONE" },
-  { label: "Fijo", value: "FIJO" },
-  { label: "Porcentual", value: "PORCENTUAL" },
-];
+import { generatePDF } from "../../utils/generateSaleOrderPDF";
+import GeneralDiscountEditor from "../shared/GeneralDiscountEditor";
 
 interface SaleOrderDetailProps {
   saleOrderId: string;
+  viewCurrency: string | null;
+  onViewCurrencyChange: (currency: string) => void;
 }
 
 interface ReturnItem {
@@ -53,7 +56,7 @@ interface ReturnItem {
   quantity: number;
 }
 
-const SaleOrderDetail: FC<SaleOrderDetailProps> = ({ saleOrderId }) => {
+const SaleOrderDetail: FC<SaleOrderDetailProps> = ({ saleOrderId, viewCurrency, onViewCurrencyChange }) => {
   const { data, loading: loadingSaleOrder, error: errorSaleOrder, refetch: refetchSaleOrder } = useQuery(FIND_SALE_ORDER, {
     variables: { saleOrderId },
     fetchPolicy: "cache-and-network",
@@ -123,6 +126,30 @@ const SaleOrderDetail: FC<SaleOrderDetailProps> = ({ saleOrderId }) => {
   });
   const qrPaymentInfo = qrPaymentInfoData?.findQrPaymentInfoBySaleOrder;
 
+  const handleGeneratePDF = async () => {
+    try {
+      dispatch(setIsBlocked(true));
+      const { data: pdfData } = await apolloClient.query({
+        query: FIND_SALE_ORDER_TO_PDF,
+        variables: { saleOrderId },
+        fetchPolicy: "network-only",
+      });
+      const { data: dataCompany } = await apolloClient.query({
+        query: DETAIL_COMPANY,
+        fetchPolicy: "network-only",
+      });
+      generatePDF(pdfData.findSaleOrderToPDF, dataCompany.detailCompany, currency);
+    } catch (error: any) {
+      showToast({ detail: error.message, severity: ToastSeverity.Error });
+    } finally {
+      dispatch(setIsBlocked(false));
+    }
+  };
+
+  const handleOpenTicket = () => {
+    window.open(`${ROUTES_MOCK.SALE_ORDERS}/detalle/${saleOrderId}/ticket`, "_blank");
+  };
+
   const handleOpenReturnDetail = () => {
     if (existingReturn) {
       loadReturnDetail({ variables: { saleReturnId: existingReturn._id } });
@@ -130,7 +157,11 @@ const SaleOrderDetail: FC<SaleOrderDetailProps> = ({ saleOrderId }) => {
     }
   };
 
-  const details: any[] = detailsData?.listSaleOrderDetail ?? [];
+  // Los ítems sin inventario no se pueden devolver desde acá (no hay stock
+  // que reponer) — se anula la venta si hace falta revertirlos.
+  const details: any[] = (detailsData?.listSaleOrderDetail ?? []).filter(
+    (d: any) => d.product
+  );
 
   const handleOpenDialog = () => {
     setReturnReason("");
@@ -298,6 +329,10 @@ const SaleOrderDetail: FC<SaleOrderDetailProps> = ({ saleOrderId }) => {
 
   const hasSelectedItems = Object.values(returnQuantities).some((qty) => qty > 0);
 
+  // Moneda de la nota: la nota siempre se guarda/muestra por defecto en la
+  // moneda en la que realmente se vendió.
+  const noteCurrency = data?.findSaleOrder.currency ?? currency;
+
   const returnTotal = Object.entries(returnQuantities)
     .filter(([, qty]) => qty > 0)
     .reduce((acc, [id, qty]) => {
@@ -309,7 +344,13 @@ const SaleOrderDetail: FC<SaleOrderDetailProps> = ({ saleOrderId }) => {
   if (data?.findSaleOrder.payment_method === "Contado" && data?.findSaleOrder.is_paid) {
     refundAmount = returnTotal;
   } else if (data?.findSaleOrder.payment_method === "Credito") {
-    const totalPaid = salePayments.reduce((acc, p) => acc + p.amount, 0);
+    // Cada abono puede estar en una moneda distinta a la de la venta — hay
+    // que convertirlo a la moneda de la venta (con su propio tipo de cambio
+    // congelado) antes de sumarlo, si no el saldo queda mal calculado.
+    const totalPaid = salePayments.reduce(
+      (acc, p) => acc + convertCurrency(p.amount ?? 0, p.currency ?? currency, noteCurrency, p.exchange_rate),
+      0
+    );
     const newTotal = (data?.findSaleOrder.total ?? 0) - returnTotal;
     refundAmount = Math.max(totalPaid - Math.max(newTotal, 0), 0);
   }
@@ -321,13 +362,21 @@ const SaleOrderDetail: FC<SaleOrderDetailProps> = ({ saleOrderId }) => {
   };
   // Subtotal de productos = total actual + descuento general ya aplicado (viene de DB)
   const sumSubtotals = parseFloat(((data?.findSaleOrder.total ?? 0) + (data?.findSaleOrder.discount_amount ?? 0)).toFixed(2));
-  const previewDiscount = (() => {
-    if (orderDiscountType === "NONE" || !orderDiscountValue) return 0;
-    if (orderDiscountType === "PORCENTUAL")
-      return parseFloat((sumSubtotals * (orderDiscountValue / 100)).toFixed(2));
-    return parseFloat(Math.min(orderDiscountValue, sumSubtotals).toFixed(2));
-  })();
-  const previewTotal = parseFloat((sumSubtotals - previewDiscount).toFixed(2));
+
+  // Si además tiene un tipo de cambio guardado (toda venta de una empresa
+  // en $ lo tiene, aunque se haya vendido en $ o en Bs), se puede alternar
+  // la vista a la otra moneda usando ese tipo de cambio (el que había al
+  // momento de crear la nota, no se recalcula con el tipo de cambio actual
+  // de la empresa).
+  const otherCurrency = noteCurrency === "Bs" ? "$" : "Bs";
+  const exchangeRate = data?.findSaleOrder.exchange_rate;
+  // El toggle de vista solo tiene sentido una vez la venta está aprobada
+  // (el total ya no cambia) — en Borrador el monto todavía puede variar
+  // mientras se agregan/editan productos, así que no se permite alternar.
+  const hasAltCurrency = !!exchangeRate && data?.findSaleOrder.status === orderStatus.APROBADO;
+  const effectiveViewCurrency = viewCurrency ?? noteCurrency;
+  const convertAmount = (amount: number) =>
+    convertCurrency(amount, noteCurrency, effectiveViewCurrency, exchangeRate);
 
   const date = getDate(data?.findSaleOrder.date) || "";
 
@@ -348,21 +397,21 @@ const SaleOrderDetail: FC<SaleOrderDetailProps> = ({ saleOrderId }) => {
         }
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 items-center">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 items-center">
 
-        {/* Código / estado / acciones — order-1 en mobile para que aparezca primero */}
-        <section className="flex flex-col gap-4 rounded-md order-1 md:order-3">
-          <div className="flex flex-col items-center gap-3 md:gap-2 bg-gray-100 px-4 py-3 md:p-4 rounded-xl">
+        {/* Código / estado / acciones — order-1 en mobile/tablet para que aparezca primero */}
+        <section className="flex flex-col gap-4 rounded-md order-1 lg:order-3">
+          <div className="flex flex-col items-center gap-3 lg:gap-2 bg-gray-100 px-4 py-3 lg:p-4 rounded-xl">
             <div className="flex flex-col items-center gap-0.5">
               <span className="text-gray-500 text-xs">Código de Orden</span>
-              <span className="text-lg md:text-xl font-bold text-gray-800">
+              <span className="text-lg lg:text-xl font-bold text-gray-800">
                 {data?.findSaleOrder.code}
               </span>
               {data?.findSaleOrder.source === "tienda_online" && (
                 <Tag severity="info" icon="pi pi-shopping-bag">Pedido de la tienda</Tag>
               )}
             </div>
-            <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 md:flex-col md:flex-nowrap md:gap-2">
+            <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 lg:flex-col lg:flex-nowrap lg:gap-2">
               <div className="flex flex-col items-center gap-0.5">
                 <span className="text-gray-500 text-xs">Estado de venta</span>
                 <Tag
@@ -395,6 +444,31 @@ const SaleOrderDetail: FC<SaleOrderDetailProps> = ({ saleOrderId }) => {
               </span>
             </div>
           )}
+
+          <PermissionGuard permissions={["DETAIL_SALE"]}>
+            <div className="flex flex-col gap-2">
+              <Button
+                icon="pi pi-download"
+                type="button"
+                severity="secondary"
+                label="Imprimir venta"
+                outlined
+                className="w-full"
+                onClick={handleGeneratePDF}
+              />
+              {data?.findSaleOrder.status === orderStatus.APROBADO && (
+                <Button
+                  icon="pi pi-print"
+                  type="button"
+                  severity="secondary"
+                  label="Imprimir ticket (térmica)"
+                  outlined
+                  className="w-full"
+                  onClick={handleOpenTicket}
+                />
+              )}
+            </div>
+          </PermissionGuard>
 
           {data?.findSaleOrder.status === orderStatus.BORRADOR && (
             <PermissionGuard permissions={["CREATE_SALE", "EDIT_SALE"]}>
@@ -513,8 +587,8 @@ const SaleOrderDetail: FC<SaleOrderDetailProps> = ({ saleOrderId }) => {
           )}
         </section>
 
-        {/* Info de la orden — order-2 en mobile */}
-        <section className="flex flex-col gap-3 order-2 md:order-1 md:border-r md:border-gray-300 md:pr-6">
+        {/* Info de la orden — order-2 en mobile/tablet */}
+        <section className="flex flex-col gap-3 order-2 lg:order-1 lg:border-r lg:border-gray-300 lg:pr-6">
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col">
               <span className="text-xs text-gray-400">Fecha de venta</span>
@@ -555,17 +629,36 @@ const SaleOrderDetail: FC<SaleOrderDetailProps> = ({ saleOrderId }) => {
           </div>
         </section>
 
-        {/* Totales — order-3 en mobile (al final) */}
-        <section className="flex flex-col items-center justify-center gap-1 text-center order-3 md:order-2 bg-green-50 md:bg-transparent rounded-xl md:rounded-none py-3 md:py-0">
+        {/* Totales — order-3 en mobile/tablet (al final) */}
+        <section className="flex flex-col items-center justify-center gap-1 text-center order-3 lg:order-2 bg-green-50 lg:bg-transparent rounded-xl lg:rounded-none py-3 lg:py-0">
+          {hasAltCurrency && (
+            <div className="flex flex-col items-center gap-1 mb-1">
+              <span className="text-xs text-blue-600">
+                Nota creada en {noteCurrency} · TC: 1 $ = {formatAmount(exchangeRate ?? 0)} Bs
+              </span>
+              <div className="flex gap-1">
+                {[noteCurrency, otherCurrency].map((opt) => (
+                  <Button
+                    key={opt}
+                    label={opt}
+                    size="small"
+                    severity={effectiveViewCurrency === opt ? "info" : "secondary"}
+                    outlined={effectiveViewCurrency !== opt}
+                    onClick={() => onViewCurrencyChange(opt)}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
           {(data?.findSaleOrder.discount_amount ?? 0) > 0 && (
             <>
               <span className="text-xs text-gray-400">Subtotal productos</span>
               <span className="text-sm text-gray-600">
-                {`${formatAmount((data?.findSaleOrder.total ?? 0) + (data?.findSaleOrder.discount_amount ?? 0))} ${currency}`}
+                {`${formatAmount(convertAmount((data?.findSaleOrder.total ?? 0) + (data?.findSaleOrder.discount_amount ?? 0)))} ${effectiveViewCurrency}`}
               </span>
               <div className="flex items-center justify-center gap-1">
                 <span className="text-xs text-orange-500">
-                  Descuento general: -{formatAmount(data?.findSaleOrder.discount_amount ?? 0)} {currency}
+                  Descuento general: -{formatAmount(convertAmount(data?.findSaleOrder.discount_amount ?? 0))} {effectiveViewCurrency}
                   {data?.findSaleOrder.discount_type === "PORCENTUAL"
                     ? ` (${data?.findSaleOrder.discount_value}%)`
                     : ""}
@@ -586,7 +679,7 @@ const SaleOrderDetail: FC<SaleOrderDetailProps> = ({ saleOrderId }) => {
           )}
           <span className="text-xs text-gray-400 mt-1">Total de compra</span>
           <span className="text-2xl font-bold text-green-600">
-            {`${formatAmount(data?.findSaleOrder.total ?? 0)} ${currency}`}
+            {`${formatAmount(convertAmount(data?.findSaleOrder.total ?? 0))} ${effectiveViewCurrency}`}
           </span>
         </section>
 
@@ -688,7 +781,7 @@ const SaleOrderDetail: FC<SaleOrderDetailProps> = ({ saleOrderId }) => {
           {/* Resumen de lo seleccionado */}
           {hasSelectedItems && (
             <div className="flex justify-end text-sm font-medium text-orange-600">
-              Total a devolver: {formatAmount(returnTotal)} {currency}
+              Total a devolver: {formatAmount(returnTotal)} {noteCurrency}
             </div>
           )}
 
@@ -700,7 +793,7 @@ const SaleOrderDetail: FC<SaleOrderDetailProps> = ({ saleOrderId }) => {
               </div>
               <p className="text-sm bg-red-50 border border-red-200 rounded px-3 py-2 text-red-700">
                 Esta devolución implica reembolsar{" "}
-                <strong>{formatAmount(refundAmount)} {currency}</strong> al cliente, y ese reembolso debe gestionarse manualmente.
+                <strong>{formatAmount(refundAmount)} {noteCurrency}</strong> al cliente, y ese reembolso debe gestionarse manualmente.
               </p>
             </div>
           )}
@@ -742,58 +835,14 @@ const SaleOrderDetail: FC<SaleOrderDetailProps> = ({ saleOrderId }) => {
           </div>
         }
       >
-        <div className="flex flex-col gap-4 pt-1">
-          {/* Descuento general opcional */}
-          <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 flex flex-col gap-2">
-            <p className="text-xs font-semibold text-orange-700">Descuento general (opcional)</p>
-            <div className="flex flex-col gap-2">
-              <SelectButton
-                value={orderDiscountType}
-                options={DISCOUNT_TYPE_OPTIONS}
-                onChange={(e) => {
-                  const val = (e.value as string) ?? "NONE";
-                  setOrderDiscountType(val);
-                  if (val === "NONE") setOrderDiscountValue(null);
-                }}
-                className="text-sm w-full"
-              />
-              {orderDiscountType !== "NONE" && (
-                <input
-                  type="number"
-                  value={orderDiscountValue ?? ""}
-                  onChange={(e) => {
-                    const val = e.target.value === "" ? null : parseFloat(e.target.value);
-                    setOrderDiscountValue(isNaN(val as number) ? null : val);
-                  }}
-                  placeholder={orderDiscountType === "PORCENTUAL" ? "%" : currency}
-                  min={0}
-                  max={orderDiscountType === "PORCENTUAL" ? 100 : undefined}
-                  className="p-inputtext p-component w-full text-sm"
-                />
-              )}
-            </div>
-          </div>
-
-          {/* Preview de totales */}
-          <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 flex flex-col gap-1 text-sm">
-            <div className="flex justify-between text-gray-600">
-              <span>Subtotal productos:</span>
-              <span className="font-medium">{formatAmount(sumSubtotals)} {currency}</span>
-            </div>
-            {previewDiscount > 0 && (
-              <div className="flex justify-between text-orange-600">
-                <span>
-                  Descuento general{orderDiscountType === "PORCENTUAL" ? ` (${orderDiscountValue}%)` : ""}:
-                </span>
-                <span>-{formatAmount(previewDiscount)} {currency}</span>
-              </div>
-            )}
-            <div className="flex justify-between font-semibold text-green-700 border-t pt-1 mt-0.5">
-              <span>Total final:</span>
-              <span>{formatAmount(previewTotal)} {currency}</span>
-            </div>
-          </div>
-        </div>
+        <GeneralDiscountEditor
+          discountType={orderDiscountType}
+          discountValue={orderDiscountValue}
+          onChangeType={setOrderDiscountType}
+          onChangeValue={setOrderDiscountValue}
+          subtotal={sumSubtotals}
+          currency={noteCurrency}
+        />
       </Dialog>
 
       {/* ── Dialog de edición de método de pago ─────────────────── */}
@@ -879,14 +928,14 @@ const SaleOrderDetail: FC<SaleOrderDetailProps> = ({ saleOrderId }) => {
                     <tr key={item._id} className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}>
                       <td className="px-3 py-2 font-medium text-gray-700 break-words">{item.product?.name ?? "—"}</td>
                       <td className="px-3 py-2 text-center text-gray-500">{item.quantity}</td>
-                      <td className="px-3 py-2 text-right text-gray-700">{formatAmount(item.subtotal)} {currency}</td>
+                      <td className="px-3 py-2 text-right text-gray-700">{formatAmount(item.subtotal)} {noteCurrency}</td>
                     </tr>
                   ))}
                 </tbody>
                 <tfoot className="bg-orange-50 font-semibold text-orange-700">
                   <tr>
                     <td className="px-3 py-2" colSpan={2}>Total devuelto</td>
-                    <td className="px-3 py-2 text-right">{formatAmount(existingReturn?.total ?? 0)} {currency}</td>
+                    <td className="px-3 py-2 text-right">{formatAmount(existingReturn?.total ?? 0)} {noteCurrency}</td>
                   </tr>
                 </tfoot>
               </table>

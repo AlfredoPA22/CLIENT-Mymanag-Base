@@ -75,7 +75,7 @@ const InventoryValueReportFilter: FC<InventoryValueReportFilterProps> = ({ setVi
   if (loadingListBrand || loadingListCategory) return <LoadingSpinner />;
 
   return (
-    <form onSubmit={handleSubmit} className="grid xl:grid-cols-3 gap-2">
+    <form onSubmit={handleSubmit} className="grid md:grid-cols-2 xl:grid-cols-3 gap-2">
       <DropdownInput
         label="Categoría"
         name="category"

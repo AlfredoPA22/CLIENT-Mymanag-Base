@@ -90,7 +90,7 @@ const PurchaseOrderReportFilter: FC<PurchaseOrderReportFilterProps> = ({
     return <LoadingSpinner />;
   }
   return (
-    <form onSubmit={handleSubmit} className="grid xl:grid-cols-2 gap-2">
+    <form onSubmit={handleSubmit} className="grid md:grid-cols-2 gap-2">
       <SingleCalendarInput
         inputId="startDate"
         name="startDate"

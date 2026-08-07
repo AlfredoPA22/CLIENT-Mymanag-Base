@@ -23,8 +23,8 @@ export const CREATE_SALE_ORDER_DETAIL = gql`
     ) {
       _id
       sale_order {
-        total
-        status
+        _id
+        code
         client {
           _id
           code
@@ -32,8 +32,67 @@ export const CREATE_SALE_ORDER_DETAIL = gql`
           phoneNumber
         }
         date
-        code
+        status
+        total
+        payment_method
+        contado_payment_method
+        is_paid
+        has_return
+        discount_type
+        discount_value
+        discount_amount
+        source
+        currency
+        exchange_rate
+      }
+    }
+  }
+`;
+
+export const CREATE_CUSTOM_SALE_ORDER_DETAIL = gql`
+  mutation CreateCustomSaleOrderDetail(
+    $sale_order: String!
+    $name: String!
+    $sale_price: Float!
+    $quantity: Int!
+    $cost: Float
+    $discount_type: String
+    $discount_value: Float
+  ) {
+    createCustomSaleOrderDetail(
+      createCustomSaleOrderDetailInput: {
+        sale_order: $sale_order
+        name: $name
+        sale_price: $sale_price
+        quantity: $quantity
+        cost: $cost
+        discount_type: $discount_type
+        discount_value: $discount_value
+      }
+    ) {
+      _id
+      sale_order {
         _id
+        code
+        client {
+          _id
+          code
+          fullName
+          phoneNumber
+        }
+        date
+        status
+        total
+        payment_method
+        contado_payment_method
+        is_paid
+        has_return
+        discount_type
+        discount_value
+        discount_amount
+        source
+        currency
+        exchange_rate
       }
     }
   }

@@ -268,6 +268,8 @@ export const LIST_SALE_ORDER_BY_PRODUCT = gql`
         total
         is_paid
         status
+        currency
+        exchange_rate
         client {
           _id
           fullName

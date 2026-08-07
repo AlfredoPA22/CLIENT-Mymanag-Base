@@ -7,6 +7,7 @@ export const CREATE_SALE_PAYMENT = gql`
     $note: String
     $payment_method: String!
     $sale_order: String!
+    $currency: String
   ) {
     createSalePayment(
       salePaymentInput: {
@@ -15,6 +16,7 @@ export const CREATE_SALE_PAYMENT = gql`
         note: $note
         payment_method: $payment_method
         sale_order: $sale_order
+        currency: $currency
       }
     ) {
       _id
@@ -26,6 +28,8 @@ export const CREATE_SALE_PAYMENT = gql`
       date
       note
       payment_method
+      currency
+      exchange_rate
       sale_order {
         _id
       }

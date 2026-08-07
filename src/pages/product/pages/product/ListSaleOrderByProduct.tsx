@@ -13,7 +13,7 @@ import { DataTableSelectionSingleChangeEvent } from "primereact/datatable";
 import { useNavigate } from "react-router-dom";
 import { ROUTES_MOCK } from "../../../../routes/RouteMocks";
 import useAuth from "../../../auth/hooks/useAuth";
-import { formatAmount } from "../../../../utils/currency";
+import { convertCurrency, formatAmount } from "../../../../utils/currency";
 
 interface ListSaleOrderByProductProps {
   productId: string;
@@ -23,6 +23,12 @@ const ListSaleOrderByProduct: FC<ListSaleOrderByProductProps> = ({ productId }) 
   const { listSaleOrderByProduct, loadingListProduct } = useListSaleOrderByProduct(productId);
   const navigate = useNavigate();
   const { currency } = useAuth();
+
+  // Fuera de la sección de ventas, todo monto se muestra convertido a la
+  // moneda de la empresa (aunque la nota se haya hecho en su moneda alterna)
+  // para no mezclar Bs y $ en un mismo listado.
+  const toCompanyAmount = (item: ISaleOrderByProduct, amount: number) =>
+    convertCurrency(amount, item.saleOrder.currency ?? currency, currency, item.saleOrder.exchange_rate);
 
   const handleSelectionChange = (e: DataTableSelectionSingleChangeEvent<ISaleOrderByProduct[]>) => {
     navigate(`${ROUTES_MOCK.SALE_ORDERS}/detalle/${e.value.saleOrder._id}`);
@@ -39,13 +45,13 @@ const ListSaleOrderByProduct: FC<ListSaleOrderByProductProps> = ({ productId }) 
     {
       field: "saleOrderDetail.sale_price", header: "Precio de venta", sortable: true,
       body: (rowData) => (
-        <LabelInput className="justify-center" label={`${formatAmount(rowData.saleOrderDetail.sale_price)} ${currency}`} />
+        <LabelInput className="justify-center" label={`${formatAmount(toCompanyAmount(rowData, rowData.saleOrderDetail.sale_price))} ${currency}`} />
       ),
     },
     {
       field: "saleOrderDetail.subtotal", header: "Subtotal", sortable: true,
       body: (rowData) => (
-        <LabelInput className="justify-center" label={`${formatAmount(rowData.saleOrderDetail.subtotal)} ${currency}`} />
+        <LabelInput className="justify-center" label={`${formatAmount(toCompanyAmount(rowData, rowData.saleOrderDetail.subtotal))} ${currency}`} />
       ),
     },
     {
@@ -62,7 +68,7 @@ const ListSaleOrderByProduct: FC<ListSaleOrderByProductProps> = ({ productId }) 
   return (
     <Card title="Ventas del producto">
       {/* ── Mobile: cards ─────────────────────────────────────── */}
-      <div className="flex flex-col gap-2 md:hidden">
+      <div className="flex flex-col gap-2 lg:hidden">
         {(!listSaleOrderByProduct || listSaleOrderByProduct.length === 0) && (
           <p className="text-center text-gray-400 py-6 text-sm">
             No se registran ventas para este producto.
@@ -73,7 +79,7 @@ const ListSaleOrderByProduct: FC<ListSaleOrderByProductProps> = ({ productId }) 
           return (
             <div
               key={item.saleOrder._id}
-              className="border border-gray-200 rounded-xl p-3 bg-white shadow-sm cursor-pointer active:bg-gray-50"
+              className="border border-gray-200 rounded-xl p-3 bg-white shadow-sm cursor-pointer transition-colors duration-150 active:bg-gray-50"
               onClick={() => navigate(`${ROUTES_MOCK.SALE_ORDERS}/detalle/${item.saleOrder._id}`)}
             >
               <div className="flex items-center justify-between mb-1">
@@ -86,10 +92,10 @@ const ListSaleOrderByProduct: FC<ListSaleOrderByProductProps> = ({ productId }) 
                 <span>·</span>
                 <span>{item.saleOrderDetail.quantity} uds.</span>
                 <span>·</span>
-                <span>{formatAmount(item.saleOrderDetail.sale_price)} {currency} c/u</span>
+                <span>{formatAmount(toCompanyAmount(item, item.saleOrderDetail.sale_price))} {currency} c/u</span>
               </div>
               <p className="text-sm font-bold text-green-700 mt-1">
-                {formatAmount(item.saleOrderDetail.subtotal)} {currency}
+                {formatAmount(toCompanyAmount(item, item.saleOrderDetail.subtotal))} {currency}
               </p>
             </div>
           );
@@ -97,7 +103,7 @@ const ListSaleOrderByProduct: FC<ListSaleOrderByProductProps> = ({ productId }) 
       </div>
 
       {/* ── Desktop: tabla ─────────────────────────────────────── */}
-      <div className="hidden md:block">
+      <div className="hidden lg:block">
         <Table
           columns={columns}
           data={listSaleOrderByProduct}

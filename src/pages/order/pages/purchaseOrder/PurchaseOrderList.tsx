@@ -1,10 +1,12 @@
 import { useApolloClient, useMutation } from "@apollo/client";
 import { Button } from "primereact/button";
+import { Calendar } from "primereact/calendar";
 import { Card } from "primereact/card";
 import { confirmDialog } from "primereact/confirmdialog";
 import { DataTableSelectionSingleChangeEvent } from "primereact/datatable";
+import { Dropdown } from "primereact/dropdown";
 import { Tag } from "primereact/tag";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import Table from "../../../../components/datatable/Table";
@@ -18,7 +20,6 @@ import {
   LIST_PURCHASE_ORDER,
 } from "../../../../graphql/queries/PurchaseOrder";
 import { DETAIL_COMPANY } from "../../../../graphql/queries/Company";
-import useTableGlobalFilter from "../../../../hooks/useTableGlobalFilter";
 import { orderStatus } from "../../../../utils/enums/orderStatus.enum";
 import { ToastSeverity } from "../../../../utils/enums/toast.enum";
 import { IPurchaseOrder } from "../../../../utils/interfaces/PurchaseOrder";
@@ -33,6 +34,17 @@ import { ROUTES_MOCK } from "../../../../routes/RouteMocks";
 import { setIsBlocked } from "../../../../redux/slices/blockUISlice";
 import useAuth from "../../../auth/hooks/useAuth";
 
+const STATUS_OPTIONS = [
+  { label: "Borrador", value: orderStatus.BORRADOR },
+  { label: "Aprobado", value: orderStatus.APROBADO },
+  { label: "Cancelado", value: orderStatus.CANCELADO },
+];
+
+const DROPDOWN_PANEL_PROPS = {
+  panelStyle: { maxWidth: "95vw" },
+  panelClassName: "[&_.p-dropdown-item]:whitespace-normal [&_.p-dropdown-item]:leading-snug",
+};
+
 const PurchaseOrderList = () => {
   const { listPurchaseOrder, loadingListPurchaseOrder } = usePurchaseOrderList();
   const navigate = useNavigate();
@@ -42,6 +54,52 @@ const PurchaseOrderList = () => {
 
   const MOBILE_PAGE_SIZE = 20;
   const [mobilePage, setMobilePage] = useState(1);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+
+  // ── Filter state ──────────────────────────────────────────────
+  const [startDate, setStartDate] = useState<Date | null>(null);
+  const [endDate, setEndDate] = useState<Date | null>(null);
+  const [providerFilter, setProviderFilter] = useState("");
+  const [sellerFilter, setSellerFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+
+  const hasActiveFilter =
+    !!startDate || !!endDate || !!providerFilter || !!sellerFilter || !!statusFilter;
+
+  const clearFilters = () => {
+    setStartDate(null);
+    setEndDate(null);
+    setProviderFilter("");
+    setSellerFilter("");
+    setStatusFilter("");
+  };
+
+  const providerOptions = useMemo(() => {
+    const names = [...new Set(
+      (listPurchaseOrder ?? []).map((o: IPurchaseOrder) => o.provider?.name).filter(Boolean)
+    )];
+    return names.sort().map((n) => ({ label: n, value: n }));
+  }, [listPurchaseOrder]);
+
+  const sellerOptions = useMemo(() => {
+    const names = [...new Set(
+      (listPurchaseOrder ?? []).map((o: IPurchaseOrder) => o.created_by?.user_name).filter(Boolean)
+    )];
+    return names.sort().map((n) => ({ label: n, value: n }));
+  }, [listPurchaseOrder]);
+
+  const filteredData = useMemo(() => {
+    if (!listPurchaseOrder) return [];
+    return listPurchaseOrder.filter((order: IPurchaseOrder) => {
+      const orderDate = new Date(Number(order.date));
+      if (startDate) { const s = new Date(startDate); s.setHours(0, 0, 0, 0); if (orderDate < s) return false; }
+      if (endDate) { const e = new Date(endDate); e.setHours(23, 59, 59, 999); if (orderDate > e) return false; }
+      if (providerFilter && order.provider?.name !== providerFilter) return false;
+      if (sellerFilter && order.created_by?.user_name !== sellerFilter) return false;
+      if (statusFilter && order.status !== statusFilter) return false;
+      return true;
+    });
+  }, [listPurchaseOrder, startDate, endDate, providerFilter, sellerFilter, statusFilter]);
 
   const [DeletePurchaseOrder] = useMutation(DELETE_PURCHASE_ORDER, {
     refetchQueries: [{ query: LIST_PURCHASE_ORDER }, { query: LIST_PRODUCT }],
@@ -73,7 +131,7 @@ const PurchaseOrderList = () => {
 
   const tableHeaderTemplate = () => (
     <div className="flex justify-between items-center m-2 px-5">
-      <h1 className="text-2xl font-bold">{`Lista de compras (${listPurchaseOrder.length})`}</h1>
+      <h1 className="text-2xl font-bold">{`Lista de compras (${filteredData.length})`}</h1>
       <Button
         id="btn-new-purchase"
         icon="pi pi-plus"
@@ -193,16 +251,80 @@ const PurchaseOrderList = () => {
     },
   ]);
 
-  const { filters, renderFilterInput } = useTableGlobalFilter(columns);
-
   if (loadingListPurchaseOrder) return <LoadingSpinner />;
 
   return (
-    <>
+    <div className="flex flex-col gap-3 p-3 md:p-0">
+
+      {/* ── Panel de filtros ───────────────────────────────────── */}
+      <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
+        <div
+          className="flex items-center justify-between p-4 cursor-pointer select-none"
+          onClick={() => setFiltersOpen((v) => !v)}
+        >
+          <span className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+            <i className="pi pi-filter text-slate-500" />
+            Filtros
+            {hasActiveFilter && (
+              <Tag severity="info" className="text-xs">
+                {filteredData.length} resultado{filteredData.length !== 1 ? "s" : ""}
+              </Tag>
+            )}
+          </span>
+          <div className="flex items-center gap-2">
+            {hasActiveFilter && (
+              <Button
+                label="Limpiar"
+                icon="pi pi-times"
+                size="small"
+                severity="secondary"
+                outlined
+                onClick={(e) => { e.stopPropagation(); clearFilters(); }}
+              />
+            )}
+            <i className={`pi pi-chevron-down transition-transform duration-200 text-slate-400 ${filtersOpen ? "rotate-180" : ""}`} />
+          </div>
+        </div>
+
+        <div className={`grid transition-[grid-template-rows] duration-300 ease-in-out ${filtersOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}>
+         <div className="overflow-hidden">
+          <div className="px-4 pb-4 border-t border-gray-100 pt-3">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium text-slate-500">Fecha inicio</label>
+              <Calendar value={startDate} onChange={(e) => setStartDate(e.value as Date | null)}
+                dateFormat="dd/mm/yy" placeholder="Desde" showIcon showButtonBar inputClassName="text-sm" />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium text-slate-500">Fecha fin</label>
+              <Calendar value={endDate} onChange={(e) => setEndDate(e.value as Date | null)}
+                dateFormat="dd/mm/yy" placeholder="Hasta" showIcon showButtonBar inputClassName="text-sm" />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium text-slate-500">Proveedor</label>
+              <Dropdown value={providerFilter} options={providerOptions} onChange={(e) => setProviderFilter(e.value)}
+                placeholder="Todos" showClear filter className="w-full text-sm" {...DROPDOWN_PANEL_PROPS} />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium text-slate-500">Usuario</label>
+              <Dropdown value={sellerFilter} options={sellerOptions} onChange={(e) => setSellerFilter(e.value)}
+                placeholder="Todos" showClear className="w-full text-sm" {...DROPDOWN_PANEL_PROPS} />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium text-slate-500">Estado</label>
+              <Dropdown value={statusFilter} options={STATUS_OPTIONS} onChange={(e) => setStatusFilter(e.value)}
+                placeholder="Todos" showClear className="w-full text-sm" {...DROPDOWN_PANEL_PROPS} />
+            </div>
+          </div>
+          </div>
+         </div>
+        </div>
+      </div>
+
       {/* ── Mobile ─────────────────────────────────────────── */}
-      <div className="md:hidden flex flex-col gap-3 p-3">
+      <div className="md:hidden flex flex-col gap-3">
         <div className="flex items-center justify-between">
-          <h1 className="text-lg font-bold">{`Compras (${listPurchaseOrder.length})`}</h1>
+          <h1 className="text-lg font-bold">{`Compras (${filteredData.length})`}</h1>
           <Button
             label="Nueva"
             icon="pi pi-plus"
@@ -213,16 +335,16 @@ const PurchaseOrderList = () => {
           />
         </div>
 
-        {listPurchaseOrder.length === 0 && (
+        {filteredData.length === 0 && (
           <p className="text-center text-gray-400 py-6 text-sm">Sin compras.</p>
         )}
 
-        {listPurchaseOrder.slice(0, mobilePage * MOBILE_PAGE_SIZE).map((item: IPurchaseOrder) => {
+        {filteredData.slice(0, mobilePage * MOBILE_PAGE_SIZE).map((item: IPurchaseOrder) => {
           const status = getStatus(item.status);
           return (
             <div
               key={item._id}
-              className="border border-gray-200 rounded-xl p-3 bg-white shadow-sm cursor-pointer active:bg-gray-50"
+              className="border border-gray-200 rounded-xl p-3 bg-white shadow-sm cursor-pointer transition-colors duration-150 active:bg-gray-50"
               onClick={() => navigate(`${ROUTES_MOCK.PURCHASE_ORDERS}/detalle/${item._id}`)}
             >
               <div className="flex items-start justify-between gap-2 mb-1">
@@ -252,9 +374,9 @@ const PurchaseOrderList = () => {
             </div>
           );
         })}
-        {mobilePage * MOBILE_PAGE_SIZE < listPurchaseOrder.length && (
+        {mobilePage * MOBILE_PAGE_SIZE < filteredData.length && (
           <Button
-            label={`Cargar más (${listPurchaseOrder.length - mobilePage * MOBILE_PAGE_SIZE} restantes)`}
+            label={`Cargar más (${filteredData.length - mobilePage * MOBILE_PAGE_SIZE} restantes)`}
             icon="pi pi-chevron-down"
             severity="secondary"
             outlined
@@ -268,16 +390,14 @@ const PurchaseOrderList = () => {
       <Card id="purchase-list-table" className="py-2 hidden md:block" header={tableHeaderTemplate}>
         <Table
           columns={columns}
-          data={listPurchaseOrder}
+          data={filteredData}
           emptyMessage="Sin compras."
           size="small"
           actionBodyTemplate={actionBodyTemplate}
-          dataFilters={filters}
-          tableHeader={renderFilterInput}
           onSelectionChange={handleSelectionChange}
         />
       </Card>
-    </>
+    </div>
   );
 };
 

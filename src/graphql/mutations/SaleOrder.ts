@@ -6,6 +6,7 @@ export const CREATE_SALE_ORDER = gql`
     $client: String!
     $payment_method: String!
     $contado_payment_method: String
+    $currency: String
   ) {
     createSaleOrder(
       saleOrderInput: {
@@ -13,6 +14,7 @@ export const CREATE_SALE_ORDER = gql`
         client: $client
         payment_method: $payment_method
         contado_payment_method: $contado_payment_method
+        currency: $currency
       }
     ) {
       _id
@@ -20,6 +22,8 @@ export const CREATE_SALE_ORDER = gql`
       date
       status
       total
+      currency
+      exchange_rate
     }
   }
 `;

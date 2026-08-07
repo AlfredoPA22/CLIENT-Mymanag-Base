@@ -1,7 +1,7 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { ISaleOrder } from "../../../utils/interfaces/SaleOrder";
-import { formatAmount } from "../../../utils/currency";
+import { convertCurrency, formatAmount } from "../../../utils/currency";
 
 const INK: [number, number, number] = [30, 41, 59];
 const INK_MID: [number, number, number] = [71, 85, 105];
@@ -19,6 +19,12 @@ const drawRule = (doc: jsPDF, y: number) => {
   doc.setLineWidth(0.3);
   doc.line(MARGIN, y, PAGE_W - MARGIN, y);
 };
+
+// Una factura puede haberse hecho en la moneda alterna de la empresa (Bs) —
+// este reporte siempre se muestra en la moneda de la empresa, así que cada
+// monto se convierte primero con el tipo de cambio congelado en su nota.
+const toCompanyAmount = (order: ISaleOrder, amount: number, baseCurrency: string) =>
+  convertCurrency(amount, order.currency ?? baseCurrency, baseCurrency, order.exchange_rate);
 
 export const generateCuentasCobrarReportPDF = (
   data: ISaleOrder[],
@@ -65,7 +71,7 @@ export const generateCuentasCobrarReportPDF = (
     : "Sin filtro";
   doc.text(`${desde}  —  ${hasta}`, MARGIN + 18, filterY);
 
-  const total = data.reduce((s, o) => s + (Number(o.total) || 0), 0);
+  const total = data.reduce((s, o) => s + toCompanyAmount(o, Number(o.total) || 0, currency), 0);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(7);
   doc.setTextColor(...INK_MID);
@@ -91,7 +97,7 @@ export const generateCuentasCobrarReportPDF = (
       o.code,
       new Date(Number(o.date)).toLocaleDateString("es-ES"),
       o.client?.fullName || "-",
-      formatAmount(Number(o.total || 0)),
+      formatAmount(toCompanyAmount(o, Number(o.total || 0), currency)),
     ]),
     bodyStyles: { fontSize: 8.5, textColor: INK, cellPadding: 4 },
     alternateRowStyles: { fillColor: ROW_ALT },

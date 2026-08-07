@@ -25,9 +25,12 @@ const SaleOrderTicket = () => {
     return <LoadingSpinner />;
   }
 
-  const { saleOrder, saleOrderDetail, qr_payment_info: qrInfo } = data.findSaleOrderToPDF;
+  const { saleOrder, saleOrderDetail } = data.findSaleOrderToPDF;
   const company = companyData?.detailCompany;
-  const showExchangeRate = saleOrder.is_paid && !!qrInfo?.exchange_rate && currency === "$";
+  // Moneda nativa de la nota — el ticket es para el cliente, se imprime en
+  // la moneda en la que realmente se vendió, sin mostrar el tipo de cambio
+  // (eso solo interesa en los reportes internos de la empresa).
+  const ticketCurrency = saleOrder.currency ?? currency;
 
   return (
     <div className="min-h-screen bg-gray-200 py-6 print:bg-white print:py-0">
@@ -62,11 +65,6 @@ const SaleOrderTicket = () => {
           {saleOrder.contado_payment_method ? ` · ${saleOrder.contado_payment_method}` : ""}
         </p>
         <p>Estado de pago: {saleOrder.is_paid ? "Pagado" : "Pendiente"}</p>
-        {showExchangeRate && (
-          <p>
-            T.C.: 1 $ = {qrInfo.exchange_rate!.toFixed(2)} Bs (cobrado: {(qrInfo.amount_bob ?? 0).toFixed(2)} Bs)
-          </p>
-        )}
 
         <div className="border-t border-dashed border-black my-1" />
 
@@ -74,12 +72,12 @@ const SaleOrderTicket = () => {
           const d = item.saleOrderDetail;
           return (
             <div key={idx} className="mb-1">
-              <p className="font-semibold">{d.product.name}</p>
+              <p className="font-semibold">{d.product?.name ?? d.custom_name}</p>
               <div className="flex justify-between">
                 <span>
                   {d.quantity} x {d.sale_price.toFixed(2)}
                 </span>
-                <span>{d.subtotal.toFixed(2)} {currency}</span>
+                <span>{d.subtotal.toFixed(2)} {ticketCurrency}</span>
               </div>
             </div>
           );
@@ -89,7 +87,7 @@ const SaleOrderTicket = () => {
 
         <div className="flex justify-between font-bold text-sm">
           <span>TOTAL</span>
-          <span>{saleOrder.total.toFixed(2)} {currency}</span>
+          <span>{saleOrder.total.toFixed(2)} {ticketCurrency}</span>
         </div>
 
         <div className="border-t border-dashed border-black my-2" />

@@ -109,6 +109,10 @@ export const generatePDF = async (
   const hasDiscount = discountAmount > 0;
   const subtotalBruto = data.saleOrder.total + discountAmount;
 
+  // Moneda nativa de la nota — si se creó en una moneda distinta a la de la
+  // empresa, el PDF se imprime en esa moneda (no la del parámetro `currency`).
+  const pdfCurrency = data.saleOrder.currency ?? currency;
+
   // Labels row
   doc.setFont("helvetica", "bold");
   doc.setFontSize(7);
@@ -148,24 +152,8 @@ export const generatePDF = async (
   doc.setTextColor(...(data.saleOrder.is_paid ? ACCENT : INK));
   doc.text(data.saleOrder.is_paid ? "Pagado" : "Pendiente", COL2, infoY + 18);
 
-  const qrInfo = data.qr_payment_info;
-  const showExchangeRate =
-    data.saleOrder.is_paid && !!qrInfo?.exchange_rate && currency === "$";
-
-  if (showExchangeRate) {
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(7);
-    doc.setTextColor(...INK_MID);
-    doc.text("TIPO DE CAMBIO (COBRO QR)", COL3, infoY + 13);
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(8.5);
-    doc.setTextColor(...INK);
-    doc.text(
-      `1 $ = ${formatAmount(qrInfo!.exchange_rate!)} Bs  ·  Cobrado: ${formatAmount(qrInfo!.amount_bob ?? 0)} Bs`,
-      COL3,
-      infoY + 18
-    );
-  }
+  // Nota: el tipo de cambio NO se muestra en documentos para el cliente
+  // (PDF/ticket) — solo interesa internamente, en los reportes de la empresa.
 
   // ── SECTION RULE ─────────────────────────────────────────
   drawRule(doc, infoY + 24);
@@ -176,8 +164,8 @@ export const generatePDF = async (
     "Producto",
     "Marca",
     "Cant.",
-    `P. Venta (${currency})`,
-    `Subtotal (${currency})`,
+    `P. Venta (${pdfCurrency})`,
+    `Subtotal (${pdfCurrency})`,
   ];
 
   const rows = data.saleOrderDetail.flatMap((detail) => {
@@ -185,9 +173,9 @@ export const generatePDF = async (
     const detailDiscount = Number(d.discount_amount) || 0;
 
     const mainRow = [
-      d.product.code,
-      d.product.name,
-      d.product.brand.name,
+      d.product?.code ?? "—",
+      d.product?.name ?? d.custom_name ?? "—",
+      d.product?.brand?.name ?? "—",
       d.quantity,
       formatAmount(d.sale_price),
       formatAmount(d.subtotal),
@@ -198,8 +186,8 @@ export const generatePDF = async (
     if (detailDiscount > 0) {
       const label =
         d.discount_type === "percentage"
-          ? `Descuento (${d.discount_value}%): -${formatAmount(detailDiscount)} ${currency}`
-          : `Descuento: -${formatAmount(detailDiscount)} ${currency}`;
+          ? `Descuento (${d.discount_value}%): -${formatAmount(detailDiscount)} ${pdfCurrency}`
+          : `Descuento: -${formatAmount(detailDiscount)} ${pdfCurrency}`;
       extraRows.push([
         {
           content: label,
@@ -267,14 +255,14 @@ export const generatePDF = async (
     doc.setFontSize(8.5);
     doc.setTextColor(...INK_MID);
     doc.text(
-      `Subtotal:   ${formatAmount(subtotalBruto)} ${currency}`,
+      `Subtotal:   ${formatAmount(subtotalBruto)} ${pdfCurrency}`,
       PAGE_W - MARGIN,
       finalY + 6,
       { align: "right" }
     );
     doc.setTextColor(...RED);
     doc.text(
-      `${discountFooterLabel}   -${formatAmount(discountAmount)} ${currency}`,
+      `${discountFooterLabel}   -${formatAmount(discountAmount)} ${pdfCurrency}`,
       PAGE_W - MARGIN,
       finalY + 12,
       { align: "right" }
@@ -283,7 +271,7 @@ export const generatePDF = async (
     doc.setFontSize(9.5);
     doc.setTextColor(...INK);
     doc.text(
-      `TOTAL:   ${formatAmount(data.saleOrder.total)} ${currency}`,
+      `TOTAL:   ${formatAmount(data.saleOrder.total)} ${pdfCurrency}`,
       PAGE_W - MARGIN,
       finalY + 20,
       { align: "right" }
@@ -293,7 +281,7 @@ export const generatePDF = async (
     doc.setFontSize(9.5);
     doc.setTextColor(...INK);
     doc.text(
-      `TOTAL:   ${formatAmount(data.saleOrder.total)} ${currency}`,
+      `TOTAL:   ${formatAmount(data.saleOrder.total)} ${pdfCurrency}`,
       PAGE_W - MARGIN,
       finalY + 8,
       { align: "right" }

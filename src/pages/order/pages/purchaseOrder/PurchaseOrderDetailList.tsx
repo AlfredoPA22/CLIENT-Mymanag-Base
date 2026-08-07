@@ -260,7 +260,7 @@ const PurchaseOrderDetailList: FC<PurchaseOrderDetailListProps> = ({
 
   const serialDialog = (
     <Dialog
-      className="md:w-[1000px] w-[95vw]"
+      className="w-[95vw] lg:w-[1000px]"
       header={editMode ? "Agregar serial" : "Ver seriales"}
       visible={visibleForm}
       onHide={() => setVisibleForm(false)}

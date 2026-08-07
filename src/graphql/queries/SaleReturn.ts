@@ -11,6 +11,7 @@ export const LIST_SALE_RETURN = gql`
       sale_order {
         _id
         code
+        currency
         client {
           fullName
         }

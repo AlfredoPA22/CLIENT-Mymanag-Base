@@ -9,7 +9,7 @@ import { getDate } from "../../../order/utils/getDate";
 import useKardexByProduct from "../../hooks/useKardexByProduct";
 import useAuth from "../../../auth/hooks/useAuth";
 import { useAbility } from "../../../../casl/AbilityContext";
-import { formatAmount } from "../../../../utils/currency";
+import { convertCurrency, formatAmount } from "../../../../utils/currency";
 
 interface ProductKardexListProps {
   productId: string;
@@ -38,6 +38,12 @@ const ProductKardexList: FC<ProductKardexListProps> = ({ productId }) => {
   const canViewCost = ability.can("read", "ProductCost");
 
   const columns = useMemo<DataTableColumn<IKardexEntry>[]>(() => {
+    // Fuera de la sección de ventas, todo monto se muestra convertido a la
+    // moneda de la empresa (aunque la nota se haya hecho en su moneda
+    // alterna) para no mezclar Bs y $ en un mismo kardex.
+    const toCompanyAmount = (r: IKardexEntry, amount: number) =>
+      convertCurrency(amount, r.currency ?? currency, currency, r.exchange_rate);
+
     const typeBody = (r: IKardexEntry) => {
       const cfg = TYPE_CONFIG[r.type] ?? { severity: "secondary" as TagSeverity, icon: "pi pi-circle", label: r.type };
       return <Tag severity={cfg.severity} icon={cfg.icon} value={cfg.label} />;
@@ -53,7 +59,7 @@ const ProductKardexList: FC<ProductKardexListProps> = ({ productId }) => {
     const moneyBody = (field: "unit_price" | "subtotal") => (r: IKardexEntry) => {
       const val = r[field];
       if (!val) return <span className="text-gray-400">—</span>;
-      return <span className="font-medium">{currency} {formatAmount(val)}</span>;
+      return <span className="font-medium">{currency} {formatAmount(toCompanyAmount(r, val))}</span>;
     };
 
     const base: DataTableColumn<IKardexEntry>[] = [
@@ -89,12 +95,15 @@ const ProductKardexList: FC<ProductKardexListProps> = ({ productId }) => {
     return base;
   }, [canViewCost, currency]);
 
+  const toCompanyAmount = (r: IKardexEntry, amount: number) =>
+    convertCurrency(amount, r.currency ?? currency, currency, r.exchange_rate);
+
   if (loadingKardex) return <TableSkeleton />;
 
   return (
     <Card title="Kardex de inventario">
       {/* ── Mobile ──────────────────────────────────────────── */}
-      <div className="flex flex-col gap-3 md:hidden">
+      <div className="flex flex-col gap-3 lg:hidden">
         {listKardex.length === 0 && (
           <p className="text-center text-gray-400 py-6 text-sm">Sin movimientos registrados.</p>
         )}
@@ -135,11 +144,11 @@ const ProductKardexList: FC<ProductKardexListProps> = ({ productId }) => {
                   <>
                     <div>
                       <p className="text-xs text-gray-400">P. Unit.</p>
-                      <p className="text-sm font-medium">{item.unit_price ? `${currency} ${formatAmount(item.unit_price)}` : "—"}</p>
+                      <p className="text-sm font-medium">{item.unit_price ? `${currency} ${formatAmount(toCompanyAmount(item, item.unit_price))}` : "—"}</p>
                     </div>
                     <div>
                       <p className="text-xs text-gray-400">Subtotal</p>
-                      <p className="text-sm font-medium">{item.subtotal ? `${currency} ${formatAmount(item.subtotal)}` : "—"}</p>
+                      <p className="text-sm font-medium">{item.subtotal ? `${currency} ${formatAmount(toCompanyAmount(item, item.subtotal))}` : "—"}</p>
                     </div>
                   </>
                 )}
@@ -161,7 +170,7 @@ const ProductKardexList: FC<ProductKardexListProps> = ({ productId }) => {
       </div>
 
       {/* ── Desktop ─────────────────────────────────────────── */}
-      <div className="hidden md:block">
+      <div className="hidden lg:block">
         <Table
           columns={columns}
           data={listKardex}

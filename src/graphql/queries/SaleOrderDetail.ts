@@ -10,9 +10,13 @@ export const LIST_SALE_ORDER_DETAIL = gql`
         name
         stock_type
       }
+      custom_name
+      custom_cost
       sale_order {
         _id
         total
+        currency
+        exchange_rate
       }
       sale_price
       quantity

@@ -11,3 +11,16 @@ export const formatAmount = (amount: number): string =>
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
+
+// Convierte un monto entre Bs y $ usando un tipo de cambio (Bs por 1 $).
+// Si ambas monedas son iguales, o no hay tipo de cambio disponible, no
+// convierte (devuelve el monto tal cual, en su moneda original).
+export const convertCurrency = (
+  amount: number,
+  fromCurrency: string,
+  toCurrency: string,
+  exchangeRate?: number | null
+): number => {
+  if (fromCurrency === toCurrency || !exchangeRate) return amount;
+  return fromCurrency === "Bs" ? amount / exchangeRate : amount * exchangeRate;
+};

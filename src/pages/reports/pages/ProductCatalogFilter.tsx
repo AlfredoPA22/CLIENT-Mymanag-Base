@@ -93,7 +93,7 @@ const ProductCatalogFilter: FC<ProductCatalogFilterProps> = ({ setVisible }) => 
         todos.
       </p>
 
-      <form onSubmit={handleSubmit} className="grid xl:grid-cols-4 gap-2">
+      <form onSubmit={handleSubmit} className="grid md:grid-cols-2 xl:grid-cols-4 gap-2">
         <DropdownInput
           label="Marca"
           name="brand"

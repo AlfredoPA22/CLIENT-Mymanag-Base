@@ -4,7 +4,7 @@ import {
   IFilterSaleOrderInput,
   ISaleOrder,
 } from "../../../utils/interfaces/SaleOrder";
-import { formatAmount } from "../../../utils/currency";
+import { convertCurrency, formatAmount } from "../../../utils/currency";
 
 // ── Design tokens — sober, white-based ───────────────────────
 const INK: [number, number, number] = [30, 41, 59];
@@ -23,6 +23,12 @@ const drawRule = (doc: jsPDF, y: number) => {
   doc.setLineWidth(0.3);
   doc.line(MARGIN, y, PAGE_W - MARGIN, y);
 };
+
+// Una nota puede haberse hecho en la moneda alterna de la empresa (Bs) —
+// este reporte siempre se muestra en la moneda de la empresa, así que cada
+// monto se convierte primero con el tipo de cambio congelado en su nota.
+const toCompanyAmount = (order: ISaleOrder, amount: number, baseCurrency: string) =>
+  convertCurrency(amount, order.currency ?? baseCurrency, baseCurrency, order.exchange_rate);
 
 export const generateSaleOrderReportPDF = (
   data: ISaleOrder[],
@@ -80,9 +86,9 @@ export const generateSaleOrderReportPDF = (
     : "Sin filtro";
   doc.text(`${desde}  —  ${hasta}`, MARGIN + 18, filterY + 9);
 
-  // Right: total + discount
-  const total = data.reduce((s, o) => s + (Number(o.total) || 0), 0);
-  const totalDiscount = data.reduce((s, o) => s + (Number(o.discount_amount) || 0), 0);
+  // Right: total + discount, convertidos a la moneda de la empresa
+  const total = data.reduce((s, o) => s + toCompanyAmount(o, Number(o.total) || 0, currency), 0);
+  const totalDiscount = data.reduce((s, o) => s + toCompanyAmount(o, Number(o.discount_amount) || 0, currency), 0);
 
   doc.setFont("helvetica", "bold");
   doc.setFontSize(7);
@@ -119,8 +125,8 @@ export const generateSaleOrderReportPDF = (
       new Date(Number(o.date)).toLocaleDateString("es-ES"),
       o.client.fullName,
       o.status,
-      o.discount_amount ? formatAmount(o.discount_amount) : "-",
-      formatAmount(o.total),
+      o.discount_amount ? formatAmount(toCompanyAmount(o, o.discount_amount, currency)) : "-",
+      formatAmount(toCompanyAmount(o, o.total, currency)),
     ]),
     bodyStyles: { fontSize: 8.5, textColor: INK, cellPadding: 4 },
     alternateRowStyles: { fillColor: ROW_ALT },

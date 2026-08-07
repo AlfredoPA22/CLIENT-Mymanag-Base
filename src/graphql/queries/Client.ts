@@ -22,6 +22,8 @@ export const LIST_SALE_ORDER_BY_CLIENT = gql`
         date
         status
         total
+        currency
+        exchange_rate
       }
       total
     }

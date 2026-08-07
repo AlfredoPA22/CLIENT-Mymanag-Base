@@ -14,6 +14,8 @@ export const LIST_KARDEX_BY_PRODUCT = gql`
       balance
       created_by
       entity_name
+      currency
+      exchange_rate
     }
   }
 `;

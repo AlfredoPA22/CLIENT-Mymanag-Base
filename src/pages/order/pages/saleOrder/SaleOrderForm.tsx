@@ -1,22 +1,34 @@
-import { useMutation, useQuery } from "@apollo/client";
+import { useApolloClient, useMutation, useQuery } from "@apollo/client";
 import { Button } from "primereact/button";
 import { Calendar } from "primereact/calendar";
+import { Dialog } from "primereact/dialog";
+import { InputNumber } from "primereact/inputnumber";
+import { SelectButton } from "primereact/selectbutton";
 import { Tag } from "primereact/tag";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { ActionMeta, SingleValue } from "react-select";
+import { canDoAny } from "../../../../casl/ability";
+import { useAbility } from "../../../../casl/AbilityContext";
 import LabelInput from "../../../../components/labelInput/LabelInput";
 import SelectInput from "../../../../components/SelectInput/SelectInput";
 import { CREATE_CLIENT } from "../../../../graphql/mutations/Client";
+import { UPDATE_COMPANY } from "../../../../graphql/mutations/Company";
 import {
   APPROVE_SALE_ORDER,
   CREATE_SALE_ORDER,
+  UPDATE_SALE_ORDER_DISCOUNT,
 } from "../../../../graphql/mutations/SaleOrder";
 import { LIST_CLIENT } from "../../../../graphql/queries/Client";
 import { GENERATE_CODE } from "../../../../graphql/queries/CodeGenerator";
+import { DETAIL_COMPANY } from "../../../../graphql/queries/Company";
+import { FIND_CURRENT_CASH_REGISTER } from "../../../../graphql/queries/CashRegister";
 import { LIST_PRODUCT } from "../../../../graphql/queries/Product";
-import { LIST_SALE_ORDER } from "../../../../graphql/queries/SaleOrder";
+import {
+  FIND_SALE_ORDER_TO_PDF,
+  LIST_SALE_ORDER,
+} from "../../../../graphql/queries/SaleOrder";
 import { useFormikForm } from "../../../../hooks/useFormikForm";
 import {
   resetSaleOrder,
@@ -41,6 +53,8 @@ import { setIsBlocked } from "../../../../redux/slices/blockUISlice";
 import { ROUTES_MOCK } from "../../../../routes/RouteMocks";
 import useAuth from "../../../auth/hooks/useAuth";
 import { formatAmount } from "../../../../utils/currency";
+import { generatePDF } from "../../utils/generateSaleOrderPDF";
+import GeneralDiscountEditor from "../shared/GeneralDiscountEditor";
 
 const SaleOrderForm = () => {
   const {
@@ -55,6 +69,15 @@ const SaleOrderForm = () => {
   const { listClientSelect } = useClientList();
   const { currency } = useAuth();
   const qrAvailable = useQrPaymentAvailable();
+  const client = useApolloClient();
+  const ability = useAbility();
+  const canEditCompany = canDoAny(ability, ["UPDATE_COMPANY"]);
+
+  const { data: companyData, refetch: refetchCompany } = useQuery(DETAIL_COMPANY);
+  const company = companyData?.detailCompany;
+
+  const { data: cashRegisterData } = useQuery(FIND_CURRENT_CASH_REGISTER);
+  const hasOpenCashRegister = !!cashRegisterData?.findCurrentCashRegister;
 
   const [selectedClient, setSelectedClient] = useState<IReactSelect | null>(
     null
@@ -62,6 +85,24 @@ const SaleOrderForm = () => {
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("Contado");
   const [selectedContadoPaymentMethod, setSelectedContadoPaymentMethod] =
     useState("Efectivo");
+  const [selectedNoteCurrency, setSelectedNoteCurrency] = useState<string>("$");
+  const [rateInput, setRateInput] = useState<number | null>(null);
+  const [updateCompany, { loading: savingRate }] = useMutation(UPDATE_COMPANY);
+
+  // Toda venta de una empresa en dólares guarda el tipo de cambio (para
+  // poder verse después en Bs), así que no se puede registrar ninguna venta
+  // sin uno configurado, sin importar en qué moneda se venda esta nota.
+  const needsExchangeRate = company?.currency === "$" && !company?.exchange_rate;
+
+  const handleSaveExchangeRate = async () => {
+    if (!rateInput || rateInput <= 0) return;
+    try {
+      await updateCompany({ variables: { input: { exchange_rate: rateInput } } });
+      await refetchCompany();
+    } catch (error: any) {
+      showToast({ detail: error.message, severity: ToastSeverity.Error });
+    }
+  };
 
   const navigate = useNavigate();
 
@@ -72,6 +113,12 @@ const SaleOrderForm = () => {
   const [approveSaleOrder] = useMutation(APPROVE_SALE_ORDER, {
     refetchQueries: [{ query: LIST_SALE_ORDER }, { query: LIST_PRODUCT }],
   });
+
+  const [updateSaleOrderDiscount] = useMutation(UPDATE_SALE_ORDER_DISCOUNT);
+
+  const [showApproveDialog, setShowApproveDialog] = useState(false);
+  const [orderDiscountType, setOrderDiscountType] = useState<string>("NONE");
+  const [orderDiscountValue, setOrderDiscountValue] = useState<number | null>(null);
 
   const [createClient] = useMutation(CREATE_CLIENT, {
     refetchQueries: [{ query: LIST_CLIENT }],
@@ -108,6 +155,10 @@ const SaleOrderForm = () => {
         values.payment_method === "Contado"
           ? values.contado_payment_method
           : undefined,
+      currency:
+        company?.currency === "$" && selectedNoteCurrency === "Bs"
+          ? "Bs"
+          : undefined,
     };
 
     const { data } = await createSaleOrder({ variables: order });
@@ -122,13 +173,28 @@ const SaleOrderForm = () => {
     setSelectedClient(null);
     setSelectedPaymentMethod("Contado");
     setSelectedContadoPaymentMethod("Efectivo");
+    setSelectedNoteCurrency("$");
     await refetchCodeOrder();
     resetForm();
   };
 
-  const setApproveSaleOrder = async () => {
+  const handleOpenApproveDialog = () => {
+    setOrderDiscountType("NONE");
+    setOrderDiscountValue(null);
+    setShowApproveDialog(true);
+  };
+
+  const handleConfirmApprove = async () => {
     try {
       dispatch(setIsBlocked(true));
+      // Siempre sincroniza el descuento a DB antes de aprobar (incluye limpiarlo si es NONE)
+      await updateSaleOrderDiscount({
+        variables: {
+          saleOrderId: saleOrderData?._id,
+          discount_type: orderDiscountType === "NONE" ? null : orderDiscountType,
+          discount_value: orderDiscountType === "NONE" ? null : (orderDiscountValue ?? null),
+        },
+      });
       const { data } = await approveSaleOrder({
         variables: { saleOrderId: saleOrderData?._id },
       });
@@ -137,11 +203,33 @@ const SaleOrderForm = () => {
           detail: "Venta Aprobada exitosamente",
           severity: ToastSeverity.Success,
         });
+        setShowApproveDialog(false);
         navigate(
           `${ROUTES_MOCK.SALE_ORDERS}/detalle/${data.approveSaleOrder._id}`
         );
       }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      showToast({ detail: error.message, severity: ToastSeverity.Error });
+    } finally {
+      dispatch(setIsBlocked(false));
+    }
+  };
+
+  const handleGeneratePDF = async () => {
+    if (!saleOrderData?._id) return;
+    try {
+      dispatch(setIsBlocked(true));
+      const { data } = await client.query({
+        query: FIND_SALE_ORDER_TO_PDF,
+        variables: { saleOrderId: saleOrderData._id },
+        fetchPolicy: "network-only",
+      });
+      const { data: dataCompany } = await client.query({
+        query: DETAIL_COMPANY,
+        fetchPolicy: "network-only",
+      });
+      generatePDF(data.findSaleOrderToPDF, dataCompany.detailCompany, currency);
     } catch (error: any) {
       showToast({ detail: error.message, severity: ToastSeverity.Error });
     } finally {
@@ -221,6 +309,13 @@ const SaleOrderForm = () => {
     validationSchema: schemaFormSaleOrder,
   });
 
+  // Solo importa avisar cuando el efectivo de esta venta vaya a entrar a una
+  // caja física — Transferencia/QR/Crédito no pasan por la caja. Es solo un
+  // aviso: no bloquea la venta, para no frenar a nadie a mitad de un cobro.
+  const isCashSale =
+    values.payment_method === "Contado" && values.contado_payment_method === "Efectivo";
+  const showNoCashRegisterWarning = isCashSale && !hasOpenCashRegister && !saleOrderInitialized;
+
   return (
     <form
       onSubmit={handleSubmit}
@@ -235,10 +330,10 @@ const SaleOrderForm = () => {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-center">
         {/* Información del cliente y fecha */}
-        <section className="flex flex-col gap-3 border-r md:border-r-gray-300 md:pr-6">
-          <div className="grid xl:grid-cols-2 gap-5">
+        <section className="flex flex-col gap-3 border-r lg:border-r-gray-300 lg:pr-6">
+          <div className="grid md:grid-cols-2 gap-5">
             <div>
               <LabelInput name="date" label="Fecha de venta" />
               <Calendar
@@ -264,25 +359,96 @@ const SaleOrderForm = () => {
             />
           </div>
 
-          {/* Método de pago — solo visible cuando es Contado */}
-          {values.payment_method === "Contado" && (
-            <DropdownInput
-              label="Método de pago"
-              name="contado_payment_method"
-              optionLabel="label"
-              placeholder="¿Cómo paga?"
-              mandatory
-              options={getSalePaymentMethodOptions(qrAvailable)}
-              optionDisabled="disabled"
-              value={selectedContadoPaymentMethod}
-              error={
-                errors.contado_payment_method
-                  ? errors.contado_payment_method
-                  : ""
-              }
-              onChange={handleContadoPaymentMethodChange}
-              disabled={saleOrderInitialized}
-            />
+          {/* Método de pago (solo Contado) + Moneda de la venta (solo si la empresa opera en dólares) */}
+          {(values.payment_method === "Contado" || company?.currency === "$") && (
+            <div className="grid md:grid-cols-2 gap-5">
+              {values.payment_method === "Contado" && (
+                <DropdownInput
+                  label="Método de pago"
+                  name="contado_payment_method"
+                  optionLabel="label"
+                  placeholder="¿Cómo paga?"
+                  mandatory
+                  options={getSalePaymentMethodOptions(qrAvailable)}
+                  optionDisabled="disabled"
+                  value={selectedContadoPaymentMethod}
+                  error={
+                    errors.contado_payment_method
+                      ? errors.contado_payment_method
+                      : ""
+                  }
+                  onChange={handleContadoPaymentMethodChange}
+                  disabled={saleOrderInitialized}
+                />
+              )}
+
+              {company?.currency === "$" && (
+                <div className="flex flex-col gap-1">
+                  <LabelInput name="currency" label="Moneda de la venta" />
+                  <SelectButton
+                    value={selectedNoteCurrency}
+                    options={[
+                      { label: "$", value: "$" },
+                      { label: "Bs", value: "Bs" },
+                    ]}
+                    onChange={(e) => setSelectedNoteCurrency(e.value ?? "$")}
+                    disabled={saleOrderInitialized}
+                    className="w-full flex [&_.p-button]:flex-1 [&_.p-button]:justify-center"
+                  />
+                </div>
+              )}
+            </div>
+          )}
+
+          {needsExchangeRate && (
+            <div className="flex flex-col gap-2 bg-amber-50 border border-amber-200 rounded-lg p-3">
+              <p className="text-xs text-amber-700">
+                No tienes un tipo de cambio configurado. No se puede registrar la venta sin eso.
+              </p>
+              {canEditCompany ? (
+                <div className="flex flex-col gap-2">
+                  <InputNumber
+                    value={rateInput}
+                    onValueChange={(e) => setRateInput(e.value ?? null)}
+                    placeholder="Tipo de cambio (Bs por $)"
+                    minFractionDigits={2}
+                    maxFractionDigits={4}
+                    className="w-full"
+                    inputClassName="w-full"
+                  />
+                  <Button
+                    label="Guardar tipo de cambio"
+                    icon="pi pi-check"
+                    severity="success"
+                    size="small"
+                    disabled={!rateInput || rateInput <= 0 || savingRate}
+                    loading={savingRate}
+                    onClick={handleSaveExchangeRate}
+                  />
+                </div>
+              ) : (
+                <p className="text-xs text-gray-400">
+                  Pedile a un administrador que configure el tipo de cambio en Ajustes de la empresa.
+                </p>
+              )}
+            </div>
+          )}
+
+          {showNoCashRegisterWarning && (
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-blue-50 border border-blue-200 rounded-lg p-3">
+              <p className="text-xs text-blue-700">
+                No hay una caja abierta — este efectivo no se va a contar en ningún cierre de caja.
+              </p>
+              <Button
+                type="button"
+                label="Abrir caja"
+                icon="pi pi-lock-open"
+                severity="info"
+                size="small"
+                className="w-full sm:w-auto justify-center"
+                onClick={() => navigate(ROUTES_MOCK.CASH_REGISTER)}
+              />
+            </div>
           )}
 
           <div className="flex flex-col">
@@ -307,7 +473,7 @@ const SaleOrderForm = () => {
               type="submit"
               severity="success"
               label="Crear venta"
-              disabled={!isValid || isSubmitting}
+              disabled={!isValid || isSubmitting || needsExchangeRate}
             />
           ) : (
             <section className="flex flex-col items-center justify-center">
@@ -341,26 +507,63 @@ const SaleOrderForm = () => {
               )}
             </div>
 
-            <div className="flex flex-row justify-center gap-4">
+            <div className="flex flex-col sm:flex-row justify-center gap-2 sm:gap-4">
               <Button
                 type="button"
                 severity="warning"
                 label="Reiniciar"
                 onClick={handleResetSaleOrder}
-                className="w-auto"
+                className="w-full sm:w-auto justify-center"
               />
               <Button
                 icon="pi pi-check-circle"
                 type="button"
                 severity="success"
                 label="Aprobar Venta"
-                onClick={setApproveSaleOrder}
-                className="w-auto"
+                onClick={handleOpenApproveDialog}
+                className="w-full sm:w-auto justify-center"
+              />
+              <Button
+                icon="pi pi-download"
+                type="button"
+                severity="secondary"
+                label="Imprimir"
+                onClick={handleGeneratePDF}
+                className="w-full sm:w-auto justify-center"
               />
             </div>
           </section>
         )}
       </div>
+
+      {/* ── Dialog de aprobación con descuento opcional ─────────── */}
+      <Dialog
+        header={`Aprobar venta — ${saleOrderData?.code ?? ""}`}
+        visible={showApproveDialog}
+        onHide={() => setShowApproveDialog(false)}
+        style={{ width: "500px" }}
+        breakpoints={{ "640px": "95vw" }}
+        footer={
+          <div className="flex justify-end gap-2 pt-2">
+            <Button label="Cancelar" severity="secondary" outlined onClick={() => setShowApproveDialog(false)} />
+            <Button
+              label="Confirmar y aprobar"
+              icon="pi pi-check-circle"
+              severity="success"
+              onClick={handleConfirmApprove}
+            />
+          </div>
+        }
+      >
+        <GeneralDiscountEditor
+          discountType={orderDiscountType}
+          discountValue={orderDiscountValue}
+          onChangeType={setOrderDiscountType}
+          onChangeValue={setOrderDiscountValue}
+          subtotal={(saleOrderData?.total ?? 0) + (saleOrderData?.discount_amount ?? 0)}
+          currency={saleOrderData?.currency ?? currency}
+        />
+      </Dialog>
     </form>
   );
 };

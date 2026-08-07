@@ -13,7 +13,7 @@ import { IClient } from "../../../utils/interfaces/Client";
 import { ISaleOrder } from "../../../utils/interfaces/SaleOrder";
 import { DataTableColumn } from "../../../utils/interfaces/Table";
 import { showToast } from "../../../utils/toastUtils";
-import { formatAmount } from "../../../utils/currency";
+import { convertCurrency, formatAmount } from "../../../utils/currency";
 import { getStatus } from "../../order/utils/getStatus";
 import { ROUTES_MOCK } from "../../../routes/RouteMocks";
 import useAuth from "../../auth/hooks/useAuth";
@@ -33,6 +33,12 @@ const ClientDetail: FC<ClientDetailProps> = ({ client }) => {
   });
 
   const { currency } = useAuth();
+
+  // Fuera de la sección de ventas, todo monto se muestra convertido a la
+  // moneda de la empresa (aunque la nota se haya hecho en su moneda alterna)
+  // para no mezclar Bs y $ en un mismo listado o reporte.
+  const toCompanyAmount = (order: ISaleOrder) =>
+    convertCurrency(order.total, order.currency ?? currency, currency, order.exchange_rate);
 
   const statusBodyTemplate = (rowData: ISaleOrder) => {
     const status = getStatus(rowData.status);
@@ -104,7 +110,7 @@ const ClientDetail: FC<ClientDetailProps> = ({ client }) => {
       body: (rowData: ISaleOrder) => (
         <LabelInput
           className="justify-center"
-          label={`${formatAmount(rowData.total)} ${currency}`}
+          label={`${formatAmount(toCompanyAmount(rowData))} ${currency}`}
         />
       ),
     },
@@ -128,7 +134,10 @@ const ClientDetail: FC<ClientDetailProps> = ({ client }) => {
   if (loadingListSaleOrderByClient) return <LoadingSpinner />;
 
   const saleOrders: ISaleOrder[] = listSaleOrderByClient?.saleOrder ?? [];
-  const total = listSaleOrderByClient?.total ?? 0;
+  // El backend devuelve `total` como String (GraphQL `String!`) — sumarle
+  // Number.EPSILON dentro de formatAmount() sin convertirlo antes concatena
+  // texto en vez de sumar, y Math.round() de esa cadena da NaN.
+  const total = Number(listSaleOrderByClient?.total ?? 0);
 
   return (
     <div className="flex flex-col gap-2">
@@ -159,7 +168,7 @@ const ClientDetail: FC<ClientDetailProps> = ({ client }) => {
                       {order.code}
                     </TextLink>
                     <p className="text-sm font-semibold text-blue-600 mt-0.5">
-                      {formatAmount(order.total)} {currency}
+                      {formatAmount(toCompanyAmount(order))} {currency}
                     </p>
                   </div>
                   {status && (

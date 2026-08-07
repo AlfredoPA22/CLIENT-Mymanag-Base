@@ -157,12 +157,12 @@ const PurchaseOrderDetailForm: FC<PurchaseOrderDetailFormProps> = ({
         className="flex flex-col md:flex-row justify-center items-center gap-2"
       >
         <section
-          className={`grid ${
+          className={`grid w-full md:w-auto ${
             selectedProduct &&
             selectedProduct.stock_type === stockType.INDIVIDUAL
               ? "xl:grid-cols-6"
               : "xl:grid-cols-4"
-          }  grid-cols-1 gap-2 justify-center items-start`}
+          }  grid-cols-1 md:grid-cols-2 gap-2 justify-center items-start`}
         >
           <DropdownInput
             key={`product-${productFieldsKey}`}

@@ -17,8 +17,10 @@ export const GENERAL_DATA = gql`
       }
       best_product_sales_number
       total_credit_pending
+      total_credit_pending_bs
       total_credit_pending_count
       total_credit_collected
+      total_credit_collected_bs
     }
   }
 `;
@@ -83,6 +85,8 @@ export const REPORT_SALE_ORDER_BY_MONTH = gql`
       date
       status
       total
+      currency
+      exchange_rate
     }
   }
 `;

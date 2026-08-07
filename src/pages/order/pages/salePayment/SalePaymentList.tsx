@@ -123,7 +123,7 @@ const SalePaymentList: FC<SalePaymentListProps> = ({
             <span>¡Este pago se cobró por QR!</span>
           </div>
           <p className="text-sm bg-red-50 border border-red-200 rounded px-3 py-2 text-red-700">
-            El dinero de <strong>{formatAmount(rowData.amount)} {currency}</strong> ya se recibió y la devolución de ese monto debe gestionarse manualmente.
+            El dinero de <strong>{formatAmount(rowData.amount)} {rowData.currency ?? currency}</strong> ya se recibió y la devolución de ese monto debe gestionarse manualmente.
           </p>
           <p className="text-sm text-gray-700">¿Deseas eliminarlo de todas formas?</p>
         </div>
@@ -156,7 +156,7 @@ const SalePaymentList: FC<SalePaymentListProps> = ({
     {
       field: "amount", header: "Monto", sortable: true,
       body: (rowData: ISalePayment) => (
-        <LabelInput className="justify-center" label={`${formatAmount(rowData.amount)} ${currency}`} />
+        <LabelInput className="justify-center" label={`${formatAmount(rowData.amount)} ${rowData.currency ?? currency}`} />
       ),
       style: { width: "20%", textAlign: "center" },
     },
@@ -212,7 +212,7 @@ const SalePaymentList: FC<SalePaymentListProps> = ({
               <p className="text-xs text-gray-500 mt-1.5 break-words">{item.note}</p>
             )}
             <div className="flex items-center justify-between mt-2">
-              <span className="text-base font-bold text-green-700">{formatAmount(item.amount)} {currency}</span>
+              <span className="text-base font-bold text-green-700">{formatAmount(item.amount)} {item.currency ?? currency}</span>
               <RowActionButtons actions={buildSalePaymentActions(item)} size="small" />
             </div>
           </div>

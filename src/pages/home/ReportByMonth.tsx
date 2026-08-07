@@ -13,7 +13,7 @@ import { getStatus } from "../order/utils/getStatus";
 import useReportByMonth from "./hooks/useReportByMonth";
 import { ROUTES_MOCK } from "../../routes/RouteMocks";
 import useAuth from "../auth/hooks/useAuth";
-import { formatAmount } from "../../utils/currency";
+import { convertCurrency, formatAmount } from "../../utils/currency";
 import { formatDateRange } from "../../utils/dateUtils";
 
 interface ReportByMonthProps {
@@ -25,6 +25,12 @@ const ReportByMonth = ({ startDate, endDate }: ReportByMonthProps) => {
   const { listSaleOrder, loadingListSaleOrder } = useReportByMonth(startDate, endDate);
   const navigate = useNavigate();
   const { currency } = useAuth();
+
+  // Este widget es informativo (fuera del módulo de Ventas), así que todo
+  // monto se muestra convertido a la moneda de la empresa aunque la nota se
+  // haya hecho en su moneda alterna.
+  const toCompanyAmount = (order: ISaleOrder) =>
+    convertCurrency(order.total, order.currency ?? currency, currency, order.exchange_rate);
 
   const statusBodyTemplate = (rowData: ISaleOrder) => {
     const status = getStatus(rowData.status);
@@ -95,7 +101,7 @@ const ReportByMonth = ({ startDate, endDate }: ReportByMonthProps) => {
       body: (rowData: ISaleOrder) => (
         <LabelInput
           className="justify-center"
-          label={`${formatAmount(rowData.total)} ${currency}`}
+          label={`${formatAmount(toCompanyAmount(rowData))} ${currency}`}
         />
       ),
     },

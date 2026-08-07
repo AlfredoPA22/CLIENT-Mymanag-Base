@@ -21,7 +21,7 @@ import { ISalePayment } from "../../../../utils/interfaces/SalePayment";
 import { DataTableColumn } from "../../../../utils/interfaces/Table";
 import { getDate } from "../../utils/getDate";
 import useAuth from "../../../auth/hooks/useAuth";
-import { formatAmount, round2 } from "../../../../utils/currency";
+import { convertCurrency, formatAmount, round2 } from "../../../../utils/currency";
 
 const DROPDOWN_PANEL_PROPS = {
   panelStyle: { maxWidth: "95vw" },
@@ -69,7 +69,11 @@ const PaymentList = () => {
   const loading = loadingSaleOrder || loadingPayments;
 
   // Cuentas por cobrar = ventas al crédito ya aprobadas — a cada una se le
-  // suma lo pagado (de listSalePayment) para saber cuánto falta.
+  // suma lo pagado (de listSalePayment) para saber cuánto falta. Los pagos
+  // pueden estar en una moneda distinta a la de su venta (pago en Bs contra
+  // una venta en $, o viceversa) — hay que convertir cada uno a la moneda
+  // de SU venta antes de sumarlo, usando el tipo de cambio que ese pago
+  // tenía congelado (no el actual de la empresa).
   const receivables = useMemo<ReceivableRow[]>(() => {
     const saleOrders = saleOrderData?.listSaleOrder ?? [];
     const payments = paymentData?.listSalePayment ?? [];
@@ -77,9 +81,17 @@ const PaymentList = () => {
     const paidBySaleOrder = new Map<string, number>();
     payments.forEach((p) => {
       if (!p.sale_order?._id) return;
+      const orderCurrency = p.sale_order.currency ?? currency;
+      const paymentCurrency = p.currency ?? currency;
+      const amountInOrderCurrency = convertCurrency(
+        p.amount ?? 0,
+        paymentCurrency,
+        orderCurrency,
+        p.exchange_rate
+      );
       paidBySaleOrder.set(
         p.sale_order._id,
-        (paidBySaleOrder.get(p.sale_order._id) ?? 0) + (p.amount ?? 0)
+        (paidBySaleOrder.get(p.sale_order._id) ?? 0) + amountInOrderCurrency
       );
     });
 
@@ -97,7 +109,7 @@ const PaymentList = () => {
             : "Pendiente";
         return { saleOrder, totalPaid, totalPending, statusLabel };
       });
-  }, [saleOrderData, paymentData]);
+  }, [saleOrderData, paymentData, currency]);
 
   const hasActiveFilter = !!startDate || !!endDate || !!clientFilter || !!statusFilter;
 
@@ -180,7 +192,7 @@ const PaymentList = () => {
       sortable: true,
       style: { textAlign: "center" },
       body: (rowData: ReceivableRow) => (
-        <LabelInput className="justify-center" label={`${formatAmount(rowData.saleOrder.total)} ${currency}`} />
+        <LabelInput className="justify-center" label={`${formatAmount(rowData.saleOrder.total)} ${rowData.saleOrder.currency ?? currency}`} />
       ),
     },
     {
@@ -189,7 +201,7 @@ const PaymentList = () => {
       sortable: true,
       style: { textAlign: "center" },
       body: (rowData: ReceivableRow) => (
-        <span className="text-green-600 font-medium">{formatAmount(rowData.totalPaid)} {currency}</span>
+        <span className="text-green-600 font-medium">{formatAmount(rowData.totalPaid)} {rowData.saleOrder.currency ?? currency}</span>
       ),
     },
     {
@@ -199,7 +211,7 @@ const PaymentList = () => {
       style: { textAlign: "center" },
       body: (rowData: ReceivableRow) => (
         <span className={`font-medium ${rowData.totalPending > 0 ? "text-red-600" : "text-gray-400"}`}>
-          {formatAmount(rowData.totalPending)} {currency}
+          {formatAmount(rowData.totalPending)} {rowData.saleOrder.currency ?? currency}
         </span>
       ),
     },
@@ -214,14 +226,25 @@ const PaymentList = () => {
 
   if (loading) return <LoadingSpinner />;
 
-  const totalPending = round2(filteredData.reduce((sum, r) => sum + r.totalPending, 0));
+  // Cada fila queda pendiente en la moneda de SU venta — sumarlas todas
+  // juntas mezclaría Bs y $ en un solo número sin sentido, así que se
+  // agrupan por moneda (lo mismo que ya se muestra fila por fila arriba).
+  const pendingByCurrency = new Map<string, number>();
+  filteredData.forEach((r) => {
+    const cur = r.saleOrder.currency ?? currency;
+    pendingByCurrency.set(cur, (pendingByCurrency.get(cur) ?? 0) + r.totalPending);
+  });
+  const totalsPending: [string, number][] =
+    pendingByCurrency.size > 0
+      ? Array.from(pendingByCurrency.entries()).map(([cur, amount]) => [cur, round2(amount)])
+      : [[currency, 0]];
 
   return (
     <div className="flex flex-col gap-3">
       {/* ── Panel de filtros ───────────────────────────────────── */}
       <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
         <div
-          className="flex items-center justify-between p-4 cursor-pointer md:cursor-default select-none"
+          className="flex items-center justify-between p-4 cursor-pointer select-none"
           onClick={() => setFiltersOpen((v) => !v)}
         >
           <span className="text-sm font-semibold text-slate-700 flex items-center gap-2">
@@ -244,11 +267,13 @@ const PaymentList = () => {
                 onClick={(e) => { e.stopPropagation(); clearFilters(); }}
               />
             )}
-            <i className={`pi pi-chevron-down md:hidden transition-transform duration-200 text-slate-400 ${filtersOpen ? "rotate-180" : ""}`} />
+            <i className={`pi pi-chevron-down transition-transform duration-200 text-slate-400 ${filtersOpen ? "rotate-180" : ""}`} />
           </div>
         </div>
 
-        <div className={`${filtersOpen ? "block" : "hidden"} md:block px-4 pb-4 border-t border-gray-100 pt-3`}>
+        <div className={`grid transition-[grid-template-rows] duration-300 ease-in-out ${filtersOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}>
+         <div className="overflow-hidden">
+          <div className="px-4 pb-4 border-t border-gray-100 pt-3">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <div className="flex flex-col gap-1">
               <label className="text-xs font-medium text-slate-500">Fecha inicio</label>
@@ -271,18 +296,20 @@ const PaymentList = () => {
                 placeholder="Todos" showClear className="w-full text-sm" {...DROPDOWN_PANEL_PROPS} />
             </div>
           </div>
+          </div>
+         </div>
         </div>
       </div>
 
       {/* ── Cabecera mobile ────────────────────────────────────── */}
-      <div className="flex justify-between items-center px-1 md:hidden">
+      <div className="flex justify-between items-center px-1 lg:hidden">
         <h1 className="text-xl font-bold text-gray-800">
           Pagos <span className="text-base font-normal text-gray-400">({filteredData.length})</span>
         </h1>
       </div>
 
       {/* ── Vista mobile: cards ────────────────────────────────── */}
-      <div className="flex flex-col gap-2 md:hidden">
+      <div className="flex flex-col gap-2 lg:hidden">
         {filteredData.length === 0 && (
           <p className="text-center text-gray-400 py-8 text-sm">Sin ventas al crédito.</p>
         )}
@@ -301,13 +328,13 @@ const PaymentList = () => {
               <p className="text-sm text-gray-600 mt-1">{row.saleOrder.client.fullName}</p>
             )}
             <div className="flex items-center justify-between mt-1.5 text-sm">
-              <span className="text-gray-500">Total: {formatAmount(row.saleOrder.total)} {currency}</span>
+              <span className="text-gray-500">Total: {formatAmount(row.saleOrder.total)} {row.saleOrder.currency ?? currency}</span>
               {statusBodyTemplate(row)}
             </div>
             <div className="flex items-center justify-between mt-1 text-sm">
-              <span className="text-green-600 font-medium">Pagado: {formatAmount(row.totalPaid)} {currency}</span>
+              <span className="text-green-600 font-medium">Pagado: {formatAmount(row.totalPaid)} {row.saleOrder.currency ?? currency}</span>
               <span className={`font-bold ${row.totalPending > 0 ? "text-red-600" : "text-gray-400"}`}>
-                Debe: {formatAmount(row.totalPending)} {currency}
+                Debe: {formatAmount(row.totalPending)} {row.saleOrder.currency ?? currency}
               </span>
             </div>
             <div className="flex justify-end mt-2 border-t border-gray-100 pt-2">
@@ -320,12 +347,16 @@ const PaymentList = () => {
       {/* ── Vista desktop: tabla ───────────────────────────────── */}
       <Card
         id="payment-list-table"
-        className="hidden md:block py-2"
+        className="hidden lg:block py-2"
         header={
           <div className="flex justify-between items-center m-2 px-5">
             <h1 className="text-2xl font-bold">{`Pagos (${filteredData.length})`}</h1>
-            <span className="text-sm font-semibold text-red-600">
-              Total por cobrar: {formatAmount(totalPending)} {currency}
+            <span className="text-sm font-semibold text-red-600 flex flex-col items-end gap-0.5">
+              {totalsPending.map(([cur, amount]) => (
+                <span key={cur}>
+                  Por cobrar en {cur}: {formatAmount(amount)} {cur}
+                </span>
+              ))}
             </span>
           </div>
         }

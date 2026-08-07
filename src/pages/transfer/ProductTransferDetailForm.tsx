@@ -89,7 +89,7 @@ const ProductTransferDetailForm: FC<ProductTransferDetailFormProps> = ({
         onSubmit={handleSubmit}
         className="flex flex-col md:flex-row justify-center items-center gap-2"
       >
-        <section className="grid grid-cols-1 xl:grid-cols-3 gap-2 justify-center items-start w-full">
+        <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2 justify-center items-start w-full md:w-auto">
           <DropdownInput
             className="xl:col-span-2"
             label="Producto"

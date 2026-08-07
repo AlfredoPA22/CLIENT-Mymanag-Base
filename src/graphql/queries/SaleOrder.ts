@@ -23,6 +23,8 @@ export const LIST_SALE_ORDER = gql`
       total
       has_return
       source
+      currency
+      exchange_rate
     }
   }
 `;
@@ -92,6 +94,8 @@ export const FIND_SALE_ORDER = gql`
       discount_value
       discount_amount
       source
+      currency
+      exchange_rate
     }
   }
 `;
@@ -128,6 +132,8 @@ export const FIND_SALE_ORDER_TO_PDF = gql`
         discount_type
         discount_value
         discount_amount
+        currency
+        exchange_rate
       }
       saleOrderDetail {
         productSerial {
@@ -144,6 +150,7 @@ export const FIND_SALE_ORDER_TO_PDF = gql`
               name
             }
           }
+          custom_name
           sale_price
           quantity
           subtotal
@@ -185,6 +192,8 @@ export const REPORT_CUENTAS_COBRAR = gql`
       status
       payment_method
       is_paid
+      currency
+      exchange_rate
     }
   }
 `;
@@ -214,6 +223,8 @@ export const REPORT_SALE_ORDER = gql`
       status
       total
       discount_amount
+      currency
+      exchange_rate
     }
   }
 `;

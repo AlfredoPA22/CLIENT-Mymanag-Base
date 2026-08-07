@@ -31,6 +31,12 @@ export const generatePDF = (
 ) => {
   const doc = new jsPDF();
 
+  // La venta y el pago pueden estar en monedas distintas (el pago se pudo
+  // hacer en la moneda alterna) — cada bloque se imprime en la suya, sin
+  // mostrar tipo de cambio salvo que el pago haya sido en Bs.
+  const orderCurrency = detail.sale_order.currency ?? currency;
+  const paymentCurrency = data.currency ?? currency;
+
   // ── TOP ACCENT LINE ───────────────────────────────────────
   doc.setFillColor(...ACCENT);
   doc.rect(0, 0, PAGE_W, 3, "F");
@@ -80,7 +86,7 @@ export const generatePDF = (
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
   doc.setTextColor(...INK);
-  doc.text(`${formatAmount(detail.total_amount)} ${currency}`, MARGIN, infoY + 21);
+  doc.text(`${formatAmount(detail.total_amount)} ${orderCurrency}`, MARGIN, infoY + 21);
 
   doc.setFont("helvetica", "bold");
   doc.setFontSize(7);
@@ -89,7 +95,7 @@ export const generatePDF = (
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
   doc.setTextColor(...INK);
-  doc.text(`${formatAmount(detail.total_pending)} ${currency}`, MARGIN, infoY + 34);
+  doc.text(`${formatAmount(detail.total_pending)} ${orderCurrency}`, MARGIN, infoY + 34);
 
   // Right — highlight paid amount
   doc.setFont("helvetica", "bold");
@@ -99,13 +105,21 @@ export const generatePDF = (
   doc.setFont("helvetica", "bold");
   doc.setFontSize(20);
   doc.setTextColor(...INK);
-  doc.text(`${formatAmount(data.amount)} ${currency}`, col2X, infoY + 12);
+  doc.text(`${formatAmount(data.amount)} ${paymentCurrency}`, col2X, infoY + 12);
 
   doc.setFont("helvetica", "normal");
   doc.setFontSize(7.5);
   doc.setTextColor(...INK_MID);
   doc.text(`Método: ${data.payment_method}`, col2X, infoY + 20);
   doc.text(`Fecha: ${getDate(data.date)}`, col2X, infoY + 26);
+
+  // Tipo de cambio — solo si el pago fue en Bs (uno en $ no lo necesita).
+  if (data.currency === "Bs" && data.exchange_rate) {
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(7.5);
+    doc.setTextColor(...INK_MID);
+    doc.text(`T.C.: 1 $ = ${formatAmount(data.exchange_rate)} Bs`, col2X, infoY + 32);
+  }
 
   // ── RULE ──────────────────────────────────────────────────
   drawRule(doc, infoY + 40);
@@ -118,7 +132,7 @@ export const generatePDF = (
         getDate(data.date),
         data.note || "—",
         data.payment_method,
-        `${formatAmount(data.amount)} ${currency}`,
+        `${formatAmount(data.amount)} ${paymentCurrency}`,
       ],
     ],
     startY: infoY + 46,

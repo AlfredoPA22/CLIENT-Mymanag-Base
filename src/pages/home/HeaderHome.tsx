@@ -17,6 +17,11 @@ interface HeaderHomeProps {
 const HeaderHome: FC<HeaderHomeProps> = ({ startDate, endDate }) => {
   const { generalData, loadingGeneralData } = useGeneralData(startDate, endDate);
   const { currency } = useAuth();
+  // Solo las empresas que operan en $ pueden además cobrar en su moneda
+  // alterna (Bs) — para esas, mostramos "Por cobrar" en ambas monedas
+  // siempre. Para el resto (la mayoría, que opera solo en Bs), esa segunda
+  // tarjeta no aplica nunca, así que en su lugar mostramos otro dato.
+  const supportsBs = currency === "$";
 
   if (loadingGeneralData) {
     return <HeaderHomeSkeleton />;
@@ -117,7 +122,7 @@ const HeaderHome: FC<HeaderHomeProps> = ({ startDate, endDate }) => {
         </div>
       </Link>
 
-      {/* Cuentas por cobrar - monto */}
+      {/* Cuentas por cobrar */}
       <Link to={ROUTES_MOCK.PAYMENTS} className={`${cardBase} border-t-rose-400`}>
         <div className="w-11 h-11 rounded-xl bg-rose-50 group-hover:bg-rose-100 flex items-center justify-center transition-colors">
           <i className="pi pi-credit-card text-rose-500 text-lg" />
@@ -138,20 +143,43 @@ const HeaderHome: FC<HeaderHomeProps> = ({ startDate, endDate }) => {
         </div>
       </Link>
 
-      {/* Cuentas por cobrar - cantidad */}
-      <Link to={ROUTES_MOCK.SALE_ORDERS} className={`${cardBase} border-t-slate-300`}>
-        <div className="w-11 h-11 rounded-xl bg-rose-50 group-hover:bg-rose-100 flex items-center justify-center transition-colors">
-          <i className="pi pi-file text-rose-400 text-lg" />
-        </div>
-        <div>
-          <p className="text-2xl font-bold text-rose-600">
-            {generalData.total_credit_pending_count ?? 0}
-          </p>
-          <p className="text-[10px] text-slate-400 mt-0.5 font-semibold uppercase tracking-wide">
-            Facturas pendientes
-          </p>
-        </div>
-      </Link>
+      {/* Cuentas por cobrar en Bs */}
+      {supportsBs && (
+        <Link to={ROUTES_MOCK.PAYMENTS} className={`${cardBase} border-t-rose-300`}>
+          <div className="w-11 h-11 rounded-xl bg-rose-50 group-hover:bg-rose-100 flex items-center justify-center transition-colors">
+            <i className="pi pi-credit-card text-rose-400 text-lg" />
+          </div>
+          <div>
+            <p className="text-2xl font-bold text-rose-500">
+              {formatAmount(generalData.total_credit_pending_bs ?? 0)}
+              <span className="text-sm font-medium text-slate-400 ml-1">Bs</span>
+            </p>
+            <p className="text-[10px] text-slate-400 mt-0.5 font-semibold uppercase tracking-wide">
+              Por cobrar en Bs
+            </p>
+            <p className="text-xs text-emerald-600 font-semibold mt-1">
+              Cobrado: {formatAmount(generalData.total_credit_collected_bs ?? 0)} Bs
+            </p>
+          </div>
+        </Link>
+      )}
+
+      {/* Notas pendientes de cobro - cantidad (solo cuando no hay tarjeta en Bs que ocupe el espacio) */}
+      {!supportsBs && (
+        <Link to={ROUTES_MOCK.PAYMENTS} className={`${cardBase} border-t-slate-300`}>
+          <div className="w-11 h-11 rounded-xl bg-rose-50 group-hover:bg-rose-100 flex items-center justify-center transition-colors">
+            <i className="pi pi-file text-rose-400 text-lg" />
+          </div>
+          <div>
+            <p className="text-2xl font-bold text-rose-600">
+              {generalData.total_credit_pending_count ?? 0}
+            </p>
+            <p className="text-[10px] text-slate-400 mt-0.5 font-semibold uppercase tracking-wide">
+              Notas pendientes de cobro
+            </p>
+          </div>
+        </Link>
+      )}
 
       {/* Mejor producto */}
       {generalData.best_product ? (

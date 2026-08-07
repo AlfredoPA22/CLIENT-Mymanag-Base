@@ -27,6 +27,9 @@ const SalePaymentHeaderDetail: FC<SalePaymentHeaderDetailProps> = ({
   const { currency } = useAuth();
   const { data: companyData } = useQuery(DETAIL_COMPANY, { skip: currency !== "$" });
   const exchangeRate = companyData?.detailCompany?.exchange_rate;
+  // Los totales ya vienen normalizados a la moneda de la venta (puede
+  // diferir de la moneda base de la empresa si se vendió en la alterna).
+  const orderCurrency = detailSalePayment?.sale_order?.currency ?? currency;
 
   if (loadingDetailSalePayment) {
     return <PaymentSkeleton />;
@@ -53,14 +56,14 @@ const SalePaymentHeaderDetail: FC<SalePaymentHeaderDetailProps> = ({
         <section className="flex flex-col items-center gap-2 p-4 border rounded-md shadow-sm">
           <LabelInput name="total_amount" label="Total a pagar" />
           <span className="text-xl font-semibold text-gray-700">
-            {`${formatAmount(detailSalePayment.total_amount)} ${currency}`}
+            {`${formatAmount(detailSalePayment.total_amount)} ${orderCurrency}`}
           </span>
         </section>
 
         <section className="flex flex-col items-center gap-2 p-4 border rounded-md shadow-sm">
           <LabelInput name="total_paid" label="Total pagado" />
           <span className="text-xl font-semibold text-green-600">
-            {`${formatAmount(detailSalePayment.total_paid)} ${currency}`}
+            {`${formatAmount(detailSalePayment.total_paid)} ${orderCurrency}`}
           </span>
         </section>
 
@@ -79,13 +82,13 @@ const SalePaymentHeaderDetail: FC<SalePaymentHeaderDetailProps> = ({
             }`}
           >
             {detailSalePayment.total_pending < 0
-              ? `${formatAmount(Math.abs(detailSalePayment.total_pending))} ${currency}`
-              : `${formatAmount(detailSalePayment.total_pending)} ${currency}`}
+              ? `${formatAmount(Math.abs(detailSalePayment.total_pending))} ${orderCurrency}`
+              : `${formatAmount(detailSalePayment.total_pending)} ${orderCurrency}`}
           </span>
         </section>
       </div>
 
-      {currency === "$" && !!exchangeRate && (
+      {orderCurrency === "$" && !!exchangeRate && (
         <div className="mt-6 flex flex-col items-center gap-3 rounded-md border border-blue-100 bg-blue-50 p-4">
           <span className="text-xs font-medium text-blue-700">
             Tipo de cambio: 1 $ = {formatAmount(exchangeRate)} Bs
@@ -155,7 +158,7 @@ const SalePaymentHeaderDetail: FC<SalePaymentHeaderDetailProps> = ({
       {/* Estado de pago */}
       <div className="mt-6 flex justify-center">
         {detailSalePayment.total_pending < 0 ? (
-          <Tag severity="info" value={`Saldo a favor: ${formatAmount(Math.abs(detailSalePayment.total_pending))} ${currency}`} />
+          <Tag severity="info" value={`Saldo a favor: ${formatAmount(Math.abs(detailSalePayment.total_pending))} ${orderCurrency}`} />
         ) : detailSalePayment.sale_order.is_paid ? (
           <Tag severity="success" value="Venta totalmente pagada" />
         ) : (

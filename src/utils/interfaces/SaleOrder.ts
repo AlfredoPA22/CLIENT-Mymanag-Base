@@ -18,6 +18,8 @@ export interface ISaleOrder {
   discount_value?: number;
   discount_amount?: number;
   source?: string;
+  currency?: string | null;
+  exchange_rate?: number | null;
 }
 
 export interface ISaleOrderInput {
@@ -25,6 +27,7 @@ export interface ISaleOrderInput {
   client: string;
   payment_method: string;
   contado_payment_method?: string;
+  currency?: string;
 }
 
 export interface IQrPaymentInfo {

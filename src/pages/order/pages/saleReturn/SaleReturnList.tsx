@@ -25,7 +25,7 @@ interface ISaleReturn {
   date: string;
   reason: string;
   total: number;
-  sale_order: { _id: string; code: string; client: { fullName: string } };
+  sale_order: { _id: string; code: string; currency?: string | null; client: { fullName: string } };
   created_by: { user_name: string };
 }
 
@@ -70,7 +70,7 @@ const SaleReturnList = () => {
   );
 
   const totalBodyTemplate = (rowData: ISaleReturn) => (
-    <LabelInput className="justify-center" label={`${formatAmount(rowData.total)} ${currency}`} />
+    <LabelInput className="justify-center" label={`${formatAmount(rowData.total)} ${rowData.sale_order?.currency ?? currency}`} />
   );
 
   const [columns] = useState<DataTableColumn<ISaleReturn>[]>([
@@ -87,6 +87,11 @@ const SaleReturnList = () => {
     { field: "reason", header: "Motivo", sortable: false },
   ]);
 
+  // Moneda nativa de la venta original de esta devolución — los sale_price/
+  // subtotal guardados ya están en esa moneda, no en la moneda global de la
+  // empresa.
+  const returnCurrency = selectedReturn?.sale_order?.currency ?? currency;
+
   const detailColumns: DataTableColumn<ISaleReturnDetail>[] = [
     {
       field: "product.code", header: "Código",
@@ -100,11 +105,11 @@ const SaleReturnList = () => {
     { field: "quantity", header: "Cantidad", style: { textAlign: "center" } },
     {
       field: "sale_price", header: "Precio unitario", style: { textAlign: "center" },
-      body: (row: ISaleReturnDetail) => `${formatAmount(row.sale_price)} ${currency}`,
+      body: (row: ISaleReturnDetail) => `${formatAmount(row.sale_price)} ${returnCurrency}`,
     },
     {
       field: "subtotal", header: "Subtotal", style: { textAlign: "center" },
-      body: (row: ISaleReturnDetail) => `${formatAmount(row.subtotal)} ${currency}`,
+      body: (row: ISaleReturnDetail) => `${formatAmount(row.subtotal)} ${returnCurrency}`,
     },
   ];
 
@@ -127,7 +132,7 @@ const SaleReturnList = () => {
   return (
     <div className="flex flex-col gap-3">
       {/* ── Mobile ─────────────────────────────────────────── */}
-      <div className="md:hidden flex flex-col gap-3 p-3">
+      <div className="lg:hidden flex flex-col gap-3 p-3">
         <div className="flex items-center justify-between">
           <h1 className="text-lg font-bold">{`Devoluciones (${list.length})`}</h1>
           <Button
@@ -146,7 +151,7 @@ const SaleReturnList = () => {
         {list.slice(0, mobilePage * MOBILE_PAGE_SIZE).map((item) => (
           <div
             key={item._id}
-            className="border border-gray-200 rounded-xl p-3 bg-white shadow-sm cursor-pointer"
+            className="border border-gray-200 rounded-xl p-3 bg-white shadow-sm cursor-pointer transition-colors duration-150 active:bg-gray-50"
             onClick={() => setSelectedReturn(item)}
           >
             <div className="flex items-start justify-between gap-2">
@@ -161,7 +166,7 @@ const SaleReturnList = () => {
                   <Tag severity="secondary" className="text-[10px]">{getDate(item.date)}</Tag>
                 )}
                 <span className="text-sm font-semibold text-green-600">
-                  {formatAmount(item.total)} {currency}
+                  {formatAmount(item.total)} {item.sale_order?.currency ?? currency}
                 </span>
               </div>
             </div>
@@ -206,7 +211,7 @@ const SaleReturnList = () => {
       </div>
 
       {/* ── Desktop ─────────────────────────────────────────── */}
-      <Card className="py-2 hidden md:block" header={tableHeaderTemplate}>
+      <Card className="py-2 hidden lg:block" header={tableHeaderTemplate}>
         <Table
           columns={columns}
           data={list}
@@ -258,10 +263,10 @@ const SaleReturnList = () => {
                   <p className="text-sm text-gray-700 break-words leading-snug mt-0.5">{row.product?.name}</p>
                   <div className="flex items-center justify-between mt-1.5">
                     <span className="text-xs text-gray-500">
-                      {row.quantity} × {formatAmount(row.sale_price)} {currency}
+                      {row.quantity} × {formatAmount(row.sale_price)} {returnCurrency}
                     </span>
                     <span className="text-sm font-semibold text-green-600">
-                      {formatAmount(row.subtotal)} {currency}
+                      {formatAmount(row.subtotal)} {returnCurrency}
                     </span>
                   </div>
                 </div>
@@ -279,7 +284,7 @@ const SaleReturnList = () => {
             </div>
 
             <div className="flex justify-end text-base font-semibold text-green-600">
-              Total devuelto: {formatAmount(selectedReturn?.total ?? 0)} {currency}
+              Total devuelto: {formatAmount(selectedReturn?.total ?? 0)} {returnCurrency}
             </div>
           </div>
         )}

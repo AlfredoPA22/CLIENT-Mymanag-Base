@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from "@apollo/client";
+import { useApolloClient, useMutation, useQuery } from "@apollo/client";
 import { Button } from "primereact/button";
 import { Tag } from "primereact/tag";
 import { FC, useEffect } from "react";
@@ -7,9 +7,11 @@ import { useNavigate } from "react-router-dom";
 import LabelInput from "../../../../components/labelInput/LabelInput";
 import { OrderSkeleton } from "../../../../components/skeleton/OrderSkeleton";
 import { APPROVE_PURCHASE_ORDER } from "../../../../graphql/mutations/PurchaseOrder";
+import { DETAIL_COMPANY } from "../../../../graphql/queries/Company";
 import { LIST_PRODUCT } from "../../../../graphql/queries/Product";
 import {
   FIND_PURCHASE_ORDER,
+  FIND_PURCHASE_ORDER_TO_PDF,
   LIST_PURCHASE_ORDER,
 } from "../../../../graphql/queries/PurchaseOrder";
 import { setIsBlocked } from "../../../../redux/slices/blockUISlice";
@@ -19,6 +21,7 @@ import { ToastSeverity } from "../../../../utils/enums/toast.enum";
 import { showToast } from "../../../../utils/toastUtils";
 import { getDate } from "../../utils/getDate";
 import { getStatus } from "../../utils/getStatus";
+import { generatePDF } from "../../utils/generatePurchaseOrderPDF";
 import SectionHeader from "../../../../components/sectionHeader/SectionHeader";
 import useAuth from "../../../auth/hooks/useAuth";
 import { formatAmount } from "../../../../utils/currency";
@@ -40,10 +43,31 @@ const PurchaseOrderDetail: FC<PurchaseOrderDetailProps> = ({ purchaseOrderId }) 
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { currency } = useAuth();
+  const apolloClient = useApolloClient();
 
   const [approvePurchaseOrder] = useMutation(APPROVE_PURCHASE_ORDER, {
     refetchQueries: [{ query: LIST_PURCHASE_ORDER }, { query: LIST_PRODUCT }],
   });
+
+  const handleGeneratePDF = async () => {
+    try {
+      dispatch(setIsBlocked(true));
+      const { data: pdfData } = await apolloClient.query({
+        query: FIND_PURCHASE_ORDER_TO_PDF,
+        variables: { purchaseOrderId },
+        fetchPolicy: "network-only",
+      });
+      const { data: dataCompany } = await apolloClient.query({
+        query: DETAIL_COMPANY,
+        fetchPolicy: "network-only",
+      });
+      generatePDF(pdfData.findPurchaseOrderToPDF, dataCompany.detailCompany, currency);
+    } catch (error: any) {
+      showToast({ detail: error.message, severity: ToastSeverity.Error });
+    } finally {
+      dispatch(setIsBlocked(false));
+    }
+  };
 
   const setApprovePurchaseOrder = async () => {
     try {
@@ -88,8 +112,8 @@ const PurchaseOrderDetail: FC<PurchaseOrderDetailProps> = ({ purchaseOrderId }) 
         }
       />
 
-      {/* ── Mobile: código + estado destacado ─────────────── */}
-      <div className="md:hidden flex items-center justify-between bg-gray-100 rounded-lg px-4 py-3 mb-4">
+      {/* ── Mobile/tablet: código + estado destacado ─────────────── */}
+      <div className="lg:hidden flex items-center justify-between bg-gray-100 rounded-lg px-4 py-3 mb-4">
         <span className="text-base font-bold text-gray-800">{order?.code}</span>
         {status && (
           <Tag severity={status.severity as "danger" | "success" | "info" | "warning"}>
@@ -98,33 +122,33 @@ const PurchaseOrderDetail: FC<PurchaseOrderDetailProps> = ({ purchaseOrderId }) 
         )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 items-center">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 items-center">
         {/* Proveedor y fecha */}
-        <section className="flex flex-col gap-3 md:border-r md:border-r-gray-300 md:pr-6">
+        <section className="flex flex-col gap-3 lg:border-r lg:border-r-gray-300 lg:pr-6">
           <div className="flex flex-col">
             <LabelInput name="date" label="Fecha de compra" />
-            <span className="text-base md:text-lg font-medium text-gray-700">{date}</span>
+            <span className="text-base lg:text-lg font-medium text-gray-700">{date}</span>
           </div>
           <div className="flex flex-col">
             <LabelInput name="provider" label="Proveedor" />
-            <span className="text-base md:text-lg font-medium text-gray-700 break-words">
+            <span className="text-base lg:text-lg font-medium text-gray-700 break-words">
               {order?.provider?.name}
             </span>
           </div>
         </section>
 
         {/* Total */}
-        <section className="flex flex-col items-start md:items-center justify-center">
+        <section className="flex flex-col items-start lg:items-center justify-center">
           <LabelInput name="total" label="Total de compra" />
-          <span className="text-xl md:text-2xl font-semibold text-green-600">
+          <span className="text-xl lg:text-2xl font-semibold text-green-600">
             {`${formatAmount(order?.total ?? 0)} ${currency}`}
           </span>
         </section>
 
         {/* Código + estado + acciones */}
         <section className="flex flex-col gap-4 rounded-md">
-          {/* Card de código/estado — oculto en mobile (se muestra arriba) */}
-          <div className="hidden md:flex flex-col items-center gap-2 bg-gray-100 p-4 rounded-md">
+          {/* Card de código/estado — oculto en mobile/tablet (se muestra arriba) */}
+          <div className="hidden lg:flex flex-col items-center gap-2 bg-gray-100 p-4 rounded-md">
             <span className="text-gray-600 text-sm">Código de Orden</span>
             <span className="text-xl font-bold text-gray-800">{order?.code}</span>
             {status && (
@@ -133,6 +157,16 @@ const PurchaseOrderDetail: FC<PurchaseOrderDetailProps> = ({ purchaseOrderId }) 
               </Tag>
             )}
           </div>
+
+          <Button
+            icon="pi pi-download"
+            type="button"
+            severity="secondary"
+            label="Imprimir compra"
+            outlined
+            className="w-full"
+            onClick={handleGeneratePDF}
+          />
 
           {!isAprobado && (
             <Button

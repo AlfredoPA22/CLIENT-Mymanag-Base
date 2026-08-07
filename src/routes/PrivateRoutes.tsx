@@ -33,6 +33,7 @@ import EditProductTransfer from "../pages/transfer/EditProductTransfer";
 import ViewProductTransfer from "../pages/transfer/ViewProductTransfer";
 import SaleReturnList from "../pages/order/pages/saleReturn/SaleReturnList";
 import StoreSettings from "../pages/store/StoreSettings";
+import CashRegisterPage from "../pages/cashRegister/CashRegisterPage";
 
 const PrivateRoutes: FC = () => {
   return (
@@ -229,6 +230,16 @@ const PrivateRoutes: FC = () => {
             element={
               <PermissionRoute permissions={["DETAIL_TRANSFER"]}>
                 <ViewProductTransfer />
+              </PermissionRoute>
+            }
+          />
+
+          {/* caja */}
+          <Route
+            path={`${ROUTES_MOCK.CASH_REGISTER}`}
+            element={
+              <PermissionRoute permissions={["LIST_CASH_REGISTER"]}>
+                <CashRegisterPage />
               </PermissionRoute>
             }
           />

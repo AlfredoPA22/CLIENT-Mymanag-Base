@@ -27,4 +27,5 @@ export const ROUTES_MOCK = {
   EDIT_TRANSFER: "/editar-transferencia",
   SALE_RETURNS: "/devoluciones",
   PAYMENTS: "/pagos",
+  CASH_REGISTER: "/caja",
 };

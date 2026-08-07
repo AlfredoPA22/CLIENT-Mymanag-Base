@@ -284,7 +284,7 @@ const BrandList = () => {
           return (
             <div
               key={item._id}
-              className="border border-gray-200 rounded-xl p-3 bg-white shadow-sm cursor-pointer active:bg-gray-50"
+              className="border border-gray-200 rounded-xl p-3 bg-white shadow-sm cursor-pointer transition-colors duration-150 active:bg-gray-50"
               onClick={() => { setCurrentBrand(item); setVisibleDetail(true); }}
             >
               <div className="flex items-start justify-between gap-2">

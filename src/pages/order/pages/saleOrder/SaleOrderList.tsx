@@ -5,12 +5,12 @@ import { Card } from "primereact/card";
 import { confirmDialog } from "primereact/confirmdialog";
 import { DataTableSelectionSingleChangeEvent } from "primereact/datatable";
 import { Dropdown } from "primereact/dropdown";
+import { SelectButton } from "primereact/selectbutton";
 import { Tag } from "primereact/tag";
 import { useMemo, useState } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import Table from "../../../../components/datatable/Table";
-import LabelInput from "../../../../components/labelInput/LabelInput";
 import LoadingSpinner from "../../../../components/LoadingSpinner/LoadingSpinner";
 import RowActionButtons, { RowAction } from "../../../../components/table/RowActionButtons";
 import { DELETE_SALE_ORDER } from "../../../../graphql/mutations/SaleOrder";
@@ -30,7 +30,7 @@ import { ISaleOrder } from "../../../../utils/interfaces/SaleOrder";
 import { DataTableColumn } from "../../../../utils/interfaces/Table";
 import { showToast } from "../../../../utils/toastUtils";
 import useAuth from "../../../auth/hooks/useAuth";
-import { formatAmount } from "../../../../utils/currency";
+import { convertCurrency, formatAmount } from "../../../../utils/currency";
 import useSaleOrderList from "../../hooks/useSaleOrderList";
 import { generatePDF } from "../../utils/generateSaleOrderPDF";
 import { getDate } from "../../utils/getDate";
@@ -71,6 +71,28 @@ const SaleOrderList = ({ storeOnly = false }: SaleOrderListProps) => {
   const MOBILE_PAGE_SIZE = 20;
   const [mobilePage, setMobilePage] = useState(1);
   const [filtersOpen, setFiltersOpen] = useState(false);
+
+  // Moneda en la que se muestra la lista completa — solo aplica a empresas
+  // en $, ya que son las únicas cuyas ventas guardan tipo de cambio.
+  // "ORIGINAL" = cada nota en la moneda en la que realmente se vendió (sin
+  // convertir nada); "$"/"Bs" fuerza la vista a esa moneda, convirtiendo
+  // cuando hay tipo de cambio guardado.
+  const [viewCurrency, setViewCurrency] = useState<string>("ORIGINAL");
+
+  // Convierte el total de una venta a `viewCurrency`. Si esa venta no tiene
+  // tipo de cambio guardado (ventas de antes de esta funcionalidad) y su
+  // moneda nativa no coincide con la seleccionada, no se puede convertir —
+  // se muestra en su moneda original en vez de inventar un monto.
+  const getRowDisplay = (order: ISaleOrder) => {
+    const nativeCurrency = order.currency ?? currency;
+    if (viewCurrency === "ORIGINAL") {
+      return { displayAmount: order.total, displayCurrency: nativeCurrency, isFallback: false };
+    }
+    const canConvert = nativeCurrency === viewCurrency || !!order.exchange_rate;
+    const displayCurrency = canConvert ? viewCurrency : nativeCurrency;
+    const displayAmount = convertCurrency(order.total, nativeCurrency, displayCurrency, order.exchange_rate);
+    return { displayAmount, displayCurrency, isFallback: displayCurrency !== viewCurrency };
+  };
 
   // ── Filter state ──────────────────────────────────────────────
   const [startDate, setStartDate] = useState<Date | null>(null);
@@ -192,7 +214,7 @@ const SaleOrderList = ({ storeOnly = false }: SaleOrderListProps) => {
             <span>¡Esta venta se cobró por QR!</span>
           </div>
           <p className="text-sm bg-red-50 border border-red-200 rounded px-3 py-2 text-red-700">
-            El dinero de <strong>{formatAmount(rowData.total)} {currency}</strong> ya se recibió y la devolución de ese monto debe gestionarse manualmente.
+            El dinero de <strong>{formatAmount(rowData.total)} {rowData.currency ?? currency}</strong> ya se recibió y la devolución de ese monto debe gestionarse manualmente.
           </p>
           <p className="text-sm text-gray-700">¿Deseas eliminarla de todas formas?</p>
         </div>
@@ -290,7 +312,7 @@ const SaleOrderList = ({ storeOnly = false }: SaleOrderListProps) => {
     navigate(`${ROUTES_MOCK.SALE_ORDERS}/detalle/${e.value._id}`);
   };
 
-  const [columns] = useState<DataTableColumn<ISaleOrder>[]>([
+  const columns = useMemo<DataTableColumn<ISaleOrder>[]>(() => [
     { field: "code", header: "Codigo", sortable: true },
     { field: "date", header: "Fecha", sortable: true, body: dateBodyTemplate },
     { field: "client.firstName", header: "Cliente", sortable: true, body: clientBodyTemplate },
@@ -311,10 +333,13 @@ const SaleOrderList = ({ storeOnly = false }: SaleOrderListProps) => {
           : <span style={{ color: "#6B7280" }}>-</span>,
     },
     {
-      field: "total", header: "Total", sortable: true, style: { textAlign: "center" },
-      body: (rowData: ISaleOrder) => (
-        <LabelInput className="justify-center" label={`${formatAmount(rowData.total)} ${currency}`} />
-      ),
+      field: "total", header: "Total", sortable: true, style: { textAlign: "center", whiteSpace: "nowrap" },
+      body: (rowData: ISaleOrder) => {
+        const { displayAmount, displayCurrency } = getRowDisplay(rowData);
+        return (
+          <span className="whitespace-nowrap">{formatAmount(displayAmount)} {displayCurrency}</span>
+        );
+      },
     },
     { field: "status", header: "Estado", sortable: true, body: statusBodyTemplate, style: { textAlign: "center" } },
     {
@@ -336,7 +361,7 @@ const SaleOrderList = ({ storeOnly = false }: SaleOrderListProps) => {
           : <span style={{ color: "red" }}>Pendiente</span>;
       },
     },
-  ]);
+  ], [viewCurrency, currency]);
 
   if (loadingListSaleOrder) return <LoadingSpinner />;
 
@@ -347,7 +372,7 @@ const SaleOrderList = ({ storeOnly = false }: SaleOrderListProps) => {
       <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
         {/* Cabecera del panel — siempre visible, tappable en mobile */}
         <div
-          className="flex items-center justify-between p-4 cursor-pointer md:cursor-default select-none"
+          className="flex items-center justify-between p-4 cursor-pointer select-none"
           onClick={() => setFiltersOpen((v) => !v)}
         >
           <span className="text-sm font-semibold text-slate-700 flex items-center gap-2">
@@ -370,12 +395,14 @@ const SaleOrderList = ({ storeOnly = false }: SaleOrderListProps) => {
                 onClick={(e) => { e.stopPropagation(); clearFilters(); }}
               />
             )}
-            <i className={`pi pi-chevron-down md:hidden transition-transform duration-200 text-slate-400 ${filtersOpen ? "rotate-180" : ""}`} />
+            <i className={`pi pi-chevron-down transition-transform duration-200 text-slate-400 ${filtersOpen ? "rotate-180" : ""}`} />
           </div>
         </div>
 
-        {/* Grid de filtros — colapsable en mobile */}
-        <div className={`${filtersOpen ? "block" : "hidden"} md:block px-4 pb-4 border-t border-gray-100 pt-3`}>
+        {/* Grid de filtros — se expande/contrae suavemente (truco de grid-template-rows, ya que "display" no se puede animar) */}
+        <div className={`grid transition-[grid-template-rows] duration-300 ease-in-out ${filtersOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}>
+         <div className="overflow-hidden">
+          <div className="px-4 pb-4 border-t border-gray-100 pt-3">
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
             <div className="flex flex-col gap-1">
               <label className="text-xs font-medium text-slate-500">Fecha inicio</label>
@@ -418,11 +445,13 @@ const SaleOrderList = ({ storeOnly = false }: SaleOrderListProps) => {
                 placeholder="Todos" showClear className="w-full text-sm" {...DROPDOWN_PANEL_PROPS} />
             </div>
           </div>
+          </div>
+         </div>
         </div>
       </div>
 
-      {/* ── Cabecera mobile: título + botón ───────────────────── */}
-      <div className="flex justify-between items-center px-1 md:hidden">
+      {/* ── Cabecera mobile: título + botón ─── (hasta lg: la tabla de escritorio tiene 11 columnas, muy ancha para tablet) ── */}
+      <div className="flex justify-between items-center px-1 lg:hidden">
         <h1 className="text-xl font-bold text-gray-800">
           {storeOnly ? "Pedidos de la tienda" : "Lista de ventas"}{" "}
           <span className="text-base font-normal text-gray-400">({filteredData.length})</span>
@@ -439,8 +468,23 @@ const SaleOrderList = ({ storeOnly = false }: SaleOrderListProps) => {
         )}
       </div>
 
+      {currency === "$" && (
+        <div className="flex items-center justify-between md:justify-end gap-2 px-1">
+          <span className="text-xs font-medium text-slate-500">Ver montos en:</span>
+          <SelectButton
+            value={viewCurrency}
+            options={[
+              { label: "Original", value: "ORIGINAL" },
+              { label: "$", value: "$" },
+              { label: "Bs", value: "Bs" },
+            ]}
+            onChange={(e) => e.value && setViewCurrency(e.value)}
+          />
+        </div>
+      )}
+
       {/* ── Vista mobile: cards ────────────────────────────────── */}
-      <div className="flex flex-col gap-2 md:hidden">
+      <div className="flex flex-col gap-2 lg:hidden">
         {filteredData.length === 0 && (
           <p className="text-center text-gray-400 py-8 text-sm">Sin ventas.</p>
         )}
@@ -455,7 +499,7 @@ const SaleOrderList = ({ storeOnly = false }: SaleOrderListProps) => {
             >
               {/* Fila superior: código + estado */}
               <div
-                className="flex items-center justify-between px-4 pt-3 pb-2 cursor-pointer active:bg-gray-50"
+                className="flex items-center justify-between px-4 pt-3 pb-2 cursor-pointer transition-colors duration-150 active:bg-gray-50"
                 onClick={() => navigate(`${ROUTES_MOCK.SALE_ORDERS}/detalle/${order._id}`)}
               >
                 <div className="flex items-center gap-2">
@@ -472,7 +516,7 @@ const SaleOrderList = ({ storeOnly = false }: SaleOrderListProps) => {
 
               {/* Cuerpo: info principal */}
               <div
-                className="px-4 pb-3 cursor-pointer active:bg-gray-50"
+                className="px-4 pb-3 cursor-pointer transition-colors duration-150 active:bg-gray-50"
                 onClick={() => navigate(`${ROUTES_MOCK.SALE_ORDERS}/detalle/${order._id}`)}
               >
                 {order.client && (
@@ -493,7 +537,10 @@ const SaleOrderList = ({ storeOnly = false }: SaleOrderListProps) => {
                   )}
                 </div>
                 <p className="text-base font-bold text-green-700 mt-1">
-                  {formatAmount(order.total)} {currency}
+                  {(() => {
+                    const { displayAmount, displayCurrency } = getRowDisplay(order);
+                    return `${formatAmount(displayAmount)} ${displayCurrency}`;
+                  })()}
                 </p>
               </div>
 
@@ -519,7 +566,7 @@ const SaleOrderList = ({ storeOnly = false }: SaleOrderListProps) => {
       {/* ── Vista desktop: tabla ───────────────────────────────── */}
       <Card
         id="sale-list-table"
-        className="hidden md:block py-2"
+        className="hidden lg:block py-2"
         header={
           <div className="flex justify-between items-center m-2 px-5">
             <h1 className="text-2xl font-bold">

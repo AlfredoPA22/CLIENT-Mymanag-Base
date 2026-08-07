@@ -180,9 +180,9 @@ const ProductTransferForm: FC<ProductTransferFormProps> = ({
         <p className="text-gray-500 text-sm">Completa los detalles para registrar la transferencia</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 items-center">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 items-center">
         {/* Campos del formulario */}
-        <section className="flex flex-col gap-3 md:border-r md:border-r-gray-300 md:pr-6">
+        <section className="flex flex-col gap-3 lg:border-r lg:border-r-gray-300 lg:pr-6">
           <div className="flex flex-col">
             <LabelInput name="date" label="Fecha" />
             <Calendar
@@ -228,7 +228,7 @@ const ProductTransferForm: FC<ProductTransferFormProps> = ({
               type="submit"
               severity="success"
               label="Crear transferencia"
-              className="w-full md:w-auto"
+              className="w-full lg:w-auto"
               disabled={!isValid || isSubmitting}
             />
           ) : (

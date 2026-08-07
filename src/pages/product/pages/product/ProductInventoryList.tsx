@@ -93,7 +93,7 @@ const ProductInventoryList: FC<ProductInventoryListProps> = ({ product }) => {
   return (
     <>
       {/* ── Mobile ────────────────────────────────────────────── */}
-      <div className="flex flex-col gap-2 md:hidden">
+      <div className="flex flex-col gap-2 lg:hidden">
         {list.length === 0 && (
           <p className="text-center text-gray-400 py-4 text-sm">Sin stock.</p>
         )}
@@ -154,7 +154,7 @@ const ProductInventoryList: FC<ProductInventoryListProps> = ({ product }) => {
       </div>
 
       {/* ── Desktop ───────────────────────────────────────────── */}
-      <div className="hidden md:block">
+      <div className="hidden lg:block">
         <Table
           columns={columns}
           data={list}

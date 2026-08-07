@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { motion } from "framer-motion";
 import { Outlet, useLocation } from "react-router-dom";
 import ChatBot from "../chatbot/ChatBot";
 import { useFullProcessTour } from "../../hooks/useFullProcessTour";
@@ -47,7 +48,15 @@ const Dashboard = () => {
         {!isHomePage && <TopBar />}
 
         <main className="p-4 md:p-6 flex-1 overflow-auto">
-          <Outlet />
+          {/* Fundido suave al cambiar de página — antes las vistas aparecían de golpe */}
+          <motion.div
+            key={pathname}
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+          >
+            <Outlet />
+          </motion.div>
           <div className="hidden md:block">
             <TourFab />
             <ChatBot />

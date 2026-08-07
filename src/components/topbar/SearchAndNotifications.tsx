@@ -37,8 +37,8 @@ const SearchAndNotifications = ({ variant = "light" }: SearchAndNotificationsPro
         onClick={() => setSearchOpen(true)}
         className={
           isDark
-            ? "flex items-center gap-2 rounded-full border border-white/10 bg-slate-800/60 px-3 py-1.5 text-sm text-slate-300 hover:bg-slate-800"
-            : "flex items-center gap-2 rounded-full border border-gray-200 px-3 py-1.5 text-sm text-gray-500 hover:bg-gray-50"
+            ? "flex items-center gap-2 rounded-full border border-white/10 bg-slate-800/60 px-3 py-1.5 text-sm text-slate-300 transition-colors duration-150 hover:bg-slate-800"
+            : "flex items-center gap-2 rounded-full border border-gray-200 px-3 py-1.5 text-sm text-gray-500 transition-colors duration-150 hover:bg-gray-50"
         }
       >
         <FiSearch size={14} />

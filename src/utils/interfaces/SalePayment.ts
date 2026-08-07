@@ -7,6 +7,7 @@ export interface ISalePaymentInput {
   amount: number;
   payment_method: string;
   note?: string;
+  currency?: string;
 }
 
 export interface ISalePayment {
@@ -17,6 +18,8 @@ export interface ISalePayment {
   note: string;
   payment_method: string;
   sale_order: ISaleOrder;
+  currency?: string | null;
+  exchange_rate?: number | null;
 }
 
 export interface IDetailSalePayment {

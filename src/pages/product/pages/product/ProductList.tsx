@@ -71,7 +71,7 @@ const ProductCard = memo(({ product, currency, onNavigate, onStockClick, onEdit,
 
   return (
     <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-      <div className="flex gap-3 p-3 cursor-pointer active:bg-gray-50"
+      <div className="flex gap-3 p-3 cursor-pointer transition-colors duration-150 active:bg-gray-50"
         onClick={() => onNavigate(product._id)}>
         {product.image
           ? <img src={product.image} alt={product.name} loading="lazy" className="w-16 h-16 rounded-lg object-cover shrink-0 border border-gray-100" />
@@ -299,7 +299,7 @@ const ProductList = () => {
 
   const dialogs = (
     <>
-      <Dialog className="md:w-[50vw] w-[95vw]"
+      <Dialog className="w-[95vw] md:w-[75vw] lg:w-[60vw] xl:w-[50vw]"
         header={currentProduct ? "Editar Producto" : "Nuevo Producto"}
         visible={visibleForm} onHide={() => setVisibleForm(false)}>
         <ProductForm setVisibleForm={setVisibleForm} productToEdit={currentProduct} />
@@ -329,7 +329,7 @@ const ProductList = () => {
       {/* ── Panel de filtros — colapsable en mobile ───────────── */}
       <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
         <div
-          className="flex items-center justify-between p-4 cursor-pointer md:cursor-default select-none"
+          className="flex items-center justify-between p-4 cursor-pointer select-none"
           onClick={() => setFiltersOpen((v) => !v)}
         >
           <span className="text-sm font-semibold text-slate-700 flex items-center gap-2">
@@ -347,11 +347,13 @@ const ProductList = () => {
                 severity="secondary" outlined
                 onClick={(e) => { e.stopPropagation(); clearFilters(); }} />
             )}
-            <i className={`pi pi-chevron-down md:hidden transition-transform duration-200 text-slate-400 ${filtersOpen ? "rotate-180" : ""}`} />
+            <i className={`pi pi-chevron-down transition-transform duration-200 text-slate-400 ${filtersOpen ? "rotate-180" : ""}`} />
           </div>
         </div>
 
-        <div className={`${filtersOpen ? "block" : "hidden"} md:block px-4 pb-4 border-t border-gray-100 pt-3`}>
+        <div className={`grid transition-[grid-template-rows] duration-300 ease-in-out ${filtersOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}>
+         <div className="overflow-hidden">
+          <div className="px-4 pb-4 border-t border-gray-100 pt-3">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <div className="flex flex-col gap-1">
               <label className="text-xs font-medium text-slate-500">Marca</label>
@@ -382,11 +384,13 @@ const ProductList = () => {
                 {...DROPDOWN_PANEL_PROPS} />
             </div>
           </div>
+          </div>
+         </div>
         </div>
       </div>
 
       {/* ── Cabecera mobile: título + botones ─────────────────── */}
-      <div className="flex justify-between items-center px-1 md:hidden">
+      <div className="flex justify-between items-center px-1 lg:hidden">
         <h1 className="text-xl font-bold text-gray-800">
           Productos <span className="text-base font-normal text-gray-400">({filteredData.length})</span>
         </h1>
@@ -399,7 +403,7 @@ const ProductList = () => {
       </div>
 
       {/* ── Vista mobile: cards ────────────────────────────────── */}
-      <div className="flex flex-col gap-2 md:hidden">
+      <div className="flex flex-col gap-2 lg:hidden">
         {filteredData.length === 0 && (
           <p className="text-center text-gray-400 py-8 text-sm">Sin productos.</p>
         )}
@@ -427,7 +431,7 @@ const ProductList = () => {
       </div>
 
       {/* ── Vista desktop: tabla ───────────────────────────────── */}
-      <Card id="product-list-table" className="hidden md:block py-2" header={tableHeaderTemplate}>
+      <Card id="product-list-table" className="hidden lg:block py-2" header={tableHeaderTemplate}>
         <Table
           columns={columns}
           data={filteredData}

@@ -8,12 +8,16 @@ export const LIST_SALE_PAYMENT = gql`
       date
       note
       payment_method
+      currency
+      exchange_rate
       sale_order {
         _id
         is_paid
         code
         status
         total
+        currency
+        exchange_rate
         client {
           fullName
         }
@@ -33,12 +37,16 @@ export const LIST_SALE_PAYMENT_BY_SALE_ORDER = gql`
       date
       note
       payment_method
+      currency
+      exchange_rate
       sale_order {
         _id
         is_paid
         code
         status
         total
+        currency
+        exchange_rate
         client {
           fullName
         }
@@ -58,6 +66,8 @@ export const DETAIL_SALE_PAYMENT_BY_SALE_ORDER = gql`
         is_paid
         code
         status
+        currency
+        exchange_rate
         client{
           fullName
         }

@@ -6,7 +6,7 @@ import useAuth from "../auth/hooks/useAuth";
 import { LIST_SALE_ORDER } from "../../graphql/queries/SaleOrder";
 import { getDate } from "../order/utils/getDate";
 import { getStatus } from "../order/utils/getStatus";
-import { formatAmount } from "../../utils/currency";
+import { convertCurrency, formatAmount } from "../../utils/currency";
 
 const GlobalSalesReport = () => {
   const { currency } = useAuth();
@@ -16,6 +16,12 @@ const GlobalSalesReport = () => {
   });
 
   const orders = data?.listSaleOrder ?? [];
+
+  // Este widget es informativo (fuera del módulo de Ventas), así que todo
+  // monto se muestra convertido a la moneda de la empresa aunque la nota se
+  // haya hecho en su moneda alterna.
+  const toCompanyAmount = (order: { total: number; currency?: string | null; exchange_rate?: number | null }) =>
+    convertCurrency(order.total, order.currency ?? currency, currency, order.exchange_rate);
 
   return (
     <div className="p-5 shadow-sm rounded-lg border border-gray-200 bg-white">
@@ -81,7 +87,7 @@ const GlobalSalesReport = () => {
         <Column
           field="total"
           header={`Total (${currency})`}
-          body={(row) => `${formatAmount(row.total)} ${currency}`}
+          body={(row) => `${formatAmount(toCompanyAmount(row))} ${currency}`}
           style={{ minWidth: "120px" }}
           align="right"
         />

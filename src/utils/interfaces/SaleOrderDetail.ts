@@ -5,7 +5,10 @@ import { ISaleOrder } from "./SaleOrder";
 export interface ISaleOrderDetail {
   _id: string;
   sale_order: ISaleOrder;
-  product: IProduct;
+  // null cuando es un ítem sin inventario (ver custom_name/custom_cost).
+  product: IProduct | null;
+  custom_name?: string | null;
+  custom_cost?: number | null;
   sale_price: number;
   quantity: number;
   serials: number;

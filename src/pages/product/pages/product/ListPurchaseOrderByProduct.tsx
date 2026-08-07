@@ -62,7 +62,7 @@ const ListPurchaseOrderByProduct: FC<ListPurchaseOrderByProductProps> = ({ produ
   return (
     <Card title="Compras del producto">
       {/* ── Mobile: cards ─────────────────────────────────────── */}
-      <div className="flex flex-col gap-2 md:hidden">
+      <div className="flex flex-col gap-2 lg:hidden">
         {(!listPurchaseOrderByProduct || listPurchaseOrderByProduct.length === 0) && (
           <p className="text-center text-gray-400 py-6 text-sm">
             No se registran compras para este producto.
@@ -73,7 +73,7 @@ const ListPurchaseOrderByProduct: FC<ListPurchaseOrderByProductProps> = ({ produ
           return (
             <div
               key={item.purchaseOrder._id}
-              className="border border-gray-200 rounded-xl p-3 bg-white shadow-sm cursor-pointer active:bg-gray-50"
+              className="border border-gray-200 rounded-xl p-3 bg-white shadow-sm cursor-pointer transition-colors duration-150 active:bg-gray-50"
               onClick={() => navigate(`${ROUTES_MOCK.PURCHASE_ORDERS}/detalle/${item.purchaseOrder._id}`)}
             >
               <div className="flex items-center justify-between mb-1">
@@ -97,7 +97,7 @@ const ListPurchaseOrderByProduct: FC<ListPurchaseOrderByProductProps> = ({ produ
       </div>
 
       {/* ── Desktop: tabla ─────────────────────────────────────── */}
-      <div className="hidden md:block">
+      <div className="hidden lg:block">
         <Table
           columns={columns}
           data={listPurchaseOrderByProduct}
