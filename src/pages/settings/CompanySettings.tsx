@@ -210,14 +210,15 @@ const CompanySettingsForm = ({ company, canEdit, saveCompany, loadingUpdate }: C
 
       {/* Modo de venta rápida (POS) — toggle independiente, se guarda al instante, no depende del botón "Guardar cambios" del form de abajo */}
       <div className="mb-6 bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-        <div className="flex items-center justify-between gap-4">
-          <div>
+        <div className="flex items-start justify-between gap-4">
+          <div className="max-w-md">
             <p className="font-semibold text-gray-800">Modo de venta rápida (POS)</p>
             <p className="text-sm text-gray-500">
               Habilita una segunda forma de armar ventas, tipo mostrador: tocar tarjetas de producto en vez de llenar un formulario línea por línea.
             </p>
           </div>
           <InputSwitch
+            className="shrink-0 mt-1"
             checked={!!company.pos_sale_mode_enabled}
             disabled={!canEdit || loadingUpdate}
             onChange={(e) => handlePosModeToggle(!!e.value)}
