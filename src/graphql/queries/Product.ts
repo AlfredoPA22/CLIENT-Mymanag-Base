@@ -285,6 +285,33 @@ export const LIST_SALE_ORDER_BY_PRODUCT = gql`
   }
 `;
 
+export const LIST_CUSTOM_SALE_ORDER_DETAIL = gql`
+  query ListCustomSaleOrderDetail {
+    listCustomSaleOrderDetail {
+      saleOrder {
+        _id
+        code
+        date
+        status
+        currency
+        exchange_rate
+        client {
+          _id
+          fullName
+        }
+      }
+      saleOrderDetail {
+        _id
+        custom_name
+        custom_cost
+        quantity
+        sale_price
+        subtotal
+      }
+    }
+  }
+`;
+
 export const LIST_PURCHASE_ORDER_BY_PRODUCT = gql`
   query ListPurchaseOrderByProduct($productId: ID!) {
     listPurchaseOrderByProduct(productId: $productId) {

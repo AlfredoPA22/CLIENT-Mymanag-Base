@@ -8,6 +8,7 @@ import { SelectButton } from "primereact/selectbutton";
 import { Tag } from "primereact/tag";
 import { useState } from "react";
 import Table from "../../components/datatable/Table";
+import { DataTableSelectionSingleChangeEvent } from "primereact/datatable";
 import LoadingSpinner from "../../components/LoadingSpinner/LoadingSpinner";
 import { PermissionGuard } from "../auth/pages/PermissionGuard";
 import {
@@ -46,7 +47,10 @@ interface ICashRegister {
   closing_date?: string;
   closed_by?: { user_name: string };
   notes?: string;
-  movements: ICashMovement[];
+  // Opcional: registros de caja creados antes de que este campo existiera
+  // (previo al rediseño de 2026-08-07) no lo tienen en absoluto en Mongo, y
+  // .lean() no les aplica el default [] del schema — puede venir undefined.
+  movements?: ICashMovement[] | null;
   cash_sales?: number;
   cash_sales_bs?: number;
   cash_payments?: number;
@@ -97,6 +101,7 @@ const CashRegisterPage = () => {
   const [showOpenDialog, setShowOpenDialog] = useState(false);
   const [showCloseDialog, setShowCloseDialog] = useState(false);
   const [showMovementsDialog, setShowMovementsDialog] = useState(false);
+  const [selectedRegister, setSelectedRegister] = useState<ICashRegister | null>(null);
   const [openingAmount, setOpeningAmount] = useState<number | null>(null);
   const [openingAmountBs, setOpeningAmountBs] = useState<number | null>(null);
   const [openingNotes, setOpeningNotes] = useState("");
@@ -218,6 +223,10 @@ const CashRegisterPage = () => {
     } catch (error: any) {
       showToast({ detail: error.message, severity: ToastSeverity.Error });
     }
+  };
+
+  const handleSelectHistoryRow = (e: DataTableSelectionSingleChangeEvent<ICashRegister[]>) => {
+    setSelectedRegister(e.value);
   };
 
   const columns: DataTableColumn<ICashRegister>[] = [
@@ -379,13 +388,13 @@ const CashRegisterPage = () => {
               </div>
             </div>
 
-            {current.movements.length > 0 && (
+            {(current.movements ?? []).length > 0 && (
               <div className="flex flex-col gap-1">
                 <span className="text-xs text-gray-400 uppercase font-semibold">
-                  Movimientos ({current.movements.length})
+                  Movimientos ({(current.movements ?? []).length})
                 </span>
                 <div className="flex flex-col gap-1 max-h-40 overflow-y-auto">
-                  {current.movements.map((m, i) => (
+                  {(current.movements ?? []).map((m, i) => (
                     <div key={i} className="flex items-center justify-between text-sm border-b border-gray-100 pb-1">
                       <span className="flex items-center gap-2">
                         <Tag severity={m.type === "INGRESO" ? "success" : "warning"} className="text-xs">
@@ -423,7 +432,13 @@ const CashRegisterPage = () => {
         {loadingList ? (
           <LoadingSpinner />
         ) : (
-          <Table columns={columns} data={history} emptyMessage="Sin registros de caja." size="small" />
+          <Table
+            columns={columns}
+            data={history}
+            emptyMessage="Sin registros de caja."
+            size="small"
+            onSelectionChange={handleSelectHistoryRow}
+          />
         )}
       </Card>
 
@@ -607,6 +622,122 @@ const CashRegisterPage = () => {
             />
           </div>
         </div>
+      </Dialog>
+
+      {/* ── Dialog detalle de caja (historial) ──────────────────── */}
+      <Dialog
+        header="Detalle de caja"
+        visible={!!selectedRegister}
+        onHide={() => setSelectedRegister(null)}
+        style={{ width: "560px" }}
+        breakpoints={{ "640px": "95vw" }}
+        footer={
+          <div className="flex justify-end pt-2">
+            <Button label="Cerrar" severity="secondary" outlined onClick={() => setSelectedRegister(null)} />
+          </div>
+        }
+      >
+        {selectedRegister && (
+          <div className="flex flex-col gap-4 pt-1">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+              <div className="flex flex-col gap-1">
+                <Tag severity={selectedRegister.status === "ABIERTA" ? "success" : "secondary"} className="w-fit">
+                  {selectedRegister.status === "ABIERTA" ? "Abierta" : "Cerrada"}
+                </Tag>
+                <span className="text-sm text-gray-500">
+                  Apertura: {formatDateTime(selectedRegister.opening_date)} · {selectedRegister.opened_by?.user_name}
+                </span>
+                {selectedRegister.closing_date && (
+                  <span className="text-sm text-gray-500">
+                    Cierre: {formatDateTime(selectedRegister.closing_date)} · {selectedRegister.closed_by?.user_name}
+                  </span>
+                )}
+                {selectedRegister.notes && <span className="text-xs text-gray-400">{selectedRegister.notes}</span>}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              <div className="bg-gray-50 rounded-lg p-3 flex flex-col gap-0.5">
+                <span className="text-xs text-gray-400 uppercase font-semibold">Apertura</span>
+                <span className="font-bold text-gray-700">{formatAmount(selectedRegister.opening_amount)} {currency}</span>
+                {supportsBs && !!selectedRegister.opening_amount_bs && (
+                  <span className="text-xs text-gray-500">{formatAmount(selectedRegister.opening_amount_bs)} Bs</span>
+                )}
+              </div>
+              <div className="bg-gray-50 rounded-lg p-3 flex flex-col gap-0.5">
+                <span className="text-xs text-gray-400 uppercase font-semibold">Ventas en efectivo</span>
+                <span className="font-bold text-gray-700">{formatAmount(selectedRegister.cash_sales ?? 0)} {currency}</span>
+                {supportsBs && !!selectedRegister.cash_sales_bs && (
+                  <span className="text-xs text-gray-500">{formatAmount(selectedRegister.cash_sales_bs)} Bs</span>
+                )}
+              </div>
+              <div className="bg-gray-50 rounded-lg p-3 flex flex-col gap-0.5">
+                <span className="text-xs text-gray-400 uppercase font-semibold">Cobros en efectivo</span>
+                <span className="font-bold text-gray-700">{formatAmount(selectedRegister.cash_payments ?? 0)} {currency}</span>
+                {supportsBs && !!selectedRegister.cash_payments_bs && (
+                  <span className="text-xs text-gray-500">{formatAmount(selectedRegister.cash_payments_bs)} Bs</span>
+                )}
+              </div>
+              <div className="bg-emerald-50 rounded-lg p-3 flex flex-col gap-0.5">
+                <span className="text-xs text-emerald-600 uppercase font-semibold">Esperado</span>
+                <span className="font-bold text-emerald-700">{formatAmount(selectedRegister.expected_amount ?? 0)} {currency}</span>
+                {supportsBs && !!selectedRegister.expected_amount_bs && (
+                  <span className="text-xs text-emerald-600">{formatAmount(selectedRegister.expected_amount_bs)} Bs</span>
+                )}
+              </div>
+              {selectedRegister.closing_amount !== undefined && selectedRegister.closing_amount !== null && (
+                <>
+                  <div className="bg-gray-50 rounded-lg p-3 flex flex-col gap-0.5">
+                    <span className="text-xs text-gray-400 uppercase font-semibold">Contado al cierre</span>
+                    <span className="font-bold text-gray-700">{formatAmount(selectedRegister.closing_amount)} {currency}</span>
+                    {supportsBs && !!selectedRegister.closing_amount_bs && (
+                      <span className="text-xs text-gray-500">{formatAmount(selectedRegister.closing_amount_bs)} Bs</span>
+                    )}
+                  </div>
+                  <div className="bg-blue-50 rounded-lg p-3 flex flex-col gap-1 justify-center">
+                    <span className="text-xs text-blue-600 uppercase font-semibold">Diferencia</span>
+                    <DifferenceTag
+                      diff={selectedRegister.closing_amount - (selectedRegister.expected_amount ?? 0)}
+                      curLabel={currency}
+                    />
+                    {supportsBs && !!selectedRegister.expected_amount_bs && (
+                      <DifferenceTag
+                        diff={(selectedRegister.closing_amount_bs ?? 0) - (selectedRegister.expected_amount_bs ?? 0)}
+                        curLabel="Bs"
+                      />
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <span className="text-xs text-gray-400 uppercase font-semibold">
+                Movimientos ({(selectedRegister.movements ?? []).length})
+              </span>
+              {(selectedRegister.movements ?? []).length === 0 ? (
+                <span className="text-sm text-gray-400">Sin movimientos manuales en este turno.</span>
+              ) : (
+                <div className="flex flex-col gap-1 max-h-52 overflow-y-auto">
+                  {(selectedRegister.movements ?? []).map((m, i) => (
+                    <div key={i} className="flex items-center justify-between text-sm border-b border-gray-100 pb-1">
+                      <span className="flex items-center gap-2">
+                        <Tag severity={m.type === "INGRESO" ? "success" : "warning"} className="text-xs">
+                          {m.type === "INGRESO" ? "Ingreso" : "Retiro"}
+                        </Tag>
+                        <span className="text-gray-600">{m.description}</span>
+                        <span className="text-xs text-gray-400">{formatDateTime(m.date)} · {m.created_by?.user_name}</span>
+                      </span>
+                      <span className={`font-medium whitespace-nowrap ${m.type === "INGRESO" ? "text-emerald-600" : "text-orange-600"}`}>
+                        {m.type === "INGRESO" ? "+" : "-"}{formatAmount(m.amount)} {m.currency ?? currency}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </Dialog>
     </div>
   );

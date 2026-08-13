@@ -4,7 +4,7 @@ import { ICompany } from "../../../utils/interfaces/Company";
 import { ISaleOrderToPDF } from "../../../utils/interfaces/SaleOrder";
 import { getDate } from "./getDate";
 import { buildSerialsRows, drawPaginatedFooter, withBottomRule } from "./pdfSerialsGrid";
-import { formatAmount } from "../../../utils/currency";
+import { convertCurrency, formatAmount } from "../../../utils/currency";
 
 // ── Design tokens — sober, white-based ───────────────────────
 const INK: [number, number, number] = [30, 41, 59];        // slate-800 — main text
@@ -43,7 +43,8 @@ const drawRule = (doc: jsPDF, y: number) => {
 export const generatePDF = async (
   data: ISaleOrderToPDF,
   dataCompany: ICompany,
-  currency: string
+  currency: string,
+  viewCurrency?: string | null
 ) => {
   const doc = new jsPDF();
 
@@ -105,13 +106,21 @@ export const generatePDF = async (
       ? `${data.saleOrder.payment_method}  ·  ${data.saleOrder.contado_payment_method ?? "—"}`
       : data.saleOrder.payment_method ?? "—";
 
-  const discountAmount = Number(data.saleOrder.discount_amount) || 0;
-  const hasDiscount = discountAmount > 0;
-  const subtotalBruto = data.saleOrder.total + discountAmount;
+  const discountAmountRaw = Number(data.saleOrder.discount_amount) || 0;
+  const hasDiscount = discountAmountRaw > 0;
+  const subtotalBrutoRaw = data.saleOrder.total + discountAmountRaw;
 
-  // Moneda nativa de la nota — si se creó en una moneda distinta a la de la
-  // empresa, el PDF se imprime en esa moneda (no la del parámetro `currency`).
-  const pdfCurrency = data.saleOrder.currency ?? currency;
+  // Moneda nativa de la nota — de ahí se convierte (con su TC congelado) a la
+  // moneda que el usuario tenga seleccionada en el toggle del Detalle. Si no
+  // se pasó ninguna, se imprime en la moneda nativa (comportamiento previo).
+  const noteCurrency = data.saleOrder.currency ?? currency;
+  const pdfCurrency = viewCurrency ?? noteCurrency;
+  const exchangeRate = data.saleOrder.exchange_rate;
+  const convertAmount = (amount: number) =>
+    convertCurrency(amount, noteCurrency, pdfCurrency, exchangeRate);
+
+  const discountAmount = convertAmount(discountAmountRaw);
+  const subtotalBruto = convertAmount(subtotalBrutoRaw);
 
   // Labels row
   doc.setFont("helvetica", "bold");
@@ -170,22 +179,22 @@ export const generatePDF = async (
 
   const rows = data.saleOrderDetail.flatMap((detail) => {
     const d = detail.saleOrderDetail;
-    const detailDiscount = Number(d.discount_amount) || 0;
+    const detailDiscount = convertAmount(Number(d.discount_amount) || 0);
 
     const mainRow = [
       d.product?.code ?? "—",
       d.product?.name ?? d.custom_name ?? "—",
       d.product?.brand?.name ?? "—",
       d.quantity,
-      formatAmount(d.sale_price),
-      formatAmount(d.subtotal),
+      formatAmount(convertAmount(d.sale_price)),
+      formatAmount(convertAmount(d.subtotal)),
     ];
 
     const extraRows: any[] = [];
 
     if (detailDiscount > 0) {
       const label =
-        d.discount_type === "percentage"
+        d.discount_type === "PORCENTUAL"
           ? `Descuento (${d.discount_value}%): -${formatAmount(detailDiscount)} ${pdfCurrency}`
           : `Descuento: -${formatAmount(detailDiscount)} ${pdfCurrency}`;
       extraRows.push([
@@ -245,9 +254,11 @@ export const generatePDF = async (
   const finalY = (doc as any).lastAutoTable.finalY + 4;
   drawRule(doc, finalY);
 
+  const totalConverted = convertAmount(data.saleOrder.total);
+
   if (hasDiscount) {
     const discountFooterLabel =
-      data.saleOrder.discount_type === "percentage"
+      data.saleOrder.discount_type === "PORCENTUAL"
         ? `Descuento (${data.saleOrder.discount_value}%):`
         : "Descuento:";
 
@@ -271,7 +282,7 @@ export const generatePDF = async (
     doc.setFontSize(9.5);
     doc.setTextColor(...INK);
     doc.text(
-      `TOTAL:   ${formatAmount(data.saleOrder.total)} ${pdfCurrency}`,
+      `TOTAL:   ${formatAmount(totalConverted)} ${pdfCurrency}`,
       PAGE_W - MARGIN,
       finalY + 20,
       { align: "right" }
@@ -281,7 +292,7 @@ export const generatePDF = async (
     doc.setFontSize(9.5);
     doc.setTextColor(...INK);
     doc.text(
-      `TOTAL:   ${formatAmount(data.saleOrder.total)} ${pdfCurrency}`,
+      `TOTAL:   ${formatAmount(totalConverted)} ${pdfCurrency}`,
       PAGE_W - MARGIN,
       finalY + 8,
       { align: "right" }

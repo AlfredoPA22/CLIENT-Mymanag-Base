@@ -138,7 +138,7 @@ const SaleOrderDetail: FC<SaleOrderDetailProps> = ({ saleOrderId, viewCurrency, 
         query: DETAIL_COMPANY,
         fetchPolicy: "network-only",
       });
-      generatePDF(pdfData.findSaleOrderToPDF, dataCompany.detailCompany, currency);
+      generatePDF(pdfData.findSaleOrderToPDF, dataCompany.detailCompany, currency, effectiveViewCurrency);
     } catch (error: any) {
       showToast({ detail: error.message, severity: ToastSeverity.Error });
     } finally {
@@ -147,7 +147,10 @@ const SaleOrderDetail: FC<SaleOrderDetailProps> = ({ saleOrderId, viewCurrency, 
   };
 
   const handleOpenTicket = () => {
-    window.open(`${ROUTES_MOCK.SALE_ORDERS}/detalle/${saleOrderId}/ticket`, "_blank");
+    window.open(
+      `${ROUTES_MOCK.SALE_ORDERS}/detalle/${saleOrderId}/ticket?currency=${effectiveViewCurrency}`,
+      "_blank"
+    );
   };
 
   const handleOpenReturnDetail = () => {
