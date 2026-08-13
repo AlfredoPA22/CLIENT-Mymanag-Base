@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Outlet, useLocation } from "react-router-dom";
-import ChatBot from "../chatbot/ChatBot";
 import { useFullProcessTour } from "../../hooks/useFullProcessTour";
 import Navbar from "../navbar/NavBar";
 import SidebarMenu from "../sidebar/SideBar";
@@ -59,7 +58,6 @@ const Dashboard = () => {
           </motion.div>
           <div className="hidden md:block">
             <TourFab />
-            <ChatBot />
           </div>
         </main>
       </div>
