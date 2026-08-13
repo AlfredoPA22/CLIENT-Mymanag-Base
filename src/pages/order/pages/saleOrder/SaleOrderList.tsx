@@ -468,8 +468,9 @@ const SaleOrderList = ({ storeOnly = false }: SaleOrderListProps) => {
         )}
       </div>
 
+      {/* En desktop este toggle se muestra junto al botón "Nueva venta" (header del Card de abajo) */}
       {currency === "$" && (
-        <div className="flex items-center justify-between md:justify-end gap-2 px-1">
+        <div className="flex items-center justify-between md:justify-end gap-2 px-1 lg:hidden">
           <span className="text-xs font-medium text-slate-500">Ver montos en:</span>
           <SelectButton
             value={viewCurrency}
@@ -572,17 +573,33 @@ const SaleOrderList = ({ storeOnly = false }: SaleOrderListProps) => {
             <h1 className="text-2xl font-bold">
               {`${storeOnly ? "Pedidos de la tienda" : "Lista de ventas"} (${filteredData.length})`}
             </h1>
-            {!storeOnly && (
-              <Button
-                id="btn-new-sale"
-                icon="pi pi-plus"
-                severity="success"
-                tooltip="Nueva venta"
-                tooltipOptions={{ position: "left" }}
-                onClick={() => navigate(`${ROUTES_MOCK.SALE_ORDERS}${ROUTES_MOCK.NEW_SALE_ORDER}`)}
-                raised
-              />
-            )}
+            <div className="flex items-center gap-3">
+              {currency === "$" && (
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-medium text-slate-500">Ver montos en:</span>
+                  <SelectButton
+                    value={viewCurrency}
+                    options={[
+                      { label: "Original", value: "ORIGINAL" },
+                      { label: "$", value: "$" },
+                      { label: "Bs", value: "Bs" },
+                    ]}
+                    onChange={(e) => e.value && setViewCurrency(e.value)}
+                  />
+                </div>
+              )}
+              {!storeOnly && (
+                <Button
+                  id="btn-new-sale"
+                  icon="pi pi-plus"
+                  severity="success"
+                  tooltip="Nueva venta"
+                  tooltipOptions={{ position: "left" }}
+                  onClick={() => navigate(`${ROUTES_MOCK.SALE_ORDERS}${ROUTES_MOCK.NEW_SALE_ORDER}`)}
+                  raised
+                />
+              )}
+            </div>
           </div>
         }
       >

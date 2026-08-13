@@ -133,8 +133,8 @@ export const LIST_PRODUCT_INVENTORY_BY_PRODUCT = gql`
 `;
 
 export const SEARCH_PRODUCT = gql`
-  query SearchProduct($serial: String!) {
-    searchProduct(serial: $serial) {
+  query SearchProduct($serial: String!, $exact: Boolean) {
+    searchProduct(serial: $serial, exact: $exact) {
       _id
       brand {
         _id

@@ -80,7 +80,15 @@ const AddSerialToDetailForm: FC<AddSerialToDetailFormProps> = ({
             error={errors.serial ? errors.serial : ""}
             onChange={handleChange}
           />
-          <BarcodeScannerButton onScan={(value) => setFieldValue("serial", value)} />
+          {/* FieldTextInput trae una label vacía + una línea de error debajo,
+              lo que le da más alto que el botón — se replica esa misma
+              estructura acá (invisible) para que el botón quede a la misma
+              altura que el input en vez de centrado contra toda la columna. */}
+          <div className="flex flex-col p-inputtext-sm">
+            <span className="mb-1 invisible">·</span>
+            <BarcodeScannerButton onScan={(value) => setFieldValue("serial", value)} />
+            <span className="text-xs block h-5" />
+          </div>
         </div>
       </section>
 

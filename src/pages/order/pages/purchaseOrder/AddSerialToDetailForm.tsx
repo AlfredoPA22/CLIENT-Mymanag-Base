@@ -146,7 +146,7 @@ const AddSerialToDetailForm: FC<AddSerialToDetailFormProps> = ({
           value={selectedWarehouse}
         />
       </div>
-      <div className="col-span-2 flex items-end gap-2">
+      <div className="col-span-2 flex items-start gap-2">
         <div className="flex-1">
           <FieldTextInput
             label="Serial"
@@ -160,7 +160,15 @@ const AddSerialToDetailForm: FC<AddSerialToDetailFormProps> = ({
             onChange={handleChange}
           />
         </div>
-        <BarcodeScannerButton onScan={(value) => setFieldValue("serial", value)} />
+        {/* Misma estructura invisible que FieldTextInput (label + hueco de
+            error) para que el botón quede a la altura del input, no
+            centrado/pegado contra toda la columna (que es más alta por la
+            label y la línea de error). */}
+        <div className="flex flex-col p-inputtext-sm">
+          <span className="mb-1 invisible">Serial</span>
+          <BarcodeScannerButton onScan={(value) => setFieldValue("serial", value)} />
+          <span className="text-xs block h-5" />
+        </div>
       </div>
 
       <section className="flex justify-center items-center w-full md:w-auto">

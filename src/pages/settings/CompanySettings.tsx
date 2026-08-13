@@ -1,5 +1,6 @@
 import { Button } from "primereact/button";
 import { DropdownChangeEvent } from "primereact/dropdown";
+import { InputSwitch } from "primereact/inputswitch";
 import { useState } from "react";
 import DropdownInput from "../../components/dropdownInput/DropdownInput";
 import FieldNumberInput from "../../components/FieldNumberInput/FieldNumberInput";
@@ -53,9 +54,10 @@ interface CompanyFormProps {
   company: ICompany;
   canEdit: boolean;
   saveCompany: (input: ICompanyInput) => Promise<void>;
+  loadingUpdate: boolean;
 }
 
-const CompanySettingsForm = ({ company, canEdit, saveCompany }: CompanyFormProps) => {
+const CompanySettingsForm = ({ company, canEdit, saveCompany, loadingUpdate }: CompanyFormProps) => {
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
 
   const initialValues: ICompanyInput = {
@@ -97,6 +99,10 @@ const CompanySettingsForm = ({ company, canEdit, saveCompany }: CompanyFormProps
 
   const handleDropdown = (e: DropdownChangeEvent) => {
     setFieldValue(e.target.name, e.value);
+  };
+
+  const handlePosModeToggle = async (checked: boolean) => {
+    await saveCompany({ pos_sale_mode_enabled: checked });
   };
 
   const onFileSelect = (e: { files: File[] }) => {
@@ -199,6 +205,23 @@ const CompanySettingsForm = ({ company, canEdit, saveCompany }: CompanyFormProps
           ) : (
             <span className="font-semibold text-gray-400">-</span>
           )}
+        </div>
+      </div>
+
+      {/* Modo de venta rápida (POS) — toggle independiente, se guarda al instante, no depende del botón "Guardar cambios" del form de abajo */}
+      <div className="mb-6 bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <p className="font-semibold text-gray-800">Modo de venta rápida (POS)</p>
+            <p className="text-sm text-gray-500">
+              Habilita una segunda forma de armar ventas, tipo mostrador: tocar tarjetas de producto en vez de llenar un formulario línea por línea.
+            </p>
+          </div>
+          <InputSwitch
+            checked={!!company.pos_sale_mode_enabled}
+            disabled={!canEdit || loadingUpdate}
+            onChange={(e) => handlePosModeToggle(!!e.value)}
+          />
         </div>
       </div>
 
@@ -382,7 +405,7 @@ const CompanySettingsForm = ({ company, canEdit, saveCompany }: CompanyFormProps
 
 const CompanySettings = () => {
   const { permissions } = useAuth();
-  const { company, loadingCompany, errorCompany, refetchCompany, saveCompany } =
+  const { company, loadingCompany, errorCompany, refetchCompany, saveCompany, loadingUpdate } =
     useCompanySettings();
 
   const canEdit = permissions.includes("UPDATE_COMPANY");
@@ -407,6 +430,7 @@ const CompanySettings = () => {
       company={company}
       canEdit={canEdit}
       saveCompany={saveCompany}
+      loadingUpdate={loadingUpdate}
     />
   );
 };

@@ -54,6 +54,8 @@ const SelectInput: FC<SelectInputProps> = ({
         options={options}
         value={value}
         isDisabled={disabled}
+        menuPortalTarget={document.body}
+        styles={{ menuPortal: (base) => ({ ...base, zIndex: 9999 }) }}
       />
       <small className="p-error text-xs block h-5">{error}</small>
     </section>

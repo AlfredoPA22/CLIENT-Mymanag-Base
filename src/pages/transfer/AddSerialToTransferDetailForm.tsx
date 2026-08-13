@@ -61,7 +61,7 @@ const AddSerialToTransferDetailForm: FC<AddSerialToTransferDetailFormProps> = ({
       onSubmit={handleSubmit}
       className="flex flex-col md:flex-row gap-3 items-end mb-4"
     >
-      <div className="flex-1 flex items-end gap-2">
+      <div className="flex-1 flex items-start gap-2">
         <div className="flex-1">
           <FieldTextInput
             label="Serial"
@@ -75,7 +75,13 @@ const AddSerialToTransferDetailForm: FC<AddSerialToTransferDetailFormProps> = ({
             onChange={handleChange}
           />
         </div>
-        <BarcodeScannerButton onScan={(value) => setFieldValue("serial", value)} />
+        {/* Misma estructura invisible que FieldTextInput (label + hueco de
+            error) para que el botón quede a la altura del input. */}
+        <div className="flex flex-col p-inputtext-sm">
+          <span className="mb-1 invisible">Serial</span>
+          <BarcodeScannerButton onScan={(value) => setFieldValue("serial", value)} />
+          <span className="text-xs block h-5" />
+        </div>
       </div>
       <Button
         type="submit"

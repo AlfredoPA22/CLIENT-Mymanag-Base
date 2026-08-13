@@ -5,6 +5,7 @@ import SearchAndNotifications from "../../components/topbar/SearchAndNotificatio
 import DateRangePicker from "./DateRangePicker";
 import GuidesSection from "./GuidesSection";
 import HeaderHome from "./HeaderHome";
+import QuickActionsSection from "./QuickActionsSection";
 import SalesSection from "./SalesSection";
 import SearchSection from "./SearchSection";
 import TopRankingsSection from "./TopRankingsSection";
@@ -61,6 +62,8 @@ const Home: FC = () => {
       <PermissionGuard permissions={["GENERAL_DATA"]}>
         <HeaderHome startDate={startDate} endDate={endDate} />
       </PermissionGuard>
+
+      <QuickActionsSection />
 
       <GuidesSection />
 

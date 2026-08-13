@@ -37,6 +37,11 @@ import RowActionButtons, { RowAction } from "../../../../components/table/RowAct
 interface SaleOrderDetailListProps {
   saleOrderId: string;
   editMode?: boolean;
+  // Independiente de editMode: permite agregar seriales (no solo verlos) sin
+  // habilitar edición de precio/cantidad ni eliminar líneas — se usa en el
+  // Detalle (vista de solo lectura) para ventas en Borrador. Por defecto
+  // sigue a editMode, que es el comportamiento de siempre en Editar venta.
+  allowAddSerials?: boolean;
   viewCurrency?: string | null;
 }
 
@@ -51,8 +56,10 @@ interface MobileEditState {
 const SaleOrderDetailList: FC<SaleOrderDetailListProps> = ({
   saleOrderId,
   editMode = true,
+  allowAddSerials,
   viewCurrency = null,
 }) => {
+  const canAddSerials = allowAddSerials ?? editMode;
   const [visibleForm, setVisibleForm] = useState<boolean>(false);
   const [currentSaleOrderDetail, setCurrentSaleOrderDetail] =
     useState<ISaleOrderDetail>();
@@ -99,6 +106,12 @@ const SaleOrderDetailList: FC<SaleOrderDetailListProps> = ({
   const displayCurrency = viewCurrency ?? noteCurrency;
   const convertForDisplay = (amount: number) =>
     convertCurrency(amount, noteCurrency, displayCurrency, noteExchangeRate);
+
+  // Serializado con menos seriales asignados que unidades vendidas — no se
+  // puede aprobar la venta así, y entre muchos productos es fácil pasarlo
+  // por alto sin un indicador visual.
+  const needsSerials = (detail: ISaleOrderDetail) =>
+    detail.product?.stock_type === stockType.SERIALIZADO && detail.serials < detail.quantity;
 
   const discountTypeOptions = [
     { label: "Sin desc.", value: "" },
@@ -183,7 +196,7 @@ const SaleOrderDetailList: FC<SaleOrderDetailListProps> = ({
     const actions: RowAction[] = [];
     if (rowData.product?.stock_type === stockType.SERIALIZADO) {
       actions.push({
-        label: editMode ? "Agregar seriales" : "Ver seriales",
+        label: canAddSerials ? "Agregar seriales" : "Ver seriales",
         icon: "pi pi-cart-plus",
         severity: "success",
         onClick: () => { setCurrentSaleOrderDetail(rowData); setVisibleForm(true); },
@@ -349,7 +362,14 @@ const SaleOrderDetailList: FC<SaleOrderDetailListProps> = ({
       style: { textAlign: "center", width: "8%" },
       body: (rowData: ISaleOrderDetail) => {
         if (rowData.product?.stock_type === stockType.SERIALIZADO) {
-          return <span>{rowData.serials}</span>;
+          if (needsSerials(rowData)) {
+            return (
+              <Tag severity="warning" icon="pi pi-exclamation-triangle" className="text-xs">
+                {rowData.serials}/{rowData.quantity}
+              </Tag>
+            );
+          }
+          return <span className="text-green-600">{rowData.serials}/{rowData.quantity}</span>;
         }
         return <>—</>;
       },
@@ -380,7 +400,9 @@ const SaleOrderDetailList: FC<SaleOrderDetailListProps> = ({
         {listSaleOrderDetail?.map((detail: ISaleOrderDetail) => (
           <div
             key={detail._id}
-            className="border border-gray-200 rounded-xl p-3 bg-white shadow-sm"
+            className={`border rounded-xl p-3 shadow-sm ${
+              needsSerials(detail) ? "border-amber-300 bg-amber-50" : "border-gray-200 bg-white"
+            }`}
           >
             {/* Cabecera: código + nombre + subtotal */}
             <div className="flex justify-between items-start gap-2">
@@ -421,9 +443,16 @@ const SaleOrderDetailList: FC<SaleOrderDetailListProps> = ({
                 </span>
               )}
               {detail.product?.stock_type === stockType.SERIALIZADO && (
-                <span className="text-gray-400">
-                  Seriales: <strong className="text-gray-700">{detail.serials}</strong>
-                </span>
+                needsSerials(detail) ? (
+                  <span className="inline-flex items-center gap-1 text-amber-700 font-medium">
+                    <i className="pi pi-exclamation-triangle text-[10px]" />
+                    Faltan seriales: {detail.serials}/{detail.quantity}
+                  </span>
+                ) : (
+                  <span className="text-gray-400">
+                    Seriales: <strong className="text-green-600">{detail.serials}/{detail.quantity}</strong>
+                  </span>
+                )
               )}
             </div>
 
@@ -448,6 +477,7 @@ const SaleOrderDetailList: FC<SaleOrderDetailListProps> = ({
           dataFilters={filters}
           tableHeader={renderFilterInput}
           editMode="row"
+          rowClassName={(rowData: ISaleOrderDetail) => (needsSerials(rowData) ? "!bg-amber-50" : "")}
           {...(editMode && { onRowEditComplete })}
         />
       </div>
@@ -552,7 +582,7 @@ const SaleOrderDetailList: FC<SaleOrderDetailListProps> = ({
       {/* ── Dialog seriales ─────────────────────────────────────── */}
       <Dialog
         className="md:w-[700px] w-[95vw]"
-        header={editMode ? "Agregar serial" : ""}
+        header={canAddSerials ? "Agregar serial" : ""}
         visible={visibleForm}
         onHide={() => setVisibleForm(false)}
       >
@@ -560,7 +590,7 @@ const SaleOrderDetailList: FC<SaleOrderDetailListProps> = ({
           <SerialToDetail
             saleOrderId={saleOrderId}
             saleOrderDetailId={currentSaleOrderDetail?._id}
-            editMode={editMode}
+            editMode={canAddSerials}
             remainingSerials={
               currentSaleOrderDetail.quantity - currentSaleOrderDetail.serials
             }

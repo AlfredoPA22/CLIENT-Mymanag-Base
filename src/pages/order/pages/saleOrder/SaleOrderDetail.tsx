@@ -6,7 +6,7 @@ import { InputTextarea } from "primereact/inputtextarea";
 import { Tag } from "primereact/tag";
 import { FC, useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { OrderSkeleton } from "../../../../components/skeleton/OrderSkeleton";
 import {
   APPROVE_SALE_ORDER,
@@ -72,6 +72,11 @@ const SaleOrderDetail: FC<SaleOrderDetailProps> = ({ saleOrderId, viewCurrency, 
   };
 
   const navigate = useNavigate();
+  const location = useLocation();
+  // SaleOrderDetail se reusa tanto en la ruta de "ver" como dentro de
+  // EditSaleOrder.tsx (la ruta de edición ya la renderiza) — si ya estamos
+  // ahí, no tiene sentido mostrar un botón que navegue a la misma pantalla.
+  const isEditRoute = location.pathname.includes(ROUTES_MOCK.EDIT_SALE_ORDER);
   const dispatch = useDispatch();
   const { currency } = useAuth();
   const qrAvailable = useQrPaymentAvailable();
@@ -388,8 +393,12 @@ const SaleOrderDetail: FC<SaleOrderDetailProps> = ({ saleOrderId, viewCurrency, 
   return (
     <div className="p-5 shadow-lg rounded-lg border border-gray-200 bg-white mb-2">
       <SectionHeader
-        title="Detalle de venta"
-        subtitle="Consulta la información de tu venta y realiza cambios si es necesario."
+        title={isEditRoute ? "Editar venta" : "Detalle de venta"}
+        subtitle={
+          isEditRoute
+            ? "Agrega o quita productos y ajusta lo que necesites antes de aprobar la venta."
+            : "Consulta la información de tu venta y realiza cambios si es necesario."
+        }
         actions={
           <Button
             label="Volver a la lista"
@@ -475,14 +484,27 @@ const SaleOrderDetail: FC<SaleOrderDetailProps> = ({ saleOrderId, viewCurrency, 
 
           {data?.findSaleOrder.status === orderStatus.BORRADOR && (
             <PermissionGuard permissions={["CREATE_SALE", "EDIT_SALE"]}>
-              <Button
-                icon="pi pi-check-circle"
-                type="button"
-                severity="success"
-                label="Aprobar venta"
-                className="w-full justify-center"
-                onClick={handleOpenApproveDialog}
-              />
+              <div className="flex flex-col gap-2">
+                {!isEditRoute && (
+                  <Button
+                    icon="pi pi-pencil"
+                    type="button"
+                    severity="info"
+                    label="Editar venta"
+                    outlined
+                    className="w-full justify-center"
+                    onClick={() => navigate(`${ROUTES_MOCK.SALE_ORDERS}${ROUTES_MOCK.EDIT_SALE_ORDER}/${saleOrderId}`)}
+                  />
+                )}
+                <Button
+                  icon="pi pi-check-circle"
+                  type="button"
+                  severity="success"
+                  label="Aprobar venta"
+                  className="w-full justify-center"
+                  onClick={handleOpenApproveDialog}
+                />
+              </div>
             </PermissionGuard>
           )}
 

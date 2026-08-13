@@ -15,6 +15,7 @@ export const UPDATE_COMPANY = gql`
       exchange_rate
       store_enabled
       store_banner_image
+      pos_sale_mode_enabled
       store_theme {
         primary
         primaryDark
