@@ -5,7 +5,7 @@ import { Dialog } from "primereact/dialog";
 import { Dropdown } from "primereact/dropdown";
 import { InputText } from "primereact/inputtext";
 import { SelectButton } from "primereact/selectbutton";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { ActionMeta, SingleValue } from "react-select";
@@ -18,7 +18,7 @@ import { CREATE_SALE_ORDER } from "../../../../graphql/mutations/SaleOrder";
 import { ADD_SERIAL_TO_SALE_ORDER_DETAIL, CREATE_SALE_ORDER_DETAIL } from "../../../../graphql/mutations/SaleOrderDetail";
 import { DETAIL_COMPANY } from "../../../../graphql/queries/Company";
 import { LIST_CLIENT } from "../../../../graphql/queries/Client";
-import { LIST_PRODUCT_INVENTORY_BY_PRODUCT, SEARCH_PRODUCT } from "../../../../graphql/queries/Product";
+import { FIND_PRODUCT_SERIAL_BY_SERIAL, LIST_PRODUCT_INVENTORY_BY_PRODUCT, SEARCH_PRODUCT } from "../../../../graphql/queries/Product";
 import { LIST_SALE_ORDER } from "../../../../graphql/queries/SaleOrder";
 import useQrPaymentAvailable from "../../../../hooks/useQrPaymentAvailable";
 import { setIsBlocked } from "../../../../redux/slices/blockUISlice";
@@ -29,17 +29,26 @@ import { ToastSeverity } from "../../../../utils/enums/toast.enum";
 import { IProduct } from "../../../../utils/interfaces/Product";
 import { IProductInventory } from "../../../../utils/interfaces/ProductInventory";
 import { IReactSelect } from "../../../../utils/interfaces/Select";
+import { IWarehouse } from "../../../../utils/interfaces/Warehouse";
 import { showToast } from "../../../../utils/toastUtils";
 import useAuth from "../../../auth/hooks/useAuth";
 import useClientList from "../../../client/hooks/useClientList";
 import useProductList from "../../../product/hooks/useProductList";
+import useWarehouseList from "../../../product/hooks/useWarehouseList";
 import { getSalePaymentMethodOptions } from "../../utils/salePaymentMethodMock";
 import { saleOrderPaymentMethodOptions } from "../../utils/saleOrderPaymentMethodMock";
+import ResolveStockShortageModal from "./ResolveStockShortageModal";
+import ResolveSerialWarehouseModal from "./ResolveSerialWarehouseModal";
 
 interface CartLine {
   product: IProduct;
   quantity: number;
-  warehouseId?: string | null;
+  // Solo para Individual: stock disponible en el almacén elegido para la
+  // nota (posWarehouseId), leído al agregar el producto por primera vez.
+  // Los +/- de cantidad comparan contra este número en memoria, sin
+  // consultar la red en cada click — mismo criterio que ya se usaba con
+  // product.stock (global) antes de este cambio.
+  availableStock?: number;
   discountType: string;
   // Para "FIJO" se guarda en la moneda BASE de la empresa (igual que
   // product.sale_price), no en la moneda elegida en el toggle — así, si el
@@ -197,6 +206,8 @@ const SaleOrderPOS = () => {
 
   const { listProduct, loadingListProduct } = useProductList();
   const { listClientSelect } = useClientList();
+  const { listWarehouse: listWarehouseRaw } = useWarehouseList();
+  const listWarehouse = listWarehouseRaw ?? [];
   const { data: companyData } = useQuery(DETAIL_COMPANY);
   const company = companyData?.detailCompany;
 
@@ -212,6 +223,58 @@ const SaleOrderPOS = () => {
   const [selectedNoteCurrency, setSelectedNoteCurrency] = useState<string>("$");
   const [submitting, setSubmitting] = useState(false);
   const [scanningSerial, setScanningSerial] = useState(false);
+
+  // Almacén único para toda la nota, elegido antes de poder tocar productos
+  // (mismo criterio que el formulario clásico) — se autoasigna en silencio
+  // si la empresa tiene un solo almacén, o se pide explícitamente si tiene
+  // más de uno. Una vez elegido, no se vuelve a preguntar.
+  const [posWarehouse, setPosWarehouse] = useState<IWarehouse | null>(null);
+  const [showWarehouseGate, setShowWarehouseGate] = useState(false);
+  const [pendingWarehouse, setPendingWarehouse] = useState<IWarehouse | null>(null);
+  const posWarehouseId = posWarehouse?._id ?? null;
+
+  useEffect(() => {
+    if (posWarehouse || listWarehouse.length === 0) return;
+    if (listWarehouse.length === 1) {
+      setPosWarehouse(listWarehouse[0]);
+    } else {
+      setShowWarehouseGate(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [listWarehouse]);
+
+  const [stockShortage, setStockShortage] = useState<{
+    product: IProduct;
+    neededQuantity: number;
+    onResolved: () => void | Promise<void>;
+  } | null>(null);
+
+  const [serialMismatch, setSerialMismatch] = useState<{
+    serial: string;
+    productId: string;
+    productName: string;
+    originId: string;
+    originName: string;
+  } | null>(null);
+
+  // Stock disponible fresco del producto en el almacén elegido para la
+  // nota — se consulta solo cuando hace falta (agregar por primera vez, o
+  // al abrir/resolver el modal de faltante), nunca en cada click de +/-.
+  const fetchAvailableInPosWarehouse = async (productId: string): Promise<number> => {
+    if (!posWarehouseId) return 0;
+    const { data } = await apolloClient.query({
+      query: LIST_PRODUCT_INVENTORY_BY_PRODUCT,
+      variables: { productId },
+      fetchPolicy: "network-only",
+    });
+    const inventories: IProductInventory[] = data?.listProductInventoryByProduct ?? [];
+    // Puede haber más de un registro para el mismo almacén (uno por lote de
+    // compra, uno por cada transferencia aprobada) — hay que sumarlos todos,
+    // no quedarse con el primero.
+    return inventories
+      .filter((inv) => inv.warehouse?._id === posWarehouseId)
+      .reduce((sum, inv) => sum + (inv.available ?? 0), 0);
+  };
 
   const [createSaleOrder] = useMutation(CREATE_SALE_ORDER, {
     refetchQueries: [{ query: LIST_SALE_ORDER }],
@@ -299,29 +362,6 @@ const SaleOrderPOS = () => {
     return acc + (gross - calcLineDiscount(gross, line.discountType, discountValueDisplay));
   }, 0);
 
-  // Los productos "Individual" necesitan un almacén de origen (lo exige el
-  // backend) — en vez de pedírselo al vendedor como en el formulario clásico,
-  // se resuelve solo eligiendo el almacén con más stock disponible.
-  const resolveWarehouse = async (product: IProduct): Promise<string | null> => {
-    if (product.stock_type !== stockType.INDIVIDUAL) return null;
-    try {
-      const { data } = await apolloClient.query({
-        query: LIST_PRODUCT_INVENTORY_BY_PRODUCT,
-        variables: { productId: product._id },
-        fetchPolicy: "network-only",
-      });
-      const inventories: IProductInventory[] = data?.listProductInventoryByProduct ?? [];
-      const best = inventories.reduce<IProductInventory | null>((acc, inv) => {
-        if (inv.available <= 0) return acc;
-        if (!acc || inv.available > acc.available) return inv;
-        return acc;
-      }, null);
-      return best?.warehouse._id ?? null;
-    } catch {
-      return null;
-    }
-  };
-
   const handleAddToCart = async (product: IProduct) => {
     if (product.stock <= 0) {
       showToast({ detail: "Sin stock disponible", severity: ToastSeverity.Warn });
@@ -329,22 +369,37 @@ const SaleOrderPOS = () => {
     }
     const existing = cart.find((l) => l.product._id === product._id);
     if (existing) {
-      if (existing.quantity >= product.stock) {
-        showToast({ detail: "No hay más stock de este producto", severity: ToastSeverity.Warn });
-        return;
-      }
-      setCart((prev) => prev.map((l) => (l.product._id === product._id ? { ...l, quantity: l.quantity + 1 } : l)));
+      await handleIncrement(product._id);
       return;
     }
 
-    const warehouseId = await resolveWarehouse(product);
-    if (product.stock_type === stockType.INDIVIDUAL && !warehouseId) {
-      showToast({ detail: "No se encontró un almacén con stock para este producto", severity: ToastSeverity.Warn });
+    if (product.stock_type !== stockType.INDIVIDUAL) {
+      setCart((prev) => [...prev, { product, quantity: 1, discountType: "NONE", discountValue: null }]);
+      return;
+    }
+
+    const available = await fetchAvailableInPosWarehouse(product._id);
+    if (available < 1) {
+      if (!posWarehouseId) {
+        showToast({ detail: "No hay un almacén elegido para esta venta", severity: ToastSeverity.Warn });
+        return;
+      }
+      setStockShortage({
+        product,
+        neededQuantity: 1,
+        onResolved: async () => {
+          const fresh = await fetchAvailableInPosWarehouse(product._id);
+          setCart((prev) => [
+            ...prev,
+            { product, quantity: 1, availableStock: fresh, discountType: "NONE", discountValue: null },
+          ]);
+        },
+      });
       return;
     }
     setCart((prev) => [
       ...prev,
-      { product, quantity: 1, warehouseId, discountType: "NONE", discountValue: null },
+      { product, quantity: 1, availableStock: available, discountType: "NONE", discountValue: null },
     ]);
   };
 
@@ -360,7 +415,7 @@ const SaleOrderPOS = () => {
     try {
       const { data } = await apolloClient.query({
         query: SEARCH_PRODUCT,
-        variables: { serial: value, exact: true },
+        variables: { serial: value, exact: true, warehouseId: posWarehouseId },
         fetchPolicy: "network-only",
       });
       const product: IProduct | null = data?.searchProduct ?? null;
@@ -394,17 +449,13 @@ const SaleOrderPOS = () => {
           )
         );
       } else {
-        const warehouseId = await resolveWarehouse(product);
-        if (product.stock_type === stockType.INDIVIDUAL && !warehouseId) {
-          showToast({ detail: "No se encontró un almacén con stock para este producto", severity: ToastSeverity.Warn });
-          return;
-        }
+        // Los seriales escaneados siempre son de productos Serializados (ver
+        // searchProduct con exact: true) — no necesitan almacén de origen.
         setCart((prev) => [
           ...prev,
           {
             product,
             quantity: 1,
-            warehouseId,
             discountType: "NONE",
             discountValue: null,
             serials: isSerialProduct ? [value] : undefined,
@@ -418,6 +469,24 @@ const SaleOrderPOS = () => {
       });
       setSearch("");
     } catch (error: any) {
+      if (typeof error.message === "string" && error.message.includes("Este serial pertenece a otro almacén")) {
+        const { data: serialData } = await apolloClient.query({
+          query: FIND_PRODUCT_SERIAL_BY_SERIAL,
+          variables: { serial: value },
+          fetchPolicy: "network-only",
+        });
+        const foundSerial = serialData?.findProductSerialBySerial;
+        if (foundSerial?.warehouse && foundSerial?.product) {
+          setSerialMismatch({
+            serial: value,
+            productId: foundSerial.product._id,
+            productName: foundSerial.product.name,
+            originId: foundSerial.warehouse._id,
+            originName: foundSerial.warehouse.name,
+          });
+          return;
+        }
+      }
       showToast({ detail: error.message, severity: ToastSeverity.Error });
     } finally {
       setScanningSerial(false);
@@ -430,17 +499,35 @@ const SaleOrderPOS = () => {
     );
   };
 
-  const handleIncrement = (productId: string) => {
-    setCart((prev) =>
-      prev.map((l) => {
-        if (l.product._id !== productId) return l;
-        if (l.quantity >= l.product.stock) {
-          showToast({ detail: "No hay más stock de este producto", severity: ToastSeverity.Warn });
-          return l;
+  const handleIncrement = async (productId: string) => {
+    const line = cart.find((l) => l.product._id === productId);
+    if (!line) return;
+    const nextQty = line.quantity + 1;
+    if (nextQty > line.product.stock) {
+      showToast({ detail: "No hay más stock de este producto", severity: ToastSeverity.Warn });
+      return;
+    }
+    if (line.product.stock_type === stockType.INDIVIDUAL) {
+      const available = line.availableStock ?? 0;
+      if (nextQty > available) {
+        if (!posWarehouseId) {
+          showToast({ detail: "No hay un almacén elegido para esta venta", severity: ToastSeverity.Warn });
+          return;
         }
-        return { ...l, quantity: l.quantity + 1 };
-      })
-    );
+        setStockShortage({
+          product: line.product,
+          neededQuantity: nextQty,
+          onResolved: async () => {
+            const fresh = await fetchAvailableInPosWarehouse(productId);
+            setCart((prev) =>
+              prev.map((l) => (l.product._id === productId ? { ...l, quantity: nextQty, availableStock: fresh } : l))
+            );
+          },
+        });
+        return;
+      }
+    }
+    setCart((prev) => prev.map((l) => (l.product._id === productId ? { ...l, quantity: nextQty } : l)));
   };
 
   const handleDecrement = (productId: string) => {
@@ -453,17 +540,40 @@ const SaleOrderPOS = () => {
 
   // Setear la cantidad a mano en vez de tener que clickear "+" una por una
   // (útil para ventas grandes, ej. 100 unidades de un mismo producto).
-  const handleSetQuantity = (productId: string, quantity: number) => {
-    setCart((prev) => {
-      const line = prev.find((l) => l.product._id === productId);
-      if (!line) return prev;
-      if (!quantity || quantity <= 0) return prev.filter((l) => l.product._id !== productId);
-      if (quantity > line.product.stock) {
-        showToast({ detail: `Solo hay ${line.product.stock} unidades disponibles`, severity: ToastSeverity.Warn });
-        quantity = line.product.stock;
+  const handleSetQuantity = async (productId: string, quantity: number) => {
+    const line = cart.find((l) => l.product._id === productId);
+    if (!line) return;
+    if (!quantity || quantity <= 0) {
+      setCart((prev) => prev.filter((l) => l.product._id !== productId));
+      return;
+    }
+    let targetQty = quantity;
+    if (targetQty > line.product.stock) {
+      showToast({ detail: `Solo hay ${line.product.stock} unidades disponibles`, severity: ToastSeverity.Warn });
+      targetQty = line.product.stock;
+    }
+    if (line.product.stock_type === stockType.INDIVIDUAL) {
+      const available = line.availableStock ?? 0;
+      if (targetQty > available) {
+        if (!posWarehouseId) {
+          showToast({ detail: "No hay un almacén elegido para esta venta", severity: ToastSeverity.Warn });
+          return;
+        }
+        const finalQty = targetQty;
+        setStockShortage({
+          product: line.product,
+          neededQuantity: finalQty,
+          onResolved: async () => {
+            const fresh = await fetchAvailableInPosWarehouse(productId);
+            setCart((prev) =>
+              prev.map((l) => (l.product._id === productId ? { ...l, quantity: finalQty, availableStock: fresh } : l))
+            );
+          },
+        });
+        return;
       }
-      return prev.map((l) => (l.product._id === productId ? { ...l, quantity } : l));
-    });
+    }
+    setCart((prev) => prev.map((l) => (l.product._id === productId ? { ...l, quantity: targetQty } : l)));
   };
 
   const handleRemove = (productId: string) => {
@@ -524,6 +634,7 @@ const SaleOrderPOS = () => {
           payment_method: paymentMethod,
           contado_payment_method: paymentMethod === "Contado" ? contadoPaymentMethod : undefined,
           currency: company?.currency === "$" && selectedNoteCurrency === "Bs" ? "Bs" : undefined,
+          warehouse: posWarehouseId ?? undefined,
         },
       });
       const orderId = orderData.createSaleOrder._id;
@@ -542,7 +653,6 @@ const SaleOrderPOS = () => {
               sale_order: orderId,
               sale_price: convertPrice(line.product.sale_price),
               quantity: line.quantity,
-              warehouse: line.warehouseId ?? undefined,
               discount_type: line.discountType === "NONE" ? undefined : line.discountType,
               discount_value:
                 (line.discountType === "FIJO" && line.discountValue != null
@@ -674,6 +784,11 @@ const SaleOrderPOS = () => {
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
+          {posWarehouse && (
+            <span className="flex items-center gap-1 text-xs font-medium text-slate-600 bg-slate-100 rounded-full px-2.5 py-1 whitespace-nowrap">
+              <i className="pi pi-building text-[10px]" /> Vendiendo desde: {posWarehouse.name}
+            </span>
+          )}
           <Dropdown
             value={categoryFilter}
             options={categoryOptions}
@@ -910,6 +1025,77 @@ const SaleOrderPOS = () => {
       >
         {checkoutContent}
       </Dialog>
+
+      {/* ── Elegir almacén antes de poder tocar productos ───────── */}
+      <Dialog
+        header="Elegí el almacén de esta venta"
+        visible={showWarehouseGate}
+        onHide={() => {}}
+        closable={false}
+        style={{ width: "420px" }}
+        breakpoints={{ "640px": "95vw" }}
+      >
+        <div className="flex flex-col gap-3 pt-1">
+          <p className="text-sm text-gray-600">
+            Esta venta se despacha desde un solo almacén. Elegilo antes de empezar a agregar productos — no se
+            puede cambiar después.
+          </p>
+          <DropdownInput
+            label="Almacén"
+            name="pos_warehouse"
+            optionLabel="name"
+            placeholder="Seleccionar almacén"
+            filter
+            mandatory
+            options={listWarehouse}
+            value={pendingWarehouse}
+            onChange={(e) => setPendingWarehouse(e.value)}
+            appendTo={document.body}
+          />
+          <Button
+            label="Continuar"
+            icon="pi pi-check"
+            severity="success"
+            disabled={!pendingWarehouse}
+            onClick={() => {
+              setPosWarehouse(pendingWarehouse);
+              setShowWarehouseGate(false);
+            }}
+            className="justify-center"
+          />
+        </div>
+      </Dialog>
+
+      <ResolveStockShortageModal
+        visible={!!stockShortage}
+        onHide={() => setStockShortage(null)}
+        product={stockShortage?.product ?? null}
+        neededQuantity={stockShortage?.neededQuantity ?? 0}
+        destinationWarehouseId={posWarehouseId ?? ""}
+        destinationWarehouseName={posWarehouse?.name ?? ""}
+        onResolved={async () => {
+          const resolved = stockShortage;
+          setStockShortage(null);
+          if (resolved) await resolved.onResolved();
+        }}
+      />
+
+      <ResolveSerialWarehouseModal
+        visible={!!serialMismatch}
+        onHide={() => setSerialMismatch(null)}
+        productId={serialMismatch?.productId ?? ""}
+        productName={serialMismatch?.productName ?? ""}
+        serial={serialMismatch?.serial ?? ""}
+        originWarehouseId={serialMismatch?.originId ?? ""}
+        originWarehouseName={serialMismatch?.originName ?? ""}
+        destinationWarehouseId={posWarehouseId ?? ""}
+        destinationWarehouseName={posWarehouse?.name ?? ""}
+        onResolved={async () => {
+          const serial = serialMismatch?.serial;
+          setSerialMismatch(null);
+          if (serial) await handleScanSerial(serial);
+        }}
+      />
     </div>
   );
 };
