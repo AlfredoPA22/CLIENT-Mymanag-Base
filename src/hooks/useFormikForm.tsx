@@ -35,7 +35,13 @@ export const useFormikForm = <T extends FormikValues>({
         }
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (error: any) {
-        showToast({ detail: error.message, severity: ToastSeverity.Error });
+        // handleSubmit puede tirar un error "silencioso" (error.silent = true)
+        // cuando ya manejó la situación por su cuenta (ej: abrió un modal para
+        // resolverla) — evita mostrar tanto el toast de éxito (por eso el
+        // throw) como uno de error genérico encima del modal.
+        if (!error?.silent) {
+          showToast({ detail: error.message, severity: ToastSeverity.Error });
+        }
       } finally {
         dispatch(setIsBlocked(false));
       }

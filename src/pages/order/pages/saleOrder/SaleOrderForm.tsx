@@ -40,8 +40,10 @@ import { codeType } from "../../../../utils/enums/codeType.enum";
 import { ToastSeverity } from "../../../../utils/enums/toast.enum";
 import { ISaleOrderInput } from "../../../../utils/interfaces/SaleOrder";
 import { IReactSelect } from "../../../../utils/interfaces/Select";
+import { IWarehouse } from "../../../../utils/interfaces/Warehouse";
 import { showToast } from "../../../../utils/toastUtils";
 import useClientList from "../../../client/hooks/useClientList";
+import useWarehouseList from "../../../product/hooks/useWarehouseList";
 import { getStatus } from "../../utils/getStatus";
 import { schemaFormSaleOrder } from "../../validations/FormSaleOrderValidation";
 import DropdownInput from "../../../../components/dropdownInput/DropdownInput";
@@ -67,6 +69,8 @@ const SaleOrderForm = () => {
   });
 
   const { listClientSelect } = useClientList();
+  const { listWarehouse: listWarehouseRaw } = useWarehouseList();
+  const listWarehouse = listWarehouseRaw ?? [];
   const { currency } = useAuth();
   const qrAvailable = useQrPaymentAvailable();
   const client = useApolloClient();
@@ -86,6 +90,7 @@ const SaleOrderForm = () => {
   const [selectedContadoPaymentMethod, setSelectedContadoPaymentMethod] =
     useState("Efectivo");
   const [selectedNoteCurrency, setSelectedNoteCurrency] = useState<string>("$");
+  const [selectedWarehouse, setSelectedWarehouse] = useState<IWarehouse | null>(null);
   const [rateInput, setRateInput] = useState<number | null>(null);
   const [updateCompany, { loading: savingRate }] = useMutation(UPDATE_COMPANY);
 
@@ -135,6 +140,7 @@ const SaleOrderForm = () => {
     client: "",
     payment_method: "Contado",
     contado_payment_method: "Efectivo",
+    warehouse: "",
   };
 
   useEffect(() => {
@@ -159,6 +165,7 @@ const SaleOrderForm = () => {
         company?.currency === "$" && selectedNoteCurrency === "Bs"
           ? "Bs"
           : undefined,
+      warehouse: values.warehouse || undefined,
     };
 
     const { data } = await createSaleOrder({ variables: order });
@@ -174,6 +181,7 @@ const SaleOrderForm = () => {
     setSelectedPaymentMethod("Contado");
     setSelectedContadoPaymentMethod("Efectivo");
     setSelectedNoteCurrency("$");
+    setSelectedWarehouse(null);
     await refetchCodeOrder();
     resetForm();
   };
@@ -308,6 +316,32 @@ const SaleOrderForm = () => {
     handleSubmit: onSubmit,
     validationSchema: schemaFormSaleOrder,
   });
+
+  // Si la empresa tiene un solo almacén, no tiene sentido preguntar — se
+  // autoasigna en silencio, igual que ya se hace en el modo POS.
+  useEffect(() => {
+    if (listWarehouse.length === 1 && !selectedWarehouse && !saleOrderInitialized) {
+      setSelectedWarehouse(listWarehouse[0]);
+      setFieldValue("warehouse", listWarehouse[0]._id);
+    }
+  }, [listWarehouse, selectedWarehouse, saleOrderInitialized]);
+
+  // Una vez creada la nota, el campo queda deshabilitado y ya no depende de
+  // que el usuario elija nada — se recupera solo desde la nota guardada
+  // (Redux) si por lo que sea el estado local queda vacío, en vez de mostrar
+  // el campo en blanco pese a que la nota sí tiene almacén.
+  useEffect(() => {
+    if (saleOrderInitialized && saleOrderData?.warehouse && !selectedWarehouse) {
+      setSelectedWarehouse(saleOrderData.warehouse as unknown as IWarehouse);
+    }
+  }, [saleOrderInitialized, saleOrderData, selectedWarehouse]);
+
+  const handleWarehouseChange = async (e: AutoCompleteChangeEvent) => {
+    const { value } = e.target;
+    setSelectedWarehouse(value ? value : null);
+    e.target.value = value ? value._id : null;
+    setFieldValue(e.target.name, e.target.value);
+  };
 
   // Solo importa avisar cuando el efectivo de esta venta vaya a entrar a una
   // caja física — Transferencia/QR/Crédito no pasan por la caja. Es solo un
@@ -451,7 +485,22 @@ const SaleOrderForm = () => {
             </div>
           )}
 
-          <div className="flex flex-col">
+          <div className={listWarehouse.length > 1 ? "grid md:grid-cols-2 gap-5" : "grid"}>
+            {listWarehouse.length > 1 && (
+              <DropdownInput
+                label="Almacén"
+                name="warehouse"
+                optionLabel="name"
+                placeholder="Seleccionar almacén"
+                filter
+                mandatory
+                options={listWarehouse}
+                value={selectedWarehouse}
+                error={errors.warehouse ? (errors.warehouse as string) : ""}
+                onChange={handleWarehouseChange}
+                disabled={saleOrderInitialized}
+              />
+            )}
             <SelectInput
               label="Cliente"
               name="client"
@@ -473,7 +522,12 @@ const SaleOrderForm = () => {
               type="submit"
               severity="success"
               label="Crear venta"
-              disabled={!isValid || isSubmitting || needsExchangeRate}
+              disabled={
+                !isValid ||
+                isSubmitting ||
+                needsExchangeRate ||
+                (listWarehouse.length > 1 && !values.warehouse)
+              }
             />
           ) : (
             <section className="flex flex-col items-center justify-center">

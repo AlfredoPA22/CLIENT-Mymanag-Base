@@ -1,13 +1,16 @@
-import { useMutation } from "@apollo/client";
+import { useApolloClient, useMutation, useQuery } from "@apollo/client";
 import { Button } from "primereact/button";
-import { FC } from "react";
+import { FC, useState } from "react";
 import BarcodeScannerButton from "../../../../components/barcodeScanner/BarcodeScannerButton";
 import FieldTextInput from "../../../../components/textInput/FieldTextInput";
 import { ADD_SERIAL_TO_SALE_ORDER_DETAIL } from "../../../../graphql/mutations/SaleOrderDetail";
+import { FIND_PRODUCT_SERIAL_BY_SERIAL } from "../../../../graphql/queries/Product";
+import { FIND_SALE_ORDER } from "../../../../graphql/queries/SaleOrder";
 import { LIST_SALE_ORDER_DETAIL, LIST_SERIAL_BY_SALE_ORDER_DETAIL } from "../../../../graphql/queries/SaleOrderDetail";
 import { useFormikForm } from "../../../../hooks/useFormikForm";
 import { IAddSerialToSaleOrderDetailInput } from "../../../../utils/interfaces/SaleOrderDetail";
 import { schemaFormAddSerialToSaleOrderDetail } from "../../validations/FormAddSerialToSaleOrderDetailValidation";
+import ResolveSerialWarehouseModal from "./ResolveSerialWarehouseModal";
 
 interface AddSerialToDetailFormProps {
   saleOrderId: string;
@@ -18,6 +21,22 @@ const AddSerialToDetailForm: FC<AddSerialToDetailFormProps> = ({
   saleOrderId,
   saleOrderDetailId,
 }) => {
+  const apolloClient = useApolloClient();
+
+  const { data: saleOrderData } = useQuery(FIND_SALE_ORDER, {
+    variables: { saleOrderId },
+    skip: !saleOrderId,
+  });
+  const noteWarehouse = saleOrderData?.findSaleOrder?.warehouse ?? null;
+
+  const [serialMismatch, setSerialMismatch] = useState<{
+    serial: string;
+    productId: string;
+    productName: string;
+    originId: string;
+    originName: string;
+  } | null>(null);
+
   const [addSerialToSaleOrderDetail] = useMutation(
     ADD_SERIAL_TO_SALE_ORDER_DETAIL,
     {
@@ -43,7 +62,41 @@ const AddSerialToDetailForm: FC<AddSerialToDetailFormProps> = ({
   };
 
   const onSubmit = async () => {
-    await addSerialToSaleOrderDetail({ variables: values });
+    try {
+      await addSerialToSaleOrderDetail({ variables: values });
+      resetForm();
+    } catch (error: any) {
+      if (
+        noteWarehouse &&
+        typeof error.message === "string" &&
+        error.message.includes("Este serial pertenece a otro almacén")
+      ) {
+        const { data: serialData } = await apolloClient.query({
+          query: FIND_PRODUCT_SERIAL_BY_SERIAL,
+          variables: { serial: values.serial },
+          fetchPolicy: "network-only",
+        });
+        const foundSerial = serialData?.findProductSerialBySerial;
+        if (foundSerial?.warehouse && foundSerial?.product) {
+          setSerialMismatch({
+            serial: values.serial ?? "",
+            productId: foundSerial.product._id,
+            productName: foundSerial.product.name,
+            originId: foundSerial.warehouse._id,
+            originName: foundSerial.warehouse.name,
+          });
+          throw Object.assign(new Error("serial_warehouse_mismatch"), { silent: true });
+        }
+      }
+      throw error;
+    }
+  };
+
+  const handleSerialMismatchResolved = async () => {
+    if (!serialMismatch) return;
+    await addSerialToSaleOrderDetail({
+      variables: { serial: serialMismatch.serial, sale_order_detail: saleOrderDetailId },
+    });
     resetForm();
   };
 
@@ -64,6 +117,7 @@ const AddSerialToDetailForm: FC<AddSerialToDetailFormProps> = ({
     validationSchema: schemaFormAddSerialToSaleOrderDetail,
   });
   return (
+    <>
     <form
       onSubmit={handleSubmit}
       className="flex flex-col md:flex-row gap-4 justify-center"
@@ -102,6 +156,20 @@ const AddSerialToDetailForm: FC<AddSerialToDetailFormProps> = ({
         />
       </section>
     </form>
+
+    <ResolveSerialWarehouseModal
+      visible={!!serialMismatch}
+      onHide={() => setSerialMismatch(null)}
+      productId={serialMismatch?.productId ?? ""}
+      productName={serialMismatch?.productName ?? ""}
+      serial={serialMismatch?.serial ?? ""}
+      originWarehouseId={serialMismatch?.originId ?? ""}
+      originWarehouseName={serialMismatch?.originName ?? ""}
+      destinationWarehouseId={noteWarehouse?._id ?? ""}
+      destinationWarehouseName={noteWarehouse?.name ?? ""}
+      onResolved={handleSerialMismatchResolved}
+    />
+    </>
   );
 };
 

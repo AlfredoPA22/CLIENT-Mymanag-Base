@@ -14,7 +14,7 @@ import {
   CREATE_CUSTOM_SALE_ORDER_DETAIL,
   CREATE_SALE_ORDER_DETAIL,
 } from "../../../../graphql/mutations/SaleOrderDetail";
-import { SEARCH_PRODUCT } from "../../../../graphql/queries/Product";
+import { FIND_PRODUCT_SERIAL_BY_SERIAL, SEARCH_PRODUCT } from "../../../../graphql/queries/Product";
 import { FIND_SALE_ORDER } from "../../../../graphql/queries/SaleOrder";
 import { LIST_SALE_ORDER_DETAIL } from "../../../../graphql/queries/SaleOrderDetail";
 import { useFormikForm } from "../../../../hooks/useFormikForm";
@@ -30,6 +30,8 @@ import useWarehouseList from "../../../product/hooks/useWarehouseList";
 import { schemaFormSaleOrderDetail } from "../../validations/FormSaleOrderDetailValidation";
 import useAuth from "../../../auth/hooks/useAuth";
 import { convertCurrency, formatAmount, round2 } from "../../../../utils/currency";
+import ResolveStockShortageModal from "./ResolveStockShortageModal";
+import ResolveSerialWarehouseModal from "./ResolveSerialWarehouseModal";
 
 interface SaleOrderDetailFormProps {
   saleOrderId: string;
@@ -55,6 +57,10 @@ const SaleOrderDetailForm: FC<SaleOrderDetailFormProps> = ({ saleOrderId }) => {
   });
   const noteCurrency = saleOrderQueryData?.findSaleOrder?.currency ?? currency;
   const noteExchangeRate = saleOrderQueryData?.findSaleOrder?.exchange_rate;
+  // Si la nota tiene almacén de cabecera (elegido al crearla), es la única
+  // fuente de verdad — el dropdown de almacén por línea desaparece y se usa
+  // este valor siempre. Notas viejas (sin esto) siguen con almacén por línea.
+  const noteWarehouse = saleOrderQueryData?.findSaleOrder?.warehouse ?? null;
 
   const [createSaleOrderDetail] = useMutation(CREATE_SALE_ORDER_DETAIL, {
     refetchQueries: [{ query: LIST_SALE_ORDER_DETAIL, variables: { saleOrderId } }],
@@ -162,11 +168,35 @@ const SaleOrderDetailForm: FC<SaleOrderDetailFormProps> = ({ saleOrderId }) => {
 
   const [selectedProduct, setSelectedProduct] = useState<IProduct | null>(null);
   const [selectedWarehouse, setSelectedWarehouse] = useState<IWarehouse | null>(null);
+  const showLineWarehouse =
+    !!selectedProduct && selectedProduct.stock_type === stockType.INDIVIDUAL && !noteWarehouse;
   const [discountType, setDiscountType] = useState<string>("NONE");
   // Cambiar la key fuerza a PrimeReact a remontar los dropdowns tras agregar
   // el producto, para que también se limpie el texto de búsqueda interno del
   // filtro (setear value=null no alcanza para eso).
   const [productFieldsKey, setProductFieldsKey] = useState(0);
+
+  // Cuando falta stock del producto en el almacén de la nota, o el serial
+  // elegido pertenece a otro almacén, se abre el modal correspondiente en
+  // vez de solo mostrar el error — con lo necesario para reintentar la
+  // acción original (`onResolved`) apenas se resuelve con una transferencia.
+  const [stockShortage, setStockShortage] = useState<{ vars: any; product: IProduct } | null>(null);
+  const [serialMismatch, setSerialMismatch] = useState<{
+    serial: string;
+    productId: string;
+    productName: string;
+    originId: string;
+    originName: string;
+  } | null>(null);
+
+  const finalizeDetailCreated = (detail: any) => {
+    resetForm();
+    dispatch(setSaleOrder(detail.sale_order));
+    setSelectedProduct(null);
+    setSelectedWarehouse(null);
+    setDiscountType("NONE");
+    setProductFieldsKey((k) => k + 1);
+  };
 
   const onSubmit = async () => {
     const vars: any = {
@@ -176,13 +206,30 @@ const SaleOrderDetailForm: FC<SaleOrderDetailFormProps> = ({ saleOrderId }) => {
       discount_type: discountType === "NONE" ? null : discountType,
       discount_value: values.discount_value ? Number(values.discount_value) : null,
     };
+    try {
+      const { data } = await createSaleOrderDetail({ variables: vars });
+      finalizeDetailCreated(data.createSaleOrderDetail);
+    } catch (error: any) {
+      const isStockShortage =
+        noteWarehouse &&
+        selectedProduct &&
+        typeof error.message === "string" &&
+        (error.message.includes("No hay suficiente stock disponible en los inventarios") ||
+          error.message.includes("No hay stock registrado para este producto en este almacén"));
+      if (isStockShortage) {
+        setStockShortage({ vars, product: selectedProduct as IProduct });
+        throw Object.assign(new Error("stock_shortage"), { silent: true });
+      }
+      throw error;
+    }
+  };
+
+  const handleStockShortageResolved = async () => {
+    if (!stockShortage) return;
+    const { vars } = stockShortage;
+    setStockShortage(null);
     const { data } = await createSaleOrderDetail({ variables: vars });
-    resetForm();
-    dispatch(setSaleOrder(data.createSaleOrderDetail.sale_order));
-    setSelectedProduct(null);
-    setSelectedWarehouse(null);
-    setDiscountType("NONE");
-    setProductFieldsKey((k) => k + 1);
+    finalizeDetailCreated(data.createSaleOrderDetail);
   };
 
   const resetCustomForm = () => {
@@ -230,6 +277,10 @@ const SaleOrderDetailForm: FC<SaleOrderDetailFormProps> = ({ saleOrderId }) => {
   const applySelectedProduct = (product: IProduct | null) => {
     setSelectedProduct(product);
     setFieldValue("product", product ? product._id : null);
+    if (noteWarehouse) {
+      setSelectedWarehouse(noteWarehouse);
+      setFieldValue("warehouse", noteWarehouse._id);
+    }
     setTimeout(() => {
       const basePrice = product?.sale_price || 0;
       const convertedPrice = round2(
@@ -258,7 +309,7 @@ const SaleOrderDetailForm: FC<SaleOrderDetailFormProps> = ({ saleOrderId }) => {
     try {
       const { data } = await apolloClient.query({
         query: SEARCH_PRODUCT,
-        variables: { serial: value, exact: true },
+        variables: { serial: value, exact: true, warehouseId: noteWarehouse?._id },
         fetchPolicy: "network-only",
       });
       const product: IProduct | null = data?.searchProduct ?? null;
@@ -291,6 +342,24 @@ const SaleOrderDetailForm: FC<SaleOrderDetailFormProps> = ({ saleOrderId }) => {
       setSerialSearch("");
       showToast({ detail: `${product.name} agregado a la venta`, severity: ToastSeverity.Success });
     } catch (error: any) {
+      if (typeof error.message === "string" && error.message.includes("Este serial pertenece a otro almacén")) {
+        const { data: serialData } = await apolloClient.query({
+          query: FIND_PRODUCT_SERIAL_BY_SERIAL,
+          variables: { serial: value },
+          fetchPolicy: "network-only",
+        });
+        const foundSerial = serialData?.findProductSerialBySerial;
+        if (foundSerial?.warehouse && foundSerial?.product) {
+          setSerialMismatch({
+            serial: value,
+            productId: foundSerial.product._id,
+            productName: foundSerial.product.name,
+            originId: foundSerial.warehouse._id,
+            originName: foundSerial.warehouse.name,
+          });
+          return;
+        }
+      }
       showToast({ detail: error.message, severity: ToastSeverity.Error });
     } finally {
       setScanningSerial(false);
@@ -347,6 +416,7 @@ const SaleOrderDetailForm: FC<SaleOrderDetailFormProps> = ({ saleOrderId }) => {
   }
 
   return (
+    <>
     <Card className="mb-2">
       <div className="relative mb-3">
         <div className="flex justify-center">
@@ -474,17 +544,13 @@ const SaleOrderDetailForm: FC<SaleOrderDetailFormProps> = ({ saleOrderId }) => {
         <div className="flex flex-col md:flex-row justify-center items-center gap-2">
           <section
             className={`grid w-full md:w-auto ${
-              selectedProduct && selectedProduct.stock_type === stockType.INDIVIDUAL
-                ? "xl:grid-cols-6"
-                : "xl:grid-cols-4"
+              showLineWarehouse ? "xl:grid-cols-6" : "xl:grid-cols-4"
             } grid-cols-1 md:grid-cols-2 gap-2 justify-center items-start`}
           >
             <DropdownInput
               key={`product-${productFieldsKey}`}
               className={`${
-                selectedProduct && selectedProduct.stock_type === stockType.INDIVIDUAL
-                  ? "2xl:w-[400px] md:col-span-2"
-                  : "2xl:w-[500px] md:col-span-2"
+                showLineWarehouse ? "2xl:w-[400px] md:col-span-2" : "2xl:w-[500px] md:col-span-2"
               }`}
               label="Producto"
               name="product"
@@ -500,7 +566,7 @@ const SaleOrderDetailForm: FC<SaleOrderDetailFormProps> = ({ saleOrderId }) => {
               error={errors.product ?? ""}
               onChange={handleProductChange}
             />
-            {selectedProduct && selectedProduct.stock_type === stockType.INDIVIDUAL && (
+            {showLineWarehouse && (
               <DropdownInput
                 key={`warehouse-${productFieldsKey}`}
                 className="2xl:w-[400px] md:col-span-2"
@@ -594,6 +660,32 @@ const SaleOrderDetailForm: FC<SaleOrderDetailFormProps> = ({ saleOrderId }) => {
       </form>
       )}
     </Card>
+
+    <ResolveStockShortageModal
+      visible={!!stockShortage}
+      onHide={() => setStockShortage(null)}
+      product={stockShortage?.product ?? null}
+      neededQuantity={stockShortage ? Number(stockShortage.vars.quantity) : 0}
+      destinationWarehouseId={noteWarehouse?._id ?? ""}
+      destinationWarehouseName={noteWarehouse?.name ?? ""}
+      onResolved={handleStockShortageResolved}
+    />
+
+    <ResolveSerialWarehouseModal
+      visible={!!serialMismatch}
+      onHide={() => setSerialMismatch(null)}
+      productId={serialMismatch?.productId ?? ""}
+      productName={serialMismatch?.productName ?? ""}
+      serial={serialMismatch?.serial ?? ""}
+      originWarehouseId={serialMismatch?.originId ?? ""}
+      originWarehouseName={serialMismatch?.originName ?? ""}
+      destinationWarehouseId={noteWarehouse?._id ?? ""}
+      destinationWarehouseName={noteWarehouse?.name ?? ""}
+      onResolved={async () => {
+        if (serialMismatch) await handleScanSerial(serialMismatch.serial);
+      }}
+    />
+    </>
   );
 };
 

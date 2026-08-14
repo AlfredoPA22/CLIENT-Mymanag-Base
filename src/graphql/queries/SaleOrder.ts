@@ -96,6 +96,10 @@ export const FIND_SALE_ORDER = gql`
       source
       currency
       exchange_rate
+      warehouse {
+        _id
+        name
+      }
     }
   }
 `;

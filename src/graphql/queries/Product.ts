@@ -134,8 +134,8 @@ export const LIST_PRODUCT_INVENTORY_BY_PRODUCT = gql`
 `;
 
 export const SEARCH_PRODUCT = gql`
-  query SearchProduct($serial: String!, $exact: Boolean) {
-    searchProduct(serial: $serial, exact: $exact) {
+  query SearchProduct($serial: String!, $exact: Boolean, $warehouseId: String) {
+    searchProduct(serial: $serial, exact: $exact, warehouseId: $warehouseId) {
       _id
       brand {
         _id
@@ -162,6 +162,27 @@ export const SEARCH_PRODUCT = gql`
       stock_type
       min_stock
       max_stock
+    }
+  }
+`;
+
+// Solo para resolver el mismatch de almacén de un serial (cuando searchProduct
+// o addSerialToSaleOrderDetail lo rechazan por estar en otro almacén) — dado
+// el string del serial, trae en qué almacén está de verdad.
+export const FIND_PRODUCT_SERIAL_BY_SERIAL = gql`
+  query FindProductSerialBySerial($serial: String!) {
+    findProductSerialBySerial(serial: $serial) {
+      _id
+      serial
+      status
+      product {
+        _id
+        name
+      }
+      warehouse {
+        _id
+        name
+      }
     }
   }
 `;

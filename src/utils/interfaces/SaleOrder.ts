@@ -1,6 +1,7 @@
 import { IClient } from "./Client";
 import { ISaleOrderDetail, ISaleOrderDetailToPDF } from "./SaleOrderDetail";
 import { IUser } from "./User";
+import { IWarehouse } from "./Warehouse";
 
 export interface ISaleOrder {
   _id: string;
@@ -20,6 +21,9 @@ export interface ISaleOrder {
   source?: string;
   currency?: string | null;
   exchange_rate?: number | null;
+  // Almacén único de la nota, elegido al crearla. Null en notas viejas
+  // (previas a este campo), que siguen con almacén por línea.
+  warehouse?: IWarehouse | null;
 }
 
 export interface ISaleOrderInput {
@@ -28,6 +32,7 @@ export interface ISaleOrderInput {
   payment_method: string;
   contado_payment_method?: string;
   currency?: string;
+  warehouse?: string;
 }
 
 export interface IQrPaymentInfo {

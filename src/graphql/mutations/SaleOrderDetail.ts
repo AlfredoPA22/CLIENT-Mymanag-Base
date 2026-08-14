@@ -44,6 +44,10 @@ export const CREATE_SALE_ORDER_DETAIL = gql`
         source
         currency
         exchange_rate
+        warehouse {
+          _id
+          name
+        }
       }
     }
   }
@@ -93,6 +97,10 @@ export const CREATE_CUSTOM_SALE_ORDER_DETAIL = gql`
         source
         currency
         exchange_rate
+        warehouse {
+          _id
+          name
+        }
       }
     }
   }

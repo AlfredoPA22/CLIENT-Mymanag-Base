@@ -652,6 +652,16 @@ const SaleOrderDetail: FC<SaleOrderDetailProps> = ({ saleOrderId, viewCurrency, 
               {data?.findSaleOrder.client.fullName}
             </span>
           </div>
+          {/* Notas viejas (previas a este campo) no tienen almacén de
+              cabecera — no se muestra nada en ese caso. */}
+          {data?.findSaleOrder.warehouse && (
+            <div className="flex flex-col">
+              <span className="text-xs text-gray-400">Almacén</span>
+              <span className="text-base font-medium text-gray-700">
+                {data?.findSaleOrder.warehouse.name}
+              </span>
+            </div>
+          )}
         </section>
 
         {/* Totales — order-3 en mobile/tablet (al final) */}
