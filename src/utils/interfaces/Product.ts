@@ -16,6 +16,9 @@ export interface IProduct {
   store_discount_price?: number | null;
   status: string;
   stock: number;
+  // Solo para stock_type INDIVIDUAL — cuánto de `stock` está libre de verdad
+  // (stock incluye lo reservado por otras ventas en Borrador).
+  available_stock?: number;
   category: ICategory;
   brand: IBrand;
   stock_type: stockType;

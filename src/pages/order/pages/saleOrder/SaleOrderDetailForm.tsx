@@ -1,17 +1,20 @@
-import { useMutation, useQuery } from "@apollo/client";
+import { useApolloClient, useMutation, useQuery } from "@apollo/client";
 import { AutoCompleteChangeEvent } from "primereact/autocomplete";
 import { Button } from "primereact/button";
 import { Card } from "primereact/card";
 import { SelectButton } from "primereact/selectbutton";
-import { FC, useState } from "react";
+import { FC, useMemo, useState } from "react";
 import { useDispatch } from "react-redux";
+import BarcodeScannerButton from "../../../../components/barcodeScanner/BarcodeScannerButton";
 import DropdownInput from "../../../../components/dropdownInput/DropdownInput";
 import { OrderDetailFormSkeleton } from "../../../../components/skeleton/OrderDetailFormSkeleton";
 import FieldTextInput from "../../../../components/textInput/FieldTextInput";
 import {
+  ADD_SERIAL_TO_SALE_ORDER_DETAIL,
   CREATE_CUSTOM_SALE_ORDER_DETAIL,
   CREATE_SALE_ORDER_DETAIL,
 } from "../../../../graphql/mutations/SaleOrderDetail";
+import { SEARCH_PRODUCT } from "../../../../graphql/queries/Product";
 import { FIND_SALE_ORDER } from "../../../../graphql/queries/SaleOrder";
 import { LIST_SALE_ORDER_DETAIL } from "../../../../graphql/queries/SaleOrderDetail";
 import { useFormikForm } from "../../../../hooks/useFormikForm";
@@ -40,6 +43,7 @@ const DISCOUNT_TYPES = [
 
 const SaleOrderDetailForm: FC<SaleOrderDetailFormProps> = ({ saleOrderId }) => {
   const dispatch = useDispatch();
+  const apolloClient = useApolloClient();
   const { currency } = useAuth();
 
   // Moneda de esta nota en particular: si se está vendiendo en la moneda
@@ -53,6 +57,10 @@ const SaleOrderDetailForm: FC<SaleOrderDetailFormProps> = ({ saleOrderId }) => {
   const noteExchangeRate = saleOrderQueryData?.findSaleOrder?.exchange_rate;
 
   const [createSaleOrderDetail] = useMutation(CREATE_SALE_ORDER_DETAIL, {
+    refetchQueries: [{ query: LIST_SALE_ORDER_DETAIL, variables: { saleOrderId } }],
+  });
+
+  const [addSerialToSaleOrderDetail] = useMutation(ADD_SERIAL_TO_SALE_ORDER_DETAIL, {
     refetchQueries: [{ query: LIST_SALE_ORDER_DETAIL, variables: { saleOrderId } }],
   });
 
@@ -83,6 +91,74 @@ const SaleOrderDetailForm: FC<SaleOrderDetailFormProps> = ({ saleOrderId }) => {
 
   const { listProduct, loadingListProduct } = useProductList();
   const { listWarehouse } = useWarehouseList();
+
+  // Para marcar en el select qué productos ya no se pueden agregar: los que
+  // ya están en esta venta (el backend igual lo rechaza, pero mejor no
+  // dejarlo seleccionar) y los que no tienen stock.
+  const { data: existingDetailsData } = useQuery(LIST_SALE_ORDER_DETAIL, {
+    variables: { saleOrderId },
+    fetchPolicy: "cache-and-network",
+  });
+  const addedProductIds = useMemo(() => {
+    const details = existingDetailsData?.listSaleOrderDetail ?? [];
+    return new Set(details.filter((d: any) => d.product).map((d: any) => d.product._id));
+  }, [existingDetailsData]);
+
+  const productOptions = useMemo(
+    () =>
+      listProduct.map((p: IProduct) => {
+        const alreadyAdded = addedProductIds.has(p._id);
+        const outOfStock = p.stock <= 0;
+        // "stock" incluye lo reservado por otras ventas en Borrador — tanto
+        // para Individual (ProductInventory.reserved) como para Serializado
+        // (seriales en status "Reservado") — un producto puede mostrar
+        // stock > 0 y aun así no tener nada libre para vender ahora.
+        // available_stock (calculado en el backend) es lo que de verdad se
+        // puede agregar. Mientras quede algo disponible no se marca nada
+        // especial — solo importa cuando ya no queda nada libre (bloquea) o
+        // para mostrar el número, siempre.
+        const tracksReservation = p.stock_type === stockType.INDIVIDUAL || p.stock_type === stockType.SERIALIZADO;
+        const fullyReserved = !outOfStock && tracksReservation && p.available_stock === 0;
+
+        let _reason: "ya_agregado" | "sin_stock" | "reservado_total" | null = null;
+        if (alreadyAdded) _reason = "ya_agregado";
+        else if (outOfStock) _reason = "sin_stock";
+        else if (fullyReserved) _reason = "reservado_total";
+
+        return {
+          ...p,
+          _disabled: alreadyAdded || outOfStock || fullyReserved,
+          _reason,
+          _availableStock: tracksReservation ? p.available_stock : undefined,
+        };
+      }),
+    [listProduct, addedProductIds]
+  );
+
+  const REASON_STYLES: Record<string, { box: string; text: string; label: string }> = {
+    ya_agregado: { box: "bg-blue-50 border-blue-200", text: "text-blue-600", label: "Ya en la venta" },
+    sin_stock: { box: "bg-red-50 border-red-200", text: "text-red-600", label: "Sin stock" },
+    reservado_total: { box: "bg-amber-50 border-amber-200", text: "text-amber-700", label: "Todo reservado" },
+  };
+
+  const productItemTemplate = (option: any) => {
+    const style = option._reason ? REASON_STYLES[option._reason] : null;
+
+    return (
+      <div
+        className={`flex items-center justify-between gap-2 w-full rounded-md border px-2 py-1.5 ${
+          style ? style.box : "border-transparent"
+        }`}
+      >
+        <span className={option._disabled ? "text-gray-500" : "text-gray-700"}>{option.fullName}</span>
+        {style ? (
+          <span className={`text-[10px] shrink-0 font-medium ${style.text}`}>{style.label}</span>
+        ) : option._availableStock != null ? (
+          <span className="text-[10px] shrink-0 text-gray-400">Disponible: {option._availableStock}</span>
+        ) : null}
+      </div>
+    );
+  };
 
   const [selectedProduct, setSelectedProduct] = useState<IProduct | null>(null);
   const [selectedWarehouse, setSelectedWarehouse] = useState<IWarehouse | null>(null);
@@ -149,18 +225,76 @@ const SaleOrderDetailForm: FC<SaleOrderDetailFormProps> = ({ saleOrderId }) => {
     }
   };
 
-  const handleProductChange = async (e: AutoCompleteChangeEvent) => {
-    const { value } = e.target;
-    setSelectedProduct(value ? value : null);
-    e.target.value = value ? value._id : null;
-    setFieldValue(e.target.name, e.target.value);
+  // Compartido entre elegir del dropdown a mano y seleccionarlo leyendo un
+  // serial — autocompleta el precio igual en los dos casos.
+  const applySelectedProduct = (product: IProduct | null) => {
+    setSelectedProduct(product);
+    setFieldValue("product", product ? product._id : null);
     setTimeout(() => {
-      const basePrice = value?.sale_price || 0;
+      const basePrice = product?.sale_price || 0;
       const convertedPrice = round2(
         convertCurrency(basePrice, currency, noteCurrency, noteExchangeRate)
       );
       setFieldValue("sale_price", convertedPrice || "");
     }, 0);
+  };
+
+  const handleProductChange = async (e: AutoCompleteChangeEvent) => {
+    applySelectedProduct(e.target.value ?? null);
+  };
+
+  // Igual que en el modo rápido (POS): leer un serial (lector físico + Enter,
+  // o cámara) agrega el producto directo al detalle con cantidad 1 y le
+  // asigna ese serial de una — sin pasar por el dropdown/form de abajo.
+  // searchProduct(exact: true) solo matchea ProductSerial, que únicamente
+  // existe para SERIALIZADO, así que nunca hace falta elegir almacén acá.
+  const [serialSearch, setSerialSearch] = useState("");
+  const [scanningSerial, setScanningSerial] = useState(false);
+
+  const handleScanSerial = async (rawValue: string) => {
+    const value = rawValue.trim();
+    if (!value) return;
+    setScanningSerial(true);
+    try {
+      const { data } = await apolloClient.query({
+        query: SEARCH_PRODUCT,
+        variables: { serial: value, exact: true },
+        fetchPolicy: "network-only",
+      });
+      const product: IProduct | null = data?.searchProduct ?? null;
+      if (!product) {
+        showToast({ detail: `No se encontró ningún producto para "${value}"`, severity: ToastSeverity.Warn });
+        return;
+      }
+      if (addedProductIds.has(product._id)) {
+        showToast({ detail: `${product.name} ya está en esta venta`, severity: ToastSeverity.Warn });
+        return;
+      }
+
+      const convertedPrice = round2(
+        convertCurrency(product.sale_price || 0, currency, noteCurrency, noteExchangeRate)
+      );
+      const { data: createData } = await createSaleOrderDetail({
+        variables: {
+          product: product._id,
+          sale_order: saleOrderId,
+          sale_price: convertedPrice,
+          quantity: 1,
+        },
+      });
+      const newDetail = createData.createSaleOrderDetail;
+      await addSerialToSaleOrderDetail({
+        variables: { sale_order_detail: newDetail._id, serial: value },
+      });
+      dispatch(setSaleOrder(newDetail.sale_order));
+
+      setSerialSearch("");
+      showToast({ detail: `${product.name} agregado a la venta`, severity: ToastSeverity.Success });
+    } catch (error: any) {
+      showToast({ detail: error.message, severity: ToastSeverity.Error });
+    } finally {
+      setScanningSerial(false);
+    }
   };
 
   const handleWarehouseChange = async (e: AutoCompleteChangeEvent) => {
@@ -214,16 +348,43 @@ const SaleOrderDetailForm: FC<SaleOrderDetailFormProps> = ({ saleOrderId }) => {
 
   return (
     <Card className="mb-2">
-      <div className="flex justify-center mb-3">
-        <SelectButton
-          value={itemMode}
-          onChange={(e) => e.value && setItemMode(e.value)}
-          options={[
-            { label: "Producto del catálogo", value: "CATALOG" },
-            { label: "Ítem sin inventario", value: "CUSTOM" },
-          ]}
-          className="w-full sm:w-auto flex [&_.p-button]:flex-1 sm:[&_.p-button]:flex-none [&_.p-button]:justify-center [&_.p-button]:text-xs sm:[&_.p-button]:text-sm sm:[&_.p-button]:whitespace-nowrap"
-        />
+      <div className="relative mb-3">
+        <div className="flex justify-center">
+          <SelectButton
+            value={itemMode}
+            onChange={(e) => e.value && setItemMode(e.value)}
+            options={[
+              { label: "Producto del catálogo", value: "CATALOG" },
+              { label: "Ítem sin inventario", value: "CUSTOM" },
+            ]}
+            className="w-full sm:w-auto flex [&_.p-button]:flex-1 sm:[&_.p-button]:flex-none [&_.p-button]:justify-center [&_.p-button]:text-xs sm:[&_.p-button]:text-sm sm:[&_.p-button]:whitespace-nowrap"
+          />
+        </div>
+        {itemMode === "CATALOG" && (
+          <div className="flex items-center gap-2 mt-3 sm:mt-0 sm:absolute sm:left-0 sm:top-1/2 sm:-translate-y-1/2">
+            <div className="relative w-full sm:w-72">
+              {scanningSerial ? (
+                <i className="pi pi-spin pi-spinner absolute left-3 top-1/2 -translate-y-1/2 text-blue-400 text-sm" />
+              ) : (
+                <i className="pi pi-qrcode absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
+              )}
+              <input
+                type="text"
+                value={serialSearch}
+                onChange={(e) => setSerialSearch(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleScanSerial(serialSearch);
+                  }
+                }}
+                placeholder="Escanear o escribir un serial para agregarlo directo"
+                className="p-inputtext p-component w-full pl-9 text-sm"
+              />
+            </div>
+            <BarcodeScannerButton onScan={handleScanSerial} />
+          </div>
+        )}
       </div>
 
       {itemMode === "CUSTOM" ? (
@@ -332,7 +493,9 @@ const SaleOrderDetailForm: FC<SaleOrderDetailFormProps> = ({ saleOrderId }) => {
               filter
               showClear
               mandatory
-              options={listProduct}
+              options={productOptions}
+              optionDisabled="_disabled"
+              itemTemplate={productItemTemplate}
               value={selectedProduct}
               error={errors.product ?? ""}
               onChange={handleProductChange}

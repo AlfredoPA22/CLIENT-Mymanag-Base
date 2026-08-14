@@ -34,7 +34,11 @@ const CreateSaleOrder = () => {
 
   return (
     <div className="size-full">
-      {posModeEnabled && (
+      {/* Una vez que ya se creó la nota (en cualquiera de los dos modos), no
+          se puede cambiar de modo a mitad de camino — el modo rápido crea su
+          propia nota nueva al cobrar, así que mezclarlo con una venta que ya
+          arrancó en el formulario clásico deja todo en un estado inconsistente. */}
+      {posModeEnabled && !saleOrderInitialized && (
         <div className="flex justify-center mb-4">
           <SelectButton value={mode} options={MODE_OPTIONS} onChange={(e) => e.value && setMode(e.value)} />
         </div>

@@ -176,7 +176,7 @@ const CartPanel = ({ cart, total, currency, convertPrice, convertToBase, onIncre
           <span className="text-xl font-bold text-green-600">{formatAmount(total)} {currency}</span>
         </div>
         <Button
-          label="Cobrar"
+          label="Completar Venta"
           icon="pi pi-check-circle"
           severity="success"
           className="w-full justify-center"

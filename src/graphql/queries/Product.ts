@@ -24,6 +24,7 @@ export const LIST_PRODUCT = gql`
       store_discount_price
       status
       stock
+      available_stock
       stock_type
       min_stock
       max_stock
