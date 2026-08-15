@@ -126,9 +126,9 @@ const ClientDetail: FC<ClientDetailProps> = ({ client }) => {
 
   return (
     <div className="flex flex-col gap-4">
-      {/* ── Encabezado del cliente ─────────────────────────────── */}
-      <Card className="shadow-lg rounded-2xl border-none">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+      {/* ── Encabezado + resumen, en una sola fila en pantallas grandes ── */}
+      <div className="flex flex-col lg:flex-row gap-4 lg:items-stretch">
+        <div className={`${statCardBase} border-t-blue-400 lg:flex-[1.3] flex-row items-center`}>
           <div className="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-lg font-bold shrink-0">
             {getInitials(client.fullName)}
           </div>
@@ -140,7 +140,7 @@ const ClientDetail: FC<ClientDetailProps> = ({ client }) => {
               </span>
             </div>
 
-            <div className="flex flex-col sm:flex-row sm:flex-wrap gap-x-6 gap-y-1 mt-2 text-sm text-gray-500">
+            <div className="flex flex-col gap-y-1 mt-2 text-sm text-gray-500">
               <div className="flex items-center gap-1.5">
                 <i className="pi pi-phone text-slate-400 shrink-0" />
                 <span>{client.phoneNumber || "Sin teléfono"}</span>
@@ -156,43 +156,42 @@ const ClientDetail: FC<ClientDetailProps> = ({ client }) => {
             </div>
           </div>
         </div>
-      </Card>
 
-      {/* ── Resumen ────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-        <div className={`${statCardBase} border-t-teal-400`}>
-          <div className="w-10 h-10 rounded-xl bg-teal-50 flex items-center justify-center">
-            <i className="pi pi-shopping-cart text-teal-500" />
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:flex gap-3 lg:flex-[2]">
+          <div className={`${statCardBase} border-t-teal-400 lg:flex-1`}>
+            <div className="w-10 h-10 rounded-xl bg-teal-50 flex items-center justify-center">
+              <i className="pi pi-shopping-cart text-teal-500" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-slate-800">{saleOrders.length}</p>
+              <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wide">Ventas</p>
+            </div>
           </div>
-          <div>
-            <p className="text-2xl font-bold text-slate-800">{saleOrders.length}</p>
-            <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wide">Ventas</p>
-          </div>
-        </div>
 
-        <div className={`${statCardBase} border-t-[#A0C82E]`}>
-          <div className="w-10 h-10 rounded-xl bg-[#A0C82E]/10 flex items-center justify-center">
-            <i className="pi pi-dollar text-[#A0C82E]" />
+          <div className={`${statCardBase} border-t-[#A0C82E] lg:flex-1`}>
+            <div className="w-10 h-10 rounded-xl bg-[#A0C82E]/10 flex items-center justify-center">
+              <i className="pi pi-dollar text-[#A0C82E]" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-slate-800">
+                {formatAmount(total)}
+                <span className="text-sm font-medium text-slate-400 ml-1">{currency}</span>
+              </p>
+              <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wide">Total vendido</p>
+            </div>
           </div>
-          <div>
-            <p className="text-2xl font-bold text-slate-800">
-              {formatAmount(total)}
-              <span className="text-sm font-medium text-slate-400 ml-1">{currency}</span>
-            </p>
-            <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wide">Total vendido</p>
-          </div>
-        </div>
 
-        <div className={`${statCardBase} border-t-indigo-400 col-span-2 sm:col-span-1`}>
-          <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center">
-            <i className="pi pi-chart-bar text-indigo-500" />
-          </div>
-          <div>
-            <p className="text-2xl font-bold text-slate-800">
-              {formatAmount(averageTicket)}
-              <span className="text-sm font-medium text-slate-400 ml-1">{currency}</span>
-            </p>
-            <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wide">Ticket promedio</p>
+          <div className={`${statCardBase} border-t-indigo-400 col-span-2 sm:col-span-1 lg:flex-1`}>
+            <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center">
+              <i className="pi pi-chart-bar text-indigo-500" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-slate-800">
+                {formatAmount(averageTicket)}
+                <span className="text-sm font-medium text-slate-400 ml-1">{currency}</span>
+              </p>
+              <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wide">Ticket promedio</p>
+            </div>
           </div>
         </div>
       </div>

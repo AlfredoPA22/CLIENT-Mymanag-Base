@@ -112,9 +112,9 @@ const CategoryDetail: FC<CategoryDetailProps> = ({ category }) => {
 
   return (
     <div className="flex flex-col gap-4">
-      {/* ── Encabezado de la categoría ─────────────────────────── */}
-      <Card className="shadow-lg rounded-2xl border-none">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+      {/* ── Encabezado + resumen, en una sola fila en pantallas grandes ── */}
+      <div className="flex flex-col lg:flex-row gap-4 lg:items-stretch">
+        <div className={`${statCardBase} border-t-indigo-400 lg:flex-[1.3] flex-row items-center`}>
           <div className="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-lg font-bold shrink-0">
             {getInitials(category.name)}
           </div>
@@ -125,40 +125,39 @@ const CategoryDetail: FC<CategoryDetailProps> = ({ category }) => {
             </p>
           </div>
         </div>
-      </Card>
 
-      {/* ── Resumen ────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-        <div className={`${statCardBase} border-t-teal-400`}>
-          <div className="w-10 h-10 rounded-xl bg-teal-50 flex items-center justify-center">
-            <i className="pi pi-box text-teal-500" />
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:flex gap-3 lg:flex-[2]">
+          <div className={`${statCardBase} border-t-teal-400 lg:flex-1`}>
+            <div className="w-10 h-10 rounded-xl bg-teal-50 flex items-center justify-center">
+              <i className="pi pi-box text-teal-500" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-slate-800">{products.length}</p>
+              <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wide">Productos</p>
+            </div>
           </div>
-          <div>
-            <p className="text-2xl font-bold text-slate-800">{products.length}</p>
-            <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wide">Productos</p>
-          </div>
-        </div>
 
-        <div className={`${statCardBase} border-t-sky-400`}>
-          <div className="w-10 h-10 rounded-xl bg-sky-50 flex items-center justify-center">
-            <i className="pi pi-inbox text-sky-500" />
+          <div className={`${statCardBase} border-t-sky-400 lg:flex-1`}>
+            <div className="w-10 h-10 rounded-xl bg-sky-50 flex items-center justify-center">
+              <i className="pi pi-inbox text-sky-500" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-slate-800">{totalStock}</p>
+              <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wide">Stock total</p>
+            </div>
           </div>
-          <div>
-            <p className="text-2xl font-bold text-slate-800">{totalStock}</p>
-            <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wide">Stock total</p>
-          </div>
-        </div>
 
-        <div className={`${statCardBase} border-t-[#A0C82E] col-span-2 sm:col-span-1`}>
-          <div className="w-10 h-10 rounded-xl bg-[#A0C82E]/10 flex items-center justify-center">
-            <i className="pi pi-dollar text-[#A0C82E]" />
-          </div>
-          <div>
-            <p className="text-2xl font-bold text-slate-800">
-              {formatAmount(avgPrice)}
-              <span className="text-sm font-medium text-slate-400 ml-1">{currency}</span>
-            </p>
-            <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wide">Precio promedio</p>
+          <div className={`${statCardBase} border-t-[#A0C82E] col-span-2 sm:col-span-1 lg:flex-1`}>
+            <div className="w-10 h-10 rounded-xl bg-[#A0C82E]/10 flex items-center justify-center">
+              <i className="pi pi-dollar text-[#A0C82E]" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-slate-800">
+                {formatAmount(avgPrice)}
+                <span className="text-sm font-medium text-slate-400 ml-1">{currency}</span>
+              </p>
+              <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wide">Precio promedio</p>
+            </div>
           </div>
         </div>
       </div>
