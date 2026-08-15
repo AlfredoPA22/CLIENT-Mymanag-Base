@@ -13,6 +13,7 @@ import { ROUTES_MOCK } from "../../../../routes/RouteMocks";
 import useAuth from "../../../auth/hooks/useAuth";
 import { formatAmount } from "../../../../utils/currency";
 import { DETAIL_COMPANY } from "../../../../graphql/queries/Company";
+import { paymentExchangeRateSource } from "../../../../utils/enums/paymentExchangeRateSource.enum";
 
 interface SalePaymentHeaderDetailProps {
   detailSalePayment: IDetailSalePayment;
@@ -26,10 +27,22 @@ const SalePaymentHeaderDetail: FC<SalePaymentHeaderDetailProps> = ({
   const navigate = useNavigate();
   const { currency } = useAuth();
   const { data: companyData } = useQuery(DETAIL_COMPANY, { skip: currency !== "$" });
-  const exchangeRate = companyData?.detailCompany?.exchange_rate;
+  const company = companyData?.detailCompany;
   // Los totales ya vienen normalizados a la moneda de la venta (puede
   // diferir de la moneda base de la empresa si se vendió en la alterna).
   const orderCurrency = detailSalePayment?.sale_order?.currency ?? currency;
+  // Mismo tipo de cambio que usará el formulario de pago para esta nota —
+  // el vigente ahora, o el que quedó congelado en la nota (según lo
+  // configurado en Ajustes de la empresa).
+  const exchangeRate =
+    company?.payment_exchange_rate_source === paymentExchangeRateSource.NOTA
+      ? detailSalePayment?.sale_order?.exchange_rate ?? company?.exchange_rate
+      : company?.exchange_rate;
+  // La moneda alterna solo existe para empresas en $ — puede ser Bs (si la
+  // venta se hizo en la moneda base) o $ (si se hizo en la alterna).
+  const alternateCurrency = orderCurrency === "$" ? "Bs" : "$";
+  const toAlternate = (amount: number) =>
+    orderCurrency === "$" ? amount * (exchangeRate ?? 1) : amount / (exchangeRate ?? 1);
 
   if (loadingDetailSalePayment) {
     return <PaymentSkeleton />;
@@ -88,27 +101,27 @@ const SalePaymentHeaderDetail: FC<SalePaymentHeaderDetailProps> = ({
         </section>
       </div>
 
-      {orderCurrency === "$" && !!exchangeRate && (
+      {currency === "$" && !!exchangeRate && (
         <div className="mt-6 flex flex-col items-center gap-3 rounded-md border border-blue-100 bg-blue-50 p-4">
           <span className="text-xs font-medium text-blue-700">
             Tipo de cambio: 1 $ = {formatAmount(exchangeRate)} Bs
           </span>
           <div className="grid w-full grid-cols-1 gap-4 text-center md:grid-cols-3">
             <div>
-              <span className="block text-xs text-gray-500">Total a pagar en Bs</span>
+              <span className="block text-xs text-gray-500">Total a pagar en {alternateCurrency}</span>
               <span className="font-semibold text-gray-700">
-                {formatAmount(detailSalePayment.total_amount * exchangeRate)} Bs
+                {formatAmount(toAlternate(detailSalePayment.total_amount))} {alternateCurrency}
               </span>
             </div>
             <div>
-              <span className="block text-xs text-gray-500">Total pagado en Bs</span>
+              <span className="block text-xs text-gray-500">Total pagado en {alternateCurrency}</span>
               <span className="font-semibold text-green-600">
-                {formatAmount(detailSalePayment.total_paid * exchangeRate)} Bs
+                {formatAmount(toAlternate(detailSalePayment.total_paid))} {alternateCurrency}
               </span>
             </div>
             <div>
               <span className="block text-xs text-gray-500">
-                {detailSalePayment.total_pending < 0 ? "Saldo a favor en Bs" : "Total pendiente en Bs"}
+                {detailSalePayment.total_pending < 0 ? `Saldo a favor en ${alternateCurrency}` : `Total pendiente en ${alternateCurrency}`}
               </span>
               <span
                 className={`font-semibold ${
@@ -119,7 +132,7 @@ const SalePaymentHeaderDetail: FC<SalePaymentHeaderDetailProps> = ({
                     : "text-green-600"
                 }`}
               >
-                {formatAmount(Math.abs(detailSalePayment.total_pending) * exchangeRate)} Bs
+                {formatAmount(toAlternate(Math.abs(detailSalePayment.total_pending)))} {alternateCurrency}
               </span>
             </div>
           </div>

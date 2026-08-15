@@ -91,6 +91,21 @@ const ProductCard: FC<ProductCardProps> = ({ productData }) => {
               }
             />
 
+            {/* "Stock" no baja apenas algo se reserva (solo al aprobar la
+                venta) — "Disponible" sí lo descuenta, es lo que de verdad se
+                puede vender ahora mismo. */}
+            <StatCard
+              label="Disponible ahora"
+              className="bg-gray-50"
+              value={
+                <p className={`text-2xl font-bold ${
+                  (productData.available_stock ?? productData.stock) > 0 ? "text-green-600" : "text-red-500"
+                }`}>
+                  {productData.available_stock ?? productData.stock}
+                </p>
+              }
+            />
+
             <StatCard
               label="Precio de venta"
               className="bg-blue-50"
@@ -109,6 +124,23 @@ const ProductCard: FC<ProductCardProps> = ({ productData }) => {
                   <p className="text-xl font-bold text-gray-600">
                     {currency} {formatAmount(productData.last_cost_price)}
                   </p>
+                }
+              />
+
+              <StatCard
+                label="Margen"
+                className="bg-emerald-50"
+                value={
+                  <div>
+                    <p className="text-xl font-bold text-emerald-700">
+                      {currency} {formatAmount(productData.sale_price - productData.last_cost_price)}
+                    </p>
+                    <p className="text-xs text-emerald-600 mt-0.5">
+                      {productData.sale_price > 0
+                        ? `${formatAmount(((productData.sale_price - productData.last_cost_price) / productData.sale_price) * 100)}%`
+                        : "—"}
+                    </p>
+                  </div>
                 }
               />
             </PermissionGuard>

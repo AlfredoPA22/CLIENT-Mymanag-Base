@@ -20,6 +20,7 @@ import { resetPurchaseOrder } from "../../../redux/slices/purchaseOrderSlice";
 import { resetSaleOrder } from "../../../redux/slices/saleOrderSlice";
 import { resetProductTransfer } from "../../../redux/slices/productTransferSlice";
 import apolloClient from "../../../ApolloClient";
+import { ROUTES_MOCK } from "../../../routes/RouteMocks";
 
 export type CompanyAccessBlockedReason = "expired" | "suspended" | null;
 
@@ -67,7 +68,7 @@ const useAuth = () => {
             isGlobal: decoded.is_global ?? false,
           })
         );
-        navigate("/");
+        navigate(ROUTES_MOCK.DASHBOARD);
       } else {
         showToast({
           detail: "Usuario no valido",

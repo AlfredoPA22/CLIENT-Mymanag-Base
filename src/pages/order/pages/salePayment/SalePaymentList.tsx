@@ -8,7 +8,6 @@ import { FC, useState } from "react";
 import { useDispatch } from "react-redux";
 import QrPaymentModal from "../../../../components/qrPayment/QrPaymentModal";
 import Table from "../../../../components/datatable/Table";
-import LabelInput from "../../../../components/labelInput/LabelInput";
 import RowActionButtons, { RowAction } from "../../../../components/table/RowActionButtons";
 import TableSkeleton from "../../../../components/skeleton/TableSkeleton";
 import { DELETE_SALE_PAYMENT } from "../../../../graphql/mutations/SalePayment";
@@ -32,7 +31,8 @@ import { generatePDF } from "../../utils/generateSalePaymentPDF";
 import { getDate } from "../../utils/getDate";
 import SalePaymentForm from "./SalePaymentForm";
 import useAuth from "../../../auth/hooks/useAuth";
-import { formatAmount } from "../../../../utils/currency";
+import { convertCurrency, formatAmount } from "../../../../utils/currency";
+import { ROUTES_MOCK } from "../../../../routes/RouteMocks";
 
 interface SalePaymentListProps {
   listSalePayment: ISalePayment[];
@@ -55,6 +55,9 @@ const SalePaymentList: FC<SalePaymentListProps> = ({
   const dispatch = useDispatch();
   const { currency } = useAuth();
   const apolloClient = useApolloClient();
+  // Moneda de la venta — un pago puede haberse hecho en otra (la alterna),
+  // en cuyo caso conviene mostrar también su equivalente en la de la venta.
+  const orderCurrency = detailSalePayment?.sale_order?.currency ?? currency;
 
   const [DeleteSalePayment] = useMutation(DELETE_SALE_PAYMENT, {
     refetchQueries: [
@@ -140,8 +143,16 @@ const SalePaymentList: FC<SalePaymentListProps> = ({
     });
   };
 
+  const handleOpenPaymentTicket = (rowData: ISalePayment) => {
+    window.open(
+      `${ROUTES_MOCK.SALE_ORDERS}${ROUTES_MOCK.SALE_PAYMENT}/${saleOrderId}/${rowData._id}/ticket`,
+      "_blank"
+    );
+  };
+
   const buildSalePaymentActions = (rowData: ISalePayment): RowAction[] => [
     { label: "Imprimir comprobante", icon: "pi pi-download", severity: "warning", onClick: () => generatePDF(rowData, currency, detailSalePayment) },
+    { label: "Imprimir ticket (térmica)", icon: "pi pi-print", severity: "secondary", onClick: () => handleOpenPaymentTicket(rowData) },
     { label: "Anular y eliminar pago", icon: "pi pi-trash", severity: "danger", onClick: () => confirmDeleteSalePayment(rowData) },
   ];
 
@@ -155,9 +166,20 @@ const SalePaymentList: FC<SalePaymentListProps> = ({
     { field: "payment_method", header: "Metodo de pago", sortable: true, style: { width: "15%", textAlign: "center" } },
     {
       field: "amount", header: "Monto", sortable: true,
-      body: (rowData: ISalePayment) => (
-        <LabelInput className="justify-center" label={`${formatAmount(rowData.amount)} ${rowData.currency ?? currency}`} />
-      ),
+      body: (rowData: ISalePayment) => {
+        const payCurrency = rowData.currency ?? currency;
+        const showEquivalent = payCurrency !== orderCurrency;
+        return (
+          <div className="flex flex-col items-center">
+            <span className="font-semibold text-gray-800">{formatAmount(rowData.amount)} {payCurrency}</span>
+            {showEquivalent && (
+              <span className="text-xs text-gray-400">
+                ≈ {formatAmount(convertCurrency(rowData.amount, payCurrency, orderCurrency, rowData.exchange_rate))} {orderCurrency}
+              </span>
+            )}
+          </div>
+        );
+      },
       style: { width: "20%", textAlign: "center" },
     },
   ]);
@@ -202,21 +224,32 @@ const SalePaymentList: FC<SalePaymentListProps> = ({
           <p className="text-center text-gray-400 py-6 text-sm">Sin pagos registrados.</p>
         )}
 
-        {listSalePayment.map((item: ISalePayment) => (
-          <div key={item._id} className="border border-gray-200 rounded-xl p-3 bg-white shadow-sm">
-            <div className="flex items-center justify-between gap-2">
-              {item.date && <Tag className="text-xs">{getDate(item.date)}</Tag>}
-              <Tag severity="secondary" className="text-xs shrink-0">{item.payment_method}</Tag>
+        {listSalePayment.map((item: ISalePayment) => {
+          const payCurrency = item.currency ?? currency;
+          const showEquivalent = payCurrency !== orderCurrency;
+          return (
+            <div key={item._id} className="border border-gray-200 rounded-xl p-3 bg-white shadow-sm">
+              <div className="flex items-center justify-between gap-2">
+                {item.date && <Tag className="text-xs">{getDate(item.date)}</Tag>}
+                <Tag severity="secondary" className="text-xs shrink-0">{item.payment_method}</Tag>
+              </div>
+              {item.note && (
+                <p className="text-xs text-gray-500 mt-1.5 break-words">{item.note}</p>
+              )}
+              <div className="flex items-center justify-between mt-2">
+                <div className="flex flex-col">
+                  <span className="text-base font-bold text-green-700">{formatAmount(item.amount)} {payCurrency}</span>
+                  {showEquivalent && (
+                    <span className="text-xs text-gray-400">
+                      ≈ {formatAmount(convertCurrency(item.amount, payCurrency, orderCurrency, item.exchange_rate))} {orderCurrency}
+                    </span>
+                  )}
+                </div>
+                <RowActionButtons actions={buildSalePaymentActions(item)} size="small" />
+              </div>
             </div>
-            {item.note && (
-              <p className="text-xs text-gray-500 mt-1.5 break-words">{item.note}</p>
-            )}
-            <div className="flex items-center justify-between mt-2">
-              <span className="text-base font-bold text-green-700">{formatAmount(item.amount)} {item.currency ?? currency}</span>
-              <RowActionButtons actions={buildSalePaymentActions(item)} size="small" />
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* ── Desktop ───────────────────────────────────────────── */}

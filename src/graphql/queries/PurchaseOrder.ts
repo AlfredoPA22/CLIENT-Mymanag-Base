@@ -78,6 +78,18 @@ export const FIND_PURCHASE_ORDER_TO_PDF = gql`
   }
 `;
 
+export const LIST_PURCHASE_ORDER_BY_PROVIDER = gql`
+  query ListPurchaseOrderByProvider($providerId: ID!) {
+    listPurchaseOrderByProvider(providerId: $providerId) {
+      _id
+      code
+      date
+      total
+      status
+    }
+  }
+`;
+
 export const REPORT_PURCHASE_ORDER_BY_YEAR = gql`
   query ReportPurchaseOrderByYear {
     reportPurchaseOrderByYear {

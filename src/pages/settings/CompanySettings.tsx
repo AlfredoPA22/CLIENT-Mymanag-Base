@@ -1,10 +1,12 @@
 import { Button } from "primereact/button";
 import { DropdownChangeEvent } from "primereact/dropdown";
 import { InputSwitch } from "primereact/inputswitch";
+import { SelectButton } from "primereact/selectbutton";
 import { useState } from "react";
 import DropdownInput from "../../components/dropdownInput/DropdownInput";
 import FieldNumberInput from "../../components/FieldNumberInput/FieldNumberInput";
 import FieldSimpleFileUpload from "../../components/fileuploadInput/FileUploadInput";
+import LabelInput from "../../components/labelInput/LabelInput";
 import LoadingSpinner from "../../components/LoadingSpinner/LoadingSpinner";
 import SectionHeader from "../../components/sectionHeader/SectionHeader";
 import FieldTextInput from "../../components/textInput/FieldTextInput";
@@ -15,6 +17,7 @@ import { ICompany, ICompanyInput } from "../../utils/interfaces/Company";
 import { uploadImage } from "../../utils/uploadImage";
 import { schemaCompanySettings } from "./validations/CompanySettingsValidation";
 import { PLAN_LABELS, companyPlan } from "../../utils/enums/companyPlan.enum";
+import { paymentExchangeRateSource } from "../../utils/enums/paymentExchangeRateSource.enum";
 import { getDate } from "../order/utils/getDate";
 
 const STATUS_LABELS: Record<string, string> = {
@@ -69,6 +72,7 @@ const CompanySettingsForm = ({ company, canEdit, saveCompany, loadingUpdate }: C
     country: company.country ?? "",
     currency: company.currency ?? "",
     exchange_rate: company.exchange_rate ?? null,
+    payment_exchange_rate_source: company.payment_exchange_rate_source ?? paymentExchangeRateSource.ACTUAL,
     image: company.image ?? "",
   };
 
@@ -379,11 +383,31 @@ const CompanySettingsForm = ({ company, canEdit, saveCompany, loadingUpdate }: C
               placeholder="Ej. 6.96"
               value={values.exchange_rate ?? null}
               error={errors.exchange_rate}
-              onValueChange={(e) => setFieldValue("exchange_rate", e.value ?? null)}
+              onChange={(e) => setFieldValue("exchange_rate", e.value ?? null)}
               disabled={!canEdit}
               minFractionDigits={2}
               maxFractionDigits={4}
             />
+          )}
+          {values.currency === "$" && (
+            <div className="sm:col-span-2">
+              <LabelInput name="payment_exchange_rate_source" label="Tipo de cambio a usar en los pagos en Bs" />
+              <SelectButton
+                value={values.payment_exchange_rate_source}
+                options={[
+                  { label: "El actual de la empresa", value: paymentExchangeRateSource.ACTUAL },
+                  { label: "El de la nota que se paga", value: paymentExchangeRateSource.NOTA },
+                ]}
+                onChange={(e) => e.value && setFieldValue("payment_exchange_rate_source", e.value)}
+                disabled={!canEdit}
+                className="w-full"
+              />
+              <p className="text-xs text-gray-400 mt-1">
+                {values.payment_exchange_rate_source === paymentExchangeRateSource.NOTA
+                  ? "Un pago en Bs se convierte con el tipo de cambio que tenía la venta cuando se creó, no con el de hoy."
+                  : "Un pago en Bs se convierte con el tipo de cambio vigente en la empresa al momento de pagar, sin importar cuándo se creó la venta."}
+              </p>
+            </div>
           )}
         </div>
 

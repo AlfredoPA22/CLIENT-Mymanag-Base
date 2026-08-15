@@ -2,7 +2,6 @@ import { Card } from "primereact/card";
 import { Tag } from "primereact/tag";
 import { FC, useState } from "react";
 import Table from "../../../../components/datatable/Table";
-import LabelInput from "../../../../components/labelInput/LabelInput";
 import TableSkeleton from "../../../../components/skeleton/TableSkeleton";
 import { DataTableColumn } from "../../../../utils/interfaces/Table";
 import { getDate } from "../../../order/utils/getDate";
@@ -32,24 +31,28 @@ const ListPurchaseOrderByProduct: FC<ListPurchaseOrderByProductProps> = ({ produ
     { field: "purchaseOrder.code", header: "Código", sortable: true },
     {
       field: "purchaseOrder.date", header: "Fecha", sortable: true,
-      body: (rowData) => <Tag value={getDate(rowData.purchaseOrder.date)} />,
+      body: (rowData) => <span className="text-gray-600">{getDate(rowData.purchaseOrder.date)}</span>,
     },
     { field: "purchaseOrder.provider.name", header: "Proveedor", sortable: true },
-    { field: "purchaseOrderDetail.quantity", header: "Cantidad", sortable: true },
+    { field: "purchaseOrderDetail.quantity", header: "Cantidad", sortable: true, style: { textAlign: "center" } },
     {
-      field: "purchaseOrderDetail.purchase_price", header: "Precio de compra", sortable: true,
+      field: "purchaseOrderDetail.purchase_price", header: "Precio de compra", sortable: true, style: { textAlign: "right" },
       body: (rowData) => (
-        <LabelInput className="justify-center" label={`${formatAmount(rowData.purchaseOrderDetail.purchase_price)} ${currency}`} />
+        <span className="text-gray-700">
+          {formatAmount(rowData.purchaseOrderDetail.purchase_price)} {currency}
+        </span>
       ),
     },
     {
-      field: "purchaseOrderDetail.subtotal", header: "Subtotal", sortable: true,
+      field: "purchaseOrderDetail.subtotal", header: "Subtotal", sortable: true, style: { textAlign: "right" },
       body: (rowData) => (
-        <LabelInput className="justify-center" label={`${formatAmount(rowData.purchaseOrderDetail.subtotal)} ${currency}`} />
+        <span className="font-semibold text-gray-800">
+          {formatAmount(rowData.purchaseOrderDetail.subtotal)} {currency}
+        </span>
       ),
     },
     {
-      field: "purchaseOrder.status", header: "Estado",
+      field: "purchaseOrder.status", header: "Estado", style: { textAlign: "center" },
       body: (rowData) => {
         const status = getStatus(rowData.purchaseOrder.status);
         return <Tag value={status?.label} severity={status?.severity as any} />;
@@ -59,8 +62,21 @@ const ListPurchaseOrderByProduct: FC<ListPurchaseOrderByProductProps> = ({ produ
 
   if (loadingListProduct) return <TableSkeleton />;
 
+  const totalPurchased = (listPurchaseOrderByProduct ?? []).reduce(
+    (acc: number, item: IPurchaseOrderByProduct) => acc + item.purchaseOrderDetail.subtotal,
+    0
+  );
+
   return (
     <Card title="Compras del producto">
+      {listPurchaseOrderByProduct && listPurchaseOrderByProduct.length > 0 && (
+        <p className="text-xs text-gray-500 -mt-2 mb-3">
+          <strong className="text-gray-700">{listPurchaseOrderByProduct.length}</strong> compra
+          {listPurchaseOrderByProduct.length !== 1 ? "s" : ""} · Total comprado:{" "}
+          <strong className="text-blue-700">{formatAmount(totalPurchased)} {currency}</strong>
+        </p>
+      )}
+
       {/* ── Mobile: cards ─────────────────────────────────────── */}
       <div className="flex flex-col gap-2 lg:hidden">
         {(!listPurchaseOrderByProduct || listPurchaseOrderByProduct.length === 0) && (

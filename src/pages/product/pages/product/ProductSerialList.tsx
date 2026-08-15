@@ -49,6 +49,7 @@ const ProductSerialList: FC<ProductSerialListProps> = ({ product }) => {
         </TextLink>
       );
     }
+    return <span className="text-gray-300">—</span>;
   };
 
   const saleOrderBodyTemplate = (rowData: IProductSerial) => {
@@ -59,14 +60,19 @@ const ProductSerialList: FC<ProductSerialListProps> = ({ product }) => {
         </TextLink>
       );
     }
+    return <span className="text-gray-300">—</span>;
   };
 
+  const serialBodyTemplate = (rowData: IProductSerial) => (
+    <span className="font-mono text-gray-700">{rowData.serial}</span>
+  );
+
   const [columns] = useState<DataTableColumn<IProductSerial>[]>([
-    { field: "serial", header: "Nombre", sortable: true, style: { width: "35%" } },
+    { field: "serial", header: "Serial", sortable: true, style: { width: "30%" }, body: serialBodyTemplate },
     { field: "warehouse.name", header: "Almacén", sortable: true, style: { width: "20%" } },
     { field: "status", header: "Estado", sortable: true, body: statusBodyTemplate, style: { width: "15%", textAlign: "center" } },
-    { field: "purchase_order_detail.purchase_order.code", header: "orden de compra", style: { width: "15%" }, body: purchaseOrderBodyTemplate },
-    { field: "sale_order_detail.sale_order.code", header: "orden de venta", sortable: true, style: { width: "15%" }, body: saleOrderBodyTemplate },
+    { field: "purchase_order_detail.purchase_order.code", header: "Orden de compra", style: { width: "17.5%" }, body: purchaseOrderBodyTemplate },
+    { field: "sale_order_detail.sale_order.code", header: "Orden de venta", sortable: true, style: { width: "17.5%" }, body: saleOrderBodyTemplate },
   ]);
 
   useEffect(() => {
@@ -83,8 +89,34 @@ const ProductSerialList: FC<ProductSerialListProps> = ({ product }) => {
 
   const list: IProductSerial[] = listProductSerial ?? [];
 
+  const statusCounts = list.reduce<Record<string, number>>((acc, row) => {
+    acc[row.status] = (acc[row.status] ?? 0) + 1;
+    return acc;
+  }, {});
+
   return (
     <>
+      {list.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2 mb-3">
+          {Object.entries(statusCounts).map(([statusValue, count]) => {
+            const status = getStatus(statusValue);
+            return (
+              <span
+                key={statusValue}
+                className="inline-flex items-center gap-1 text-xs font-medium text-gray-600 bg-slate-50 border border-slate-100 rounded-full px-2.5 py-1"
+              >
+                {status && (
+                  <Tag severity={status.severity as "danger" | "success" | "info" | "warning"} className="!py-0 !px-1.5 !text-[10px]">
+                    {status.label}
+                  </Tag>
+                )}
+                <strong className="text-gray-800">{count}</strong>
+              </span>
+            );
+          })}
+        </div>
+      )}
+
       {/* ── Mobile ────────────────────────────────────────────── */}
       <div className="flex flex-col gap-2 md:hidden">
         {list.length === 0 && (

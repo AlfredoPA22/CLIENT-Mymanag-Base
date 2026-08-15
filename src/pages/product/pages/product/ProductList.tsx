@@ -12,7 +12,6 @@ import { memo, useCallback, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import ProductImagePlaceholder from "../../../../components/ProductImagePlaceholder/ProductImagePlaceholder";
 import Table from "../../../../components/datatable/Table";
-import LabelInput from "../../../../components/labelInput/LabelInput";
 import RowActionButtons from "../../../../components/table/RowActionButtons";
 import LoadingSpinner from "../../../../components/LoadingSpinner/LoadingSpinner";
 import { numberEditor } from "../../../../components/numberEditor/numberEditor";
@@ -35,7 +34,8 @@ import SearchProductForm from "./SearchProductForm";
 import ProductSerialList from "./ProductSerialList";
 import ProductInventoryList from "./ProductInventoryList";
 import { ROUTES_MOCK } from "../../../../routes/RouteMocks";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { getToken } from "../../../../redux/accessors/auth.accessor";
 import { setIsBlocked } from "../../../../redux/slices/blockUISlice";
 import useAuth from "../../../auth/hooks/useAuth";
 import { formatAmount } from "../../../../utils/currency";
@@ -54,6 +54,11 @@ const DROPDOWN_PANEL_PROPS = {
   panelStyle: { maxWidth: "95vw" },
   panelClassName: "[&_.p-dropdown-item]:whitespace-normal [&_.p-dropdown-item]:leading-snug",
 };
+
+// "Stock" no baja apenas algo se reserva (solo al aprobar la venta) — se usa
+// tanto en la tabla de escritorio como en las cards mobile.
+const isLowStock = (product: IProduct) =>
+  product.min_stock > 0 && product.stock > 0 && product.stock <= product.min_stock;
 
 // ── Card memoizado: solo se re-renderiza si cambia su propio producto ──────────
 interface ProductCardProps {
@@ -110,13 +115,20 @@ const ProductCard = memo(({ product, currency, onNavigate, onStockClick, onEdit,
       </div>
 
       <div className="flex items-center justify-between px-3 pb-3 border-t border-gray-100 pt-2">
-        <Button
-          label={`Stock: ${product.stock}`}
-          size="small"
-          raised
-          severity="info"
-          onClick={() => onStockClick(product, isSerial)}
-        />
+        <div className="flex flex-col items-start gap-0.5">
+          <Button
+            label={`Stock: ${product.stock}`}
+            size="small"
+            raised
+            severity={product.stock <= 0 ? "danger" : isLowStock(product) ? "warning" : "info"}
+            onClick={() => onStockClick(product, isSerial)}
+          />
+          {product.available_stock != null && product.available_stock < product.stock && (
+            <span className="text-[10px] text-amber-600 font-medium">
+              {product.available_stock} disponible
+            </span>
+          )}
+        </div>
         <RowActionButtons
           actions={[
             { label: "Editar producto", icon: "pi pi-pencil", severity: "info", onClick: () => onEdit(product) },
@@ -186,6 +198,38 @@ const ProductList = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { currency } = useAuth();
+  const token = useSelector(getToken);
+
+  const handleExportProducts = useCallback(async () => {
+    try {
+      dispatch(setIsBlocked(true));
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/product-export`,
+        { headers: { Authorization: `${token || ""}` } }
+      );
+      if (!response.ok) {
+        const result = await response.json().catch(() => ({}));
+        throw new Error(result.message || "Error al exportar los productos");
+      }
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "productos.xlsx";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      showToast({
+        detail: error.message || "Error al exportar los productos",
+        severity: ToastSeverity.Error,
+      });
+    } finally {
+      dispatch(setIsBlocked(false));
+    }
+  }, [dispatch, token]);
 
   const [deleteProduct] = useMutation(DELETE_PRODUCT, {
     refetchQueries: [{ query: LIST_PRODUCT }, { query: LIST_LOW_STOCK_PRODUCT }],
@@ -199,20 +243,32 @@ const ProductList = () => {
     return null;
   };
 
+  // available_stock menor a stock: hay unidades comprometidas en otra venta
+  // que ya no están realmente libres. Se muestra chico debajo del número de
+  // stock, solo cuando difiere, para no meter ruido en el caso común.
   const stockBodyTemplate = (rowData: IProduct) => {
-    if (rowData.stock_type === stockType.SERIALIZADO) {
-      return (
-        <Button raised severity="info"
-          onClick={() => { setCurrentProduct(rowData); setVisibleListSerial(true); }}>
+    const isSerial = rowData.stock_type === stockType.SERIALIZADO;
+    const outOfStock = rowData.stock <= 0;
+    const severity = outOfStock ? "danger" : isLowStock(rowData) ? "warning" : "info";
+    const hasReserved =
+      rowData.available_stock != null && rowData.available_stock < rowData.stock;
+
+    return (
+      <div className="flex flex-col items-center gap-0.5">
+        <Button raised severity={severity}
+          onClick={() => {
+            setCurrentProduct(rowData);
+            if (isSerial) setVisibleListSerial(true);
+            else setVisibleListInventory(true);
+          }}>
           {rowData.stock}
         </Button>
-      );
-    }
-    return (
-      <Button raised severity="info"
-        onClick={() => { setCurrentProduct(rowData); setVisibleListInventory(true); }}>
-        {rowData.stock}
-      </Button>
+        {hasReserved && (
+          <span className="text-[10px] text-amber-600 font-medium whitespace-nowrap">
+            {rowData.available_stock} disp.
+          </span>
+        )}
+      </div>
     );
   };
 
@@ -223,12 +279,15 @@ const ProductList = () => {
         <Button id="btn-search-product" icon="pi pi-search" severity="info"
           tooltip="Buscar producto" tooltipOptions={{ position: "left" }}
           onClick={() => setVisibleSearch(true)} raised />
+        <Button id="btn-export-products" icon="pi pi-download" severity="secondary"
+          tooltip="Exportar todos los productos" tooltipOptions={{ position: "left" }}
+          onClick={handleExportProducts} raised />
         <Button id="btn-new-product" icon="pi pi-plus" severity="success"
           tooltip="Nuevo producto" tooltipOptions={{ position: "left" }}
           onClick={() => { setCurrentProduct(null); setVisibleForm(true); }} raised />
       </div>
     </div>
-  ), [filteredData.length, setVisibleSearch, setCurrentProduct, setVisibleForm]);
+  ), [filteredData.length, setVisibleSearch, setCurrentProduct, setVisibleForm, handleExportProducts]);
 
   const handleDeleteProduct = useCallback(async (productId: string) => {
     try {
@@ -284,18 +343,33 @@ const ProductList = () => {
     { field: "brand.name", header: "Marca", sortable: true, style: { width: "15%" } },
     { field: "category.name", header: "Categoria", sortable: true, style: { width: "15%" } },
     {
-      field: "sale_price", header: "Precio de venta", sortable: true, style: { width: "10%" },
+      field: "sale_price", header: "Precio de venta", sortable: true, style: { width: "10%", textAlign: "right" },
       body: (rowData: IProduct) => (
-        <LabelInput className="justify-center" label={`${formatAmount(rowData.sale_price)} ${currency}`} />
+        <span className="font-semibold text-gray-800">{formatAmount(rowData.sale_price)} {currency}</span>
       ),
       fieldEditor: (options: ColumnEditorOptions) => numberEditor(options, true),
     },
     { field: "stock", header: "Stock", sortable: true, style: { width: "10%", textAlign: "center" }, body: stockBodyTemplate },
-    { field: "stock_type", header: "Tipo de stock", sortable: true, style: { width: "10%", textAlign: "center" } },
+    {
+      field: "stock_type", header: "Tipo de stock", sortable: true, style: { width: "10%", textAlign: "center" },
+      body: (rowData: IProduct) => (
+        <Tag
+          severity={rowData.stock_type === stockType.SERIALIZADO ? "contrast" : "secondary"}
+          value={rowData.stock_type === stockType.SERIALIZADO ? "Serializado" : "Individual"}
+        />
+      ),
+    },
     { field: "status", header: "Estado", sortable: true, body: statusBodyTemplate, style: { width: "10%", textAlign: "center" } },
   ]);
 
   const { filters, renderFilterInput } = useTableGlobalFilter(columns);
+
+  // Fila con fondo ámbar suave cuando el stock ya tocó el mínimo — mismo
+  // criterio que ya usa el tile "Bajo stock" del dashboard, pero visible acá
+  // mismo en vez de tener que ir a buscarlo en otro lado.
+  const rowClassName = (data: IProduct) => ({
+    "bg-amber-50": isLowStock(data),
+  });
 
   const dialogs = (
     <>
@@ -441,6 +515,7 @@ const ProductList = () => {
           dataFilters={filters}
           tableHeader={renderFilterInput}
           onSelectionChange={handleSelectionChange}
+          rowClassName={rowClassName}
         />
       </Card>
 

@@ -19,6 +19,30 @@ interface ProductInventoryListProps {
   product: IProduct;
 }
 
+// Movimientos posibles de un lote, además de lo que sigue Disponible — solo
+// se muestran los que tienen algo (la mayoría de los lotes solo tocan uno).
+const MOVEMENT_FIELDS: { key: "reserved" | "transferred" | "sold"; label: string; cls: string }[] = [
+  { key: "reserved", label: "Reservado", cls: "text-amber-700 bg-amber-50" },
+  { key: "transferred", label: "Transferido", cls: "text-purple-700 bg-purple-50" },
+  { key: "sold", label: "Vendido", cls: "text-blue-700 bg-blue-50" },
+];
+
+const MovementChips = ({ rowData }: { rowData: IProductInventory }) => {
+  const items = MOVEMENT_FIELDS.filter((m) => (rowData[m.key] ?? 0) > 0);
+  if (items.length === 0) {
+    return <span className="text-gray-300 text-xs">—</span>;
+  }
+  return (
+    <div className="flex flex-wrap gap-1">
+      {items.map((m) => (
+        <span key={m.key} className={`text-[10px] font-medium rounded-full px-2 py-0.5 whitespace-nowrap ${m.cls}`}>
+          {m.label}: {rowData[m.key]}
+        </span>
+      ))}
+    </div>
+  );
+};
+
 const ProductInventoryList: FC<ProductInventoryListProps> = ({ product }) => {
   const {
     data: { listProductInventoryByProduct: listProductInventory } = [],
@@ -42,12 +66,25 @@ const ProductInventoryList: FC<ProductInventoryListProps> = ({ product }) => {
     return null;
   };
 
-  const purchaseOrderBodyTemplate = (rowData: IProductInventory) => {
+  const availableBodyTemplate = (rowData: IProductInventory) => (
+    <span className={`font-bold ${rowData.available > 0 ? "text-emerald-600" : "text-gray-300"}`}>
+      {rowData.available}
+    </span>
+  );
+
+  // "Sin orden" no explicaba nada — ese lote no vino de una compra, vino de
+  // una transferencia desde otro almacén (ver createDetail en
+  // productTransfer.service.ts, que crea el lote destino sin purchase_order_detail).
+  const originBodyTemplate = (rowData: IProductInventory) => {
     const purchaseOrderDetail = rowData.purchase_order_detail;
     const purchaseOrder = purchaseOrderDetail?.purchase_order;
 
     if (!purchaseOrder) {
-      return <span className="text-gray-400 italic">Sin orden</span>;
+      return (
+        <span className="inline-flex items-center gap-1 text-xs font-medium text-purple-700 bg-purple-50 rounded-full px-2 py-0.5 whitespace-nowrap">
+          <i className="pi pi-arrow-right-arrow-left text-[10px]" /> Transferencia
+        </span>
+      );
     }
 
     const isApproved = purchaseOrder.status === orderStatus.APROBADO;
@@ -66,14 +103,12 @@ const ProductInventoryList: FC<ProductInventoryListProps> = ({ product }) => {
   };
 
   const [columns] = useState<DataTableColumn<IProductInventory>[]>([
-    { field: "purchase_order_detail", header: "orden de compra", sortable: true, style: { width: "15%" }, body: purchaseOrderBodyTemplate },
-    { field: "warehouse.name", header: "Almacén", sortable: true, style: { width: "25%" } },
-    { field: "quantity", header: "Cantidad", sortable: true, style: { width: "10%" } },
-    { field: "available", header: "Disponible", sortable: true, style: { width: "10%" } },
-    { field: "reserved", header: "Reservados", sortable: true, style: { width: "10%" } },
-    { field: "transferred", header: "Transferidos", sortable: true, style: { width: "10%" } },
-    { field: "sold", header: "Vendidos", sortable: true, style: { width: "10%" } },
-    { field: "status", header: "Estado", sortable: true, body: statusBodyTemplate, style: { width: "10%", textAlign: "center" } },
+    { field: "purchase_order_detail", header: "Origen", sortable: true, style: { width: "18%" }, body: originBodyTemplate },
+    { field: "warehouse.name", header: "Almacén", sortable: true, style: { width: "20%" } },
+    { field: "quantity", header: "Cantidad", sortable: true, style: { width: "10%", textAlign: "center" } },
+    { field: "available", header: "Disponible", sortable: true, style: { width: "12%", textAlign: "center" }, body: availableBodyTemplate },
+    { field: "reserved", header: "Movimientos", style: { width: "25%" }, body: (r: IProductInventory) => <MovementChips rowData={r} /> },
+    { field: "status", header: "Estado", sortable: true, body: statusBodyTemplate, style: { width: "15%", textAlign: "center" } },
   ]);
 
   useEffect(() => {
@@ -90,8 +125,41 @@ const ProductInventoryList: FC<ProductInventoryListProps> = ({ product }) => {
 
   const list: IProductInventory[] = listProductInventory ?? [];
 
+  const totals = list.reduce(
+    (acc, row) => ({
+      available: acc.available + (row.available ?? 0),
+      reserved: acc.reserved + (row.reserved ?? 0),
+    }),
+    { available: 0, reserved: 0 }
+  );
+
   return (
     <>
+      <p className="text-xs text-gray-500 mb-3">
+        Cada fila es un lote de stock recibido (una compra o una transferencia). La{" "}
+        <strong>Cantidad</strong> del lote se reparte entre lo que queda{" "}
+        <strong>Disponible</strong> y lo que ya se movió (reservado, transferido o vendido).
+      </p>
+
+      {/* Reconcilia con el "Stock" que se ve en la lista de productos — ese
+          número no baja apenas algo se reserva (solo al aprobar la venta),
+          así que suele ser Disponible + Reservado, no solo Disponible. */}
+      {list.length > 0 && (
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mb-3 bg-slate-50 border border-slate-100 rounded-lg px-3 py-2 text-xs text-gray-600">
+          <span>
+            <strong className="text-emerald-600">{totals.available}</strong> disponible
+          </span>
+          <span className="text-gray-300">+</span>
+          <span>
+            <strong className="text-amber-700">{totals.reserved}</strong> reservado
+          </span>
+          <span className="text-gray-300">=</span>
+          <span>
+            <strong className="text-gray-800">{product.stock}</strong> en stock del producto
+          </span>
+        </div>
+      )}
+
       {/* ── Mobile ────────────────────────────────────────────── */}
       <div className="flex flex-col gap-2 lg:hidden">
         {list.length === 0 && (
@@ -99,8 +167,6 @@ const ProductInventoryList: FC<ProductInventoryListProps> = ({ product }) => {
         )}
         {list.map((row: IProductInventory) => {
           const status = getStatus(row.status);
-          const purchaseOrder = row.purchase_order_detail?.purchase_order;
-          const isApproved = purchaseOrder?.status === orderStatus.APROBADO;
           return (
             <div key={row._id} className="border border-gray-200 rounded-xl px-3 py-2.5 bg-white shadow-sm">
               {/* Almacén + estado */}
@@ -115,38 +181,26 @@ const ProductInventoryList: FC<ProductInventoryListProps> = ({ product }) => {
                 )}
               </div>
 
-              {/* Orden de compra */}
-              {purchaseOrder ? (
-                <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
-                  <i className="pi pi-shopping-cart text-[10px]" />
-                  <TextLink
-        to={
-          isApproved
-            ? `${ROUTES_MOCK.PURCHASE_ORDERS}/detalle/${purchaseOrder._id}`
-            : `${ROUTES_MOCK.PURCHASE_ORDERS}${ROUTES_MOCK.EDIT_PURCHASE_ORDER}/${purchaseOrder._id}`
-        }
-      >
-                    {purchaseOrder.code}
-                  </TextLink>
-                </p>
-              ) : (
-                <p className="text-xs text-gray-400 italic mt-1">Sin orden de compra</p>
-              )}
+              {/* Origen */}
+              <div className="mt-1">{originBodyTemplate(row)}</div>
 
-              {/* Grid de cantidades */}
-              <div className="grid grid-cols-3 gap-x-2 gap-y-1 mt-2 text-center">
-                {[
-                  { label: "Cantidad", value: row.quantity },
-                  { label: "Disponible", value: row.available },
-                  { label: "Reservados", value: row.reserved },
-                  { label: "Transferidos", value: row.transferred },
-                  { label: "Vendidos", value: row.sold },
-                ].map(({ label, value }) => (
-                  <div key={label} className="bg-gray-50 rounded-lg px-2 py-1">
-                    <p className="text-[10px] text-gray-400 leading-none">{label}</p>
-                    <p className="text-sm font-bold text-gray-700 mt-0.5">{value ?? 0}</p>
-                  </div>
-                ))}
+              {/* Cantidad / Disponible */}
+              <div className="grid grid-cols-2 gap-x-2 gap-y-1 mt-2 text-center">
+                <div className="bg-gray-50 rounded-lg px-2 py-1">
+                  <p className="text-[10px] text-gray-400 leading-none">Cantidad</p>
+                  <p className="text-sm font-bold text-gray-700 mt-0.5">{row.quantity ?? 0}</p>
+                </div>
+                <div className="bg-gray-50 rounded-lg px-2 py-1">
+                  <p className="text-[10px] text-gray-400 leading-none">Disponible</p>
+                  <p className={`text-sm font-bold mt-0.5 ${row.available > 0 ? "text-emerald-600" : "text-gray-400"}`}>
+                    {row.available ?? 0}
+                  </p>
+                </div>
+              </div>
+
+              {/* Movimientos */}
+              <div className="mt-2">
+                <MovementChips rowData={row} />
               </div>
             </div>
           );

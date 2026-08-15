@@ -2,7 +2,10 @@ import { useMutation } from "@apollo/client";
 import { Button } from "primereact/button";
 import { Card } from "primereact/card";
 import { ColumnEditorOptions } from "primereact/column";
-import { DataTableRowEditCompleteEvent } from "primereact/datatable";
+import {
+  DataTableRowEditCompleteEvent,
+  DataTableSelectionSingleChangeEvent,
+} from "primereact/datatable";
 import { Dialog } from "primereact/dialog";
 import { InputText } from "primereact/inputtext";
 import { useState } from "react";
@@ -24,10 +27,13 @@ import { DataTableColumn } from "../../../utils/interfaces/Table";
 import { showToast } from "../../../utils/toastUtils";
 import useProviderList from "../hooks/useProviderList";
 import ProviderForm from "./ProviderForm";
+import ProviderDetail from "./ProviderDetail";
 
 const ProviderList = () => {
   const { listProvider, loadingListProvider } = useProviderList();
   const [visibleForm, setVisibleForm] = useState<boolean>(false);
+  const [visibleDetail, setVisibleDetail] = useState<boolean>(false);
+  const [currentProvider, setCurrentProvider] = useState<IProvider>();
   const [mobileEditVisible, setMobileEditVisible] = useState(false);
   const [mobileEditData, setMobileEditData] = useState<IProvider | null>(null);
 
@@ -77,6 +83,11 @@ const ProviderList = () => {
   const actionBodyTemplate = (rowData: IProvider) => (
     <RowActionButtons actions={buildProviderActions(rowData)} />
   );
+
+  const handleSelectionChange = (e: DataTableSelectionSingleChangeEvent<IProvider[]>) => {
+    setCurrentProvider(e.value);
+    setVisibleDetail(true);
+  };
 
   const onRowEditComplete = async (e: DataTableRowEditCompleteEvent) => {
     try {
@@ -173,6 +184,15 @@ const ProviderList = () => {
       </Dialog>
 
       <Dialog
+        className="md:w-[90vw] w-[95vw]"
+        visible={visibleDetail}
+        header={currentProvider && "Detalle de proveedor"}
+        onHide={() => setVisibleDetail(false)}
+      >
+        {currentProvider && <ProviderDetail provider={currentProvider} />}
+      </Dialog>
+
+      <Dialog
         header="Editar Proveedor"
         visible={mobileEditVisible}
         onHide={() => setMobileEditVisible(false)}
@@ -240,7 +260,8 @@ const ProviderList = () => {
         {listProvider.map((item: IProvider) => (
           <div
             key={item._id}
-            className="border border-gray-200 rounded-xl p-3 bg-white shadow-sm"
+            className="border border-gray-200 rounded-xl p-3 bg-white shadow-sm cursor-pointer transition-colors duration-150 active:bg-gray-50"
+            onClick={() => { setCurrentProvider(item); setVisibleDetail(true); }}
           >
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0 overflow-hidden flex-1">
@@ -266,7 +287,7 @@ const ProviderList = () => {
               </div>
             )}
 
-            <div className="flex justify-end mt-2">
+            <div className="flex justify-end mt-2" onClick={(e) => e.stopPropagation()}>
               <RowActionButtons
                 size="small"
                 actions={[
@@ -291,6 +312,7 @@ const ProviderList = () => {
           tableHeader={renderFilterInput}
           editMode="row"
           onRowEditComplete={onRowEditComplete}
+          onSelectionChange={handleSelectionChange}
         />
       </Card>
 

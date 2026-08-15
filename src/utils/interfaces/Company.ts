@@ -13,6 +13,7 @@ export interface ICompany {
   image: string;
   currency: string;
   exchange_rate?: number | null;
+  payment_exchange_rate_source?: string | null;
   store_enabled: boolean;
   store_banner_image?: string;
   store_theme?: IStoreTheme;
@@ -33,6 +34,7 @@ export interface ICompanyInput {
   image?: string;
   currency?: string;
   exchange_rate?: number | null;
+  payment_exchange_rate_source?: string | null;
   store_enabled?: boolean;
   store_banner_image?: string;
   store_theme?: IStoreTheme;

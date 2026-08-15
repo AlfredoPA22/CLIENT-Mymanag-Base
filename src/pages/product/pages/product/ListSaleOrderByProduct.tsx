@@ -2,7 +2,6 @@ import { Card } from "primereact/card";
 import { Tag } from "primereact/tag";
 import { FC, useState } from "react";
 import Table from "../../../../components/datatable/Table";
-import LabelInput from "../../../../components/labelInput/LabelInput";
 import TableSkeleton from "../../../../components/skeleton/TableSkeleton";
 import { ISaleOrderByProduct } from "../../../../utils/interfaces/SaleOrder";
 import { DataTableColumn } from "../../../../utils/interfaces/Table";
@@ -38,24 +37,28 @@ const ListSaleOrderByProduct: FC<ListSaleOrderByProductProps> = ({ productId }) 
     { field: "saleOrder.code", header: "Código", sortable: true },
     {
       field: "saleOrder.date", header: "Fecha", sortable: true,
-      body: (rowData) => <Tag value={getDate(rowData.saleOrder.date)} />,
+      body: (rowData) => <span className="text-gray-600">{getDate(rowData.saleOrder.date)}</span>,
     },
     { field: "saleOrder.client.fullName", header: "Cliente", sortable: true },
-    { field: "saleOrderDetail.quantity", header: "Cantidad", sortable: true },
+    { field: "saleOrderDetail.quantity", header: "Cantidad", sortable: true, style: { textAlign: "center" } },
     {
-      field: "saleOrderDetail.sale_price", header: "Precio de venta", sortable: true,
+      field: "saleOrderDetail.sale_price", header: "Precio de venta", sortable: true, style: { textAlign: "right" },
       body: (rowData) => (
-        <LabelInput className="justify-center" label={`${formatAmount(toCompanyAmount(rowData, rowData.saleOrderDetail.sale_price))} ${currency}`} />
+        <span className="text-gray-700">
+          {formatAmount(toCompanyAmount(rowData, rowData.saleOrderDetail.sale_price))} {currency}
+        </span>
       ),
     },
     {
-      field: "saleOrderDetail.subtotal", header: "Subtotal", sortable: true,
+      field: "saleOrderDetail.subtotal", header: "Subtotal", sortable: true, style: { textAlign: "right" },
       body: (rowData) => (
-        <LabelInput className="justify-center" label={`${formatAmount(toCompanyAmount(rowData, rowData.saleOrderDetail.subtotal))} ${currency}`} />
+        <span className="font-semibold text-gray-800">
+          {formatAmount(toCompanyAmount(rowData, rowData.saleOrderDetail.subtotal))} {currency}
+        </span>
       ),
     },
     {
-      field: "saleOrder.status", header: "Estado",
+      field: "saleOrder.status", header: "Estado", style: { textAlign: "center" },
       body: (rowData) => {
         const status = getStatus(rowData.saleOrder.status);
         return <Tag value={status?.label} severity={status?.severity as any} />;
@@ -65,8 +68,21 @@ const ListSaleOrderByProduct: FC<ListSaleOrderByProductProps> = ({ productId }) 
 
   if (loadingListProduct) return <TableSkeleton />;
 
+  const totalSold = (listSaleOrderByProduct ?? []).reduce(
+    (acc: number, item: ISaleOrderByProduct) => acc + toCompanyAmount(item, item.saleOrderDetail.subtotal),
+    0
+  );
+
   return (
     <Card title="Ventas del producto">
+      {listSaleOrderByProduct && listSaleOrderByProduct.length > 0 && (
+        <p className="text-xs text-gray-500 -mt-2 mb-3">
+          <strong className="text-gray-700">{listSaleOrderByProduct.length}</strong> venta
+          {listSaleOrderByProduct.length !== 1 ? "s" : ""} · Total vendido:{" "}
+          <strong className="text-green-700">{formatAmount(totalSold)} {currency}</strong>
+        </p>
+      )}
+
       {/* ── Mobile: cards ─────────────────────────────────────── */}
       <div className="flex flex-col gap-2 lg:hidden">
         {(!listSaleOrderByProduct || listSaleOrderByProduct.length === 0) && (

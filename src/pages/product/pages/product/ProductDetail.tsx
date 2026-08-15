@@ -43,7 +43,7 @@ const ProductDetail = () => {
   }
 
   return (
-    <TabView className="size-full" scrollable>
+    <TabView className="w-full" scrollable>
       <TabPanel
         header={<span className="text-sm"><span className="hidden sm:inline">Información </span>General</span>}
       >

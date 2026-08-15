@@ -1,6 +1,6 @@
 import { type FC } from "react";
 
-import { Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 import Dashboard from "../components/dashboard/Dashboard";
 import RoleList from "../pages/admin/pages/role/RoleList";
 import UserList from "../pages/admin/pages/user/UserList";
@@ -9,7 +9,6 @@ import { PlanRoute } from "../pages/auth/pages/PlanRoute";
 import UnauthorizedPage from "../pages/auth/pages/UnauthorizedPage";
 import ClientList from "../pages/client/pages/ClientList";
 import Home from "../pages/home/Home";
-import WelcomePage from "../pages/home/WelcomePage";
 import CreatePurchaseOrder from "../pages/order/pages/purchaseOrder/CreatePurchaseOrder";
 import EditPurchaseOrder from "../pages/order/pages/purchaseOrder/EditPurchaseOrder";
 import PurchaseOrderList from "../pages/order/pages/purchaseOrder/PurchaseOrderList";
@@ -25,6 +24,7 @@ import ReportsPage from "../pages/reports/pages/ReportsPage";
 import { ProtectedRoute } from "./ProtectedRoute";
 import { ROUTES_MOCK } from "./RouteMocks";
 import SalePayment from "../pages/order/pages/salePayment/SalePayment";
+import SalePaymentTicket from "../pages/order/pages/salePayment/SalePaymentTicket";
 import PaymentList from "../pages/order/pages/salePayment/PaymentList";
 import CompanySettings from "../pages/settings/CompanySettings";
 import ProductTransferList from "../pages/transfer/ProductTransferList";
@@ -45,11 +45,15 @@ const PrivateRoutes: FC = () => {
           path={`${ROUTES_MOCK.SALE_ORDERS}/detalle/:id/ticket`}
           element={<SaleOrderTicket />}
         />
+        <Route
+          path={`${ROUTES_MOCK.SALE_ORDERS}${ROUTES_MOCK.SALE_PAYMENT}/:saleOrderId/:paymentId/ticket`}
+          element={<SalePaymentTicket />}
+        />
         <Route path="/" element={<Dashboard />}>
           <Route path="unauthorized" element={<UnauthorizedPage />} />
 
-          {/* Página de bienvenida como ruta por defecto */}
-          <Route index element={<WelcomePage />} />
+          {/* El login y "/" siempre van directo al dashboard real */}
+          <Route index element={<Navigate to={ROUTES_MOCK.DASHBOARD} replace />} />
 
           {/* inicio */}
           <Route path={ROUTES_MOCK.DASHBOARD} element={<Home />} />

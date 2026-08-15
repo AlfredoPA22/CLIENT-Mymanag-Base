@@ -1,7 +1,7 @@
 import { useMutation } from "@apollo/client";
 import { Button } from "primereact/button";
 import { Dialog } from "primereact/dialog";
-import { FC, useState } from "react";
+import { FC, useEffect, useState } from "react";
 import { AutoCompleteChangeEvent } from "primereact/autocomplete";
 import { canDoAny } from "../../../../casl/ability";
 import { useAbility } from "../../../../casl/AbilityContext";
@@ -48,6 +48,14 @@ const ResolveStockShortageModal: FC<ResolveStockShortageModalProps> = ({
   const [selectedOrigin, setSelectedOrigin] = useState<IWarehouse | null>(null);
   const [quantity, setQuantity] = useState<string>("");
   const [submitting, setSubmitting] = useState(false);
+
+  // Precarga la cantidad sugerida cada vez que se abre para un faltante
+  // nuevo — antes arrancaba vacío (solo como placeholder), lo que hacía más
+  // fácil transferir de menos por error de tipeo.
+  useEffect(() => {
+    if (visible) setQuantity(neededQuantity > 0 ? String(neededQuantity) : "");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visible, neededQuantity]);
 
   const [createProductTransfer] = useMutation(CREATE_PRODUCT_TRANSFER);
   const [createProductTransferDetail] = useMutation(CREATE_PRODUCT_TRANSFER_DETAIL);

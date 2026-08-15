@@ -389,6 +389,13 @@ const SaleOrderPOS = () => {
         neededQuantity: 1,
         onResolved: async () => {
           const fresh = await fetchAvailableInPosWarehouse(product._id);
+          if (fresh < 1) {
+            showToast({
+              detail: `Sigue sin haber stock de ${product.name} en ese almacén`,
+              severity: ToastSeverity.Warn,
+            });
+            return;
+          }
           setCart((prev) => [
             ...prev,
             { product, quantity: 1, availableStock: fresh, discountType: "NONE", discountValue: null },
@@ -519,6 +526,16 @@ const SaleOrderPOS = () => {
           neededQuantity: nextQty,
           onResolved: async () => {
             const fresh = await fetchAvailableInPosWarehouse(productId);
+            if (fresh < nextQty) {
+              showToast({
+                detail: `Todavía no alcanza el stock en ese almacén (disponible: ${fresh})`,
+                severity: ToastSeverity.Warn,
+              });
+              setCart((prev) =>
+                prev.map((l) => (l.product._id === productId ? { ...l, availableStock: fresh } : l))
+              );
+              return;
+            }
             setCart((prev) =>
               prev.map((l) => (l.product._id === productId ? { ...l, quantity: nextQty, availableStock: fresh } : l))
             );
@@ -565,6 +582,16 @@ const SaleOrderPOS = () => {
           neededQuantity: finalQty,
           onResolved: async () => {
             const fresh = await fetchAvailableInPosWarehouse(productId);
+            if (fresh < finalQty) {
+              showToast({
+                detail: `Todavía no alcanza el stock en ese almacén (disponible: ${fresh})`,
+                severity: ToastSeverity.Warn,
+              });
+              setCart((prev) =>
+                prev.map((l) => (l.product._id === productId ? { ...l, availableStock: fresh } : l))
+              );
+              return;
+            }
             setCart((prev) =>
               prev.map((l) => (l.product._id === productId ? { ...l, quantity: finalQty, availableStock: fresh } : l))
             );

@@ -15,6 +15,7 @@ export const DETAIL_COMPANY = gql`
       image
       currency
       exchange_rate
+      payment_exchange_rate_source
       store_enabled
       store_banner_image
       pos_sale_mode_enabled

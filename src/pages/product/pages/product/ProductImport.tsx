@@ -73,6 +73,36 @@ const ProductImport = () => {
     }
   };
 
+  const handleDownloadTemplate = async () => {
+    try {
+      dispatch(setIsBlocked(true));
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/product-import-template`,
+        { headers: { Authorization: `${token || ""}` } }
+      );
+      if (!response.ok) {
+        const result = await response.json().catch(() => ({}));
+        throw new Error(result.message || "Error al descargar la plantilla");
+      }
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "plantilla_productos.xlsx";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error: any) {
+      showToast({
+        detail: error.message || "Error al descargar la plantilla",
+        severity: ToastSeverity.Error,
+      });
+    } finally {
+      dispatch(setIsBlocked(false));
+    }
+  };
+
   const handleSaveImportProducts = async () => {
     try {
       dispatch(setIsBlocked(true));
@@ -146,6 +176,28 @@ const ProductImport = () => {
     { field: "min_stock", header: "Stock Min" },
     { field: "max_stock", header: "Stock Max" },
     {
+      field: "show_in_store",
+      header: "En tienda",
+      body: (rowData: IPreviewProductImport) => (
+        <Tag
+          value={rowData.show_in_store ? "Sí" : "No"}
+          severity={rowData.show_in_store ? "success" : "secondary"}
+        />
+      ),
+    },
+    {
+      field: "store_price",
+      header: "Precio tienda",
+      body: (rowData: IPreviewProductImport) =>
+        rowData.store_price != null ? rowData.store_price : "-",
+    },
+    {
+      field: "store_discount_price",
+      header: "Precio desc. tienda",
+      body: (rowData: IPreviewProductImport) =>
+        rowData.store_discount_price != null ? rowData.store_discount_price : "-",
+    },
+    {
       field: "isValid",
       header: "Validez",
       body: (rowData: IPreviewProductImport) => (
@@ -173,6 +225,13 @@ const ProductImport = () => {
 
   return (
     <Card className="py-2" title="Importar Productos">
+      <p className="text-sm text-gray-500 -mt-2 mb-4 max-w-3xl">
+        Cargá muchos productos de una sola vez desde un Excel, en vez de crearlos uno por uno.
+        Descargá la <strong>plantilla</strong> para ver las columnas que necesita, completala,
+        subí el archivo y tocá <strong>Previsualizar</strong> para revisar si hay errores antes
+        de guardar nada. Las marcas y categorías que no existan todavía se crean solas. 
+      </p>
+
       <div className="flex flex-wrap justify-between items-end gap-4 mb-4">
         {/* Izquierda: selector y previsualizar */}
         <div className="flex flex-wrap gap-4">
@@ -222,12 +281,7 @@ const ProductImport = () => {
             icon="pi pi-download"
             severity="secondary"
             className="p-button-sm"
-            onClick={() => {
-              window.open(
-                "https://res.cloudinary.com/dbt5vgimv/raw/upload/v1750122698/MyManag/assets/template_products.xlsx",
-                "_blank"
-              );
-            }}
+            onClick={handleDownloadTemplate}
           />
         </div>
       </div>

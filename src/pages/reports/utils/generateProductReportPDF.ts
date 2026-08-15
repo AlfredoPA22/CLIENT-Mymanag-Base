@@ -106,28 +106,38 @@ export const generateProductReportPDF = (
     alternateRowStyles: { fillColor: ROW_ALT },
     startY: filterY + 12,
     theme: "plain",
+    // El código no tiene espacios para partir en salto de línea — con poco
+    // ancho, jsPDF lo corta a la mitad de la palabra. El producto (nombre
+    // largo, a veces con specs entre paréntesis) es lo que de verdad
+    // necesita más espacio; categoría/marca son etiquetas cortas.
     columnStyles: {
-      0: { cellWidth: 28, halign: "center" },
-      1: { cellWidth: 65 },
-      2: { cellWidth: 48 },
-      3: { cellWidth: 42 },
-      4: { cellWidth: 36, halign: "right" },
-      5: { cellWidth: 22, halign: "center" },
-      6: { cellWidth: 28, halign: "center" },
+      0: { cellWidth: 30, halign: "center", fontSize: 7.5 },
+      1: { cellWidth: 90 },
+      2: { cellWidth: 34 },
+      3: { cellWidth: 34 },
+      4: { cellWidth: 34, halign: "right" },
+      5: { cellWidth: 20, halign: "center" },
+      6: { cellWidth: 27, halign: "center" },
     },
-    margin: { left: MARGIN, right: MARGIN },
+    margin: { left: MARGIN, right: MARGIN, bottom: 14 },
     tableLineColor: RULE,
     tableLineWidth: 0.3,
   });
 
-  // ── PAGE FOOTER ───────────────────────────────────────────
+  // ── PAGE FOOTER (en todas las páginas, con el total real) ──
   const PAGE_H = doc.internal.pageSize.getHeight();
-  drawRule(doc, PAGE_H - 10, PAGE_W);
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(6.5);
-  doc.setTextColor(...INK_LIGHT);
-  doc.text("Inventasys — Reporte de Productos", MARGIN, PAGE_H - 6);
-  doc.text("Página 1 de 1", PAGE_W - MARGIN, PAGE_H - 6, { align: "right" });
+  // internal.pages[0] es un placeholder no usado por jsPDF — el total real
+  // de páginas es length - 1 (getNumberOfPages() no está en los tipos).
+  const totalPages = doc.internal.pages.length - 1;
+  for (let page = 1; page <= totalPages; page++) {
+    doc.setPage(page);
+    drawRule(doc, PAGE_H - 10, PAGE_W);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(6.5);
+    doc.setTextColor(...INK_LIGHT);
+    doc.text("Inventasys — Reporte de Productos", MARGIN, PAGE_H - 6);
+    doc.text(`Página ${page} de ${totalPages}`, PAGE_W - MARGIN, PAGE_H - 6, { align: "right" });
+  }
 
   doc.save("reporte_productos.pdf");
 };
