@@ -9,7 +9,6 @@ import { ROUTES_MOCK } from "../../../../routes/RouteMocks";
 import { IProduct } from "../../../../utils/interfaces/Product";
 import { DataTableColumn } from "../../../../utils/interfaces/Table";
 import { IWarehouse } from "../../../../utils/interfaces/Warehouse";
-import { getStatus } from "../../../order/utils/getStatus";
 import useProductListWithParams from "../../hooks/useProductListWithParams";
 import useAuth from "../../../auth/hooks/useAuth";
 import { formatAmount } from "../../../../utils/currency";
@@ -38,14 +37,17 @@ const WarehouseDetail: FC<WarehouseDetailProps> = ({ warehouse }) => {
       warehouseId: warehouse._id,
     });
 
-  const statusBodyTemplate = (rowData: IProduct) => {
-    const status = getStatus(rowData.status);
-    if (status) {
-      const { severity, label } = status;
-      return <Tag severity={severity as "danger" | "success"}>{label}</Tag>;
-    }
-    return null;
-  };
+  // "Estado" acá es específico de este almacén y refleja si hay algo
+  // vendible AHORA (available_stock) — NO el estado global del producto
+  // (que puede decir "Disponible" aunque acá no haya nada), ni tampoco
+  // solo la presencia física (rowData.stock incluye lo reservado, que
+  // sigue en el almacén pero ya está comprometido con otra venta).
+  const statusBodyTemplate = (rowData: IProduct) =>
+    (rowData.available_stock ?? 0) > 0 ? (
+      <Tag severity="success">Disponible aquí</Tag>
+    ) : (
+      <Tag severity="danger">Sin stock aquí</Tag>
+    );
 
   const [columns] = useState<DataTableColumn<IProduct>[]>([
     {
@@ -87,11 +89,19 @@ const WarehouseDetail: FC<WarehouseDetailProps> = ({ warehouse }) => {
       header: "Stock en este almacén",
       sortable: true,
       style: { width: "15%", textAlign: "center" },
-      body: (rowData: IProduct) => (
-        <span className={`font-semibold ${rowData.stock > 0 ? "text-green-600" : "text-red-500"}`}>
-          {rowData.stock}
-        </span>
-      ),
+      body: (rowData: IProduct) => {
+        const reserved = rowData.stock - (rowData.available_stock ?? 0);
+        return (
+          <div className="flex flex-col items-center">
+            <span className={`font-semibold ${rowData.stock > 0 ? "text-green-600" : "text-red-500"}`}>
+              {rowData.stock}
+            </span>
+            {reserved > 0 && (
+              <span className="text-xs text-amber-600">{reserved} reservado</span>
+            )}
+          </div>
+        );
+      },
     },
     {
       field: "status",
@@ -110,7 +120,9 @@ const WarehouseDetail: FC<WarehouseDetailProps> = ({ warehouse }) => {
 
   const products: IProduct[] = listProductWithParams ?? [];
   const totalStock = products.reduce((acc, p) => acc + (p.stock ?? 0), 0);
-  const outOfStockCount = products.filter((p) => (p.stock ?? 0) <= 0).length;
+  // "Sin stock aquí" = nada vendible ahora mismo, aunque haya algo
+  // reservado (físicamente presente pero ya comprometido con otra venta).
+  const outOfStockCount = products.filter((p) => (p.available_stock ?? 0) <= 0).length;
 
   return (
     <div className="flex flex-col gap-4">
@@ -173,9 +185,7 @@ const WarehouseDetail: FC<WarehouseDetailProps> = ({ warehouse }) => {
           {products.length === 0 && (
             <p className="text-center text-gray-400 py-6 text-sm">Sin productos.</p>
           )}
-          {products.map((product: IProduct) => {
-            const status = getStatus(product.status);
-            return (
+          {products.map((product: IProduct) => (
               <div
                 key={product._id}
                 className="border border-gray-200 rounded-xl p-3 bg-white shadow-sm"
@@ -192,11 +202,9 @@ const WarehouseDetail: FC<WarehouseDetailProps> = ({ warehouse }) => {
                       <p className="text-xs text-gray-500 break-words">{product.brand.name}</p>
                     )}
                   </div>
-                  {status && (
-                    <Tag severity={status.severity as "danger" | "success"} className="shrink-0">
-                      {status.label}
-                    </Tag>
-                  )}
+                  <Tag severity={(product.available_stock ?? 0) > 0 ? "success" : "danger"} className="shrink-0">
+                    {(product.available_stock ?? 0) > 0 ? "Disponible aquí" : "Sin stock aquí"}
+                  </Tag>
                 </div>
                 <div className="flex items-center justify-between mt-2 text-sm">
                   <span className="font-semibold text-blue-600">
@@ -204,11 +212,12 @@ const WarehouseDetail: FC<WarehouseDetailProps> = ({ warehouse }) => {
                   </span>
                   <span className={`font-semibold text-xs ${product.stock > 0 ? "text-green-500" : "text-red-500"}`}>
                     Stock aquí: {product.stock}
+                    {product.stock - (product.available_stock ?? 0) > 0 &&
+                      ` (${product.stock - (product.available_stock ?? 0)} reservado)`}
                   </span>
                 </div>
               </div>
-            );
-          })}
+          ))}
         </div>
 
         {/* ── Desktop: tabla ─────────────────────────────────── */}

@@ -243,6 +243,7 @@ export const LIST_PRODUCT_WITH_PARAMS = gql`
       sale_price
       status
       stock
+      available_stock
       stock_type
       min_stock
       max_stock
