@@ -1,5 +1,4 @@
 import { Card } from "primereact/card";
-import { Tag } from "primereact/tag";
 import { FC, useState } from "react";
 import TextLink from "../../../../components/TextLink/TextLink";
 import Table from "../../../../components/datatable/Table";
@@ -36,18 +35,6 @@ const WarehouseDetail: FC<WarehouseDetailProps> = ({ warehouse }) => {
       categoryId: "",
       warehouseId: warehouse._id,
     });
-
-  // "Estado" acá es específico de este almacén y refleja si hay algo
-  // vendible AHORA (available_stock) — NO el estado global del producto
-  // (que puede decir "Disponible" aunque acá no haya nada), ni tampoco
-  // solo la presencia física (rowData.stock incluye lo reservado, que
-  // sigue en el almacén pero ya está comprometido con otra venta).
-  const statusBodyTemplate = (rowData: IProduct) =>
-    (rowData.available_stock ?? 0) > 0 ? (
-      <Tag severity="success">Disponible aquí</Tag>
-    ) : (
-      <Tag severity="danger">Sin stock aquí</Tag>
-    );
 
   const [columns] = useState<DataTableColumn<IProduct>[]>([
     {
@@ -102,13 +89,6 @@ const WarehouseDetail: FC<WarehouseDetailProps> = ({ warehouse }) => {
           </div>
         );
       },
-    },
-    {
-      field: "status",
-      header: "Estado",
-      sortable: true,
-      body: statusBodyTemplate,
-      style: { width: "10%", textAlign: "center" },
     },
   ]);
 
@@ -202,9 +182,6 @@ const WarehouseDetail: FC<WarehouseDetailProps> = ({ warehouse }) => {
                       <p className="text-xs text-gray-500 break-words">{product.brand.name}</p>
                     )}
                   </div>
-                  <Tag severity={(product.available_stock ?? 0) > 0 ? "success" : "danger"} className="shrink-0">
-                    {(product.available_stock ?? 0) > 0 ? "Disponible aquí" : "Sin stock aquí"}
-                  </Tag>
                 </div>
                 <div className="flex items-center justify-between mt-2 text-sm">
                   <span className="font-semibold text-blue-600">
