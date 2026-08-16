@@ -55,7 +55,7 @@ const ProductTransferDetailList: FC<ProductTransferDetailListProps> = ({
     if (listDetails && onCanApproveChange) {
       const allComplete = listDetails.every(
         (d: IProductTransferDetail) =>
-          d.product.stock_type !== stockType.SERIALIZADO || d.serials.length >= d.quantity
+          d.product?.stock_type !== stockType.SERIALIZADO || d.serials.length >= d.quantity
       );
       onCanApproveChange(allComplete);
     }
@@ -87,7 +87,7 @@ const ProductTransferDetailList: FC<ProductTransferDetailListProps> = ({
   };
 
   const serialsBodyTemplate = (rowData: IProductTransferDetail) => {
-    if (rowData.product.stock_type !== stockType.SERIALIZADO) {
+    if (rowData.product?.stock_type !== stockType.SERIALIZADO) {
       return <span className="text-gray-400 text-sm">No corresponde</span>;
     }
     const assigned = rowData.serials.length;
@@ -98,7 +98,7 @@ const ProductTransferDetailList: FC<ProductTransferDetailListProps> = ({
 
   const buildTransferDetailActions = (rowData: IProductTransferDetail): RowAction[] => {
     const actions: RowAction[] = [];
-    if (rowData.product.stock_type === stockType.SERIALIZADO) {
+    if (rowData.product?.stock_type === stockType.SERIALIZADO) {
       actions.push({
         label: editMode ? "Gestionar seriales" : "Ver seriales",
         icon: "pi pi-cart-plus",
@@ -127,11 +127,14 @@ const ProductTransferDetailList: FC<ProductTransferDetailListProps> = ({
       header: "Código",
       sortable: true,
       style: { width: "10%" },
-      body: (rowData: IProductTransferDetail) => (
-        <TextLink to={`${ROUTES_MOCK.INVENTORY}${ROUTES_MOCK.PRODUCTS}/detalle/${rowData.product._id}`}>
-          {rowData.product.code}
-        </TextLink>
-      ),
+      body: (rowData: IProductTransferDetail) =>
+        rowData.product ? (
+          <TextLink to={`${ROUTES_MOCK.INVENTORY}${ROUTES_MOCK.PRODUCTS}/detalle/${rowData.product._id}`}>
+            {rowData.product.code}
+          </TextLink>
+        ) : (
+          <Tag severity="secondary" className="text-xs">Producto eliminado</Tag>
+        ),
     },
     { field: "product.name", header: "Producto", sortable: true, style: { width: "35%" } },
     { field: "product.stock", header: "Stock origen", sortable: true, style: { textAlign: "center", width: "15%" } },
@@ -175,7 +178,7 @@ const ProductTransferDetailList: FC<ProductTransferDetailListProps> = ({
           )}
           <div className="flex flex-col gap-2">
             {listDetails?.map((item: IProductTransferDetail) => {
-              const isSerialized = item.product.stock_type === stockType.SERIALIZADO;
+              const isSerialized = item.product?.stock_type === stockType.SERIALIZADO;
               const assigned = item.serials.length;
               const required = item.quantity;
               const serialsComplete = assigned >= required;
@@ -187,14 +190,20 @@ const ProductTransferDetailList: FC<ProductTransferDetailListProps> = ({
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0 overflow-hidden flex-1">
-                      <TextLink
-                        to={`${ROUTES_MOCK.INVENTORY}${ROUTES_MOCK.PRODUCTS}/detalle/${item.product._id}`}
-                      >
-                        <span className="text-xs font-medium">{item.product.code}</span>
-                      </TextLink>
-                      <p className="font-semibold text-gray-800 text-sm break-words mt-0.5">
-                        {item.product.name}
-                      </p>
+                      {item.product ? (
+                        <>
+                          <TextLink
+                            to={`${ROUTES_MOCK.INVENTORY}${ROUTES_MOCK.PRODUCTS}/detalle/${item.product._id}`}
+                          >
+                            <span className="text-xs font-medium">{item.product.code}</span>
+                          </TextLink>
+                          <p className="font-semibold text-gray-800 text-sm break-words mt-0.5">
+                            {item.product.name}
+                          </p>
+                        </>
+                      ) : (
+                        <Tag severity="secondary" className="text-xs">Producto eliminado</Tag>
+                      )}
                     </div>
                     {isSerialized && (
                       <Tag
@@ -208,7 +217,7 @@ const ProductTransferDetailList: FC<ProductTransferDetailListProps> = ({
                   <div className="flex items-center gap-4 mt-2 text-xs text-gray-600">
                     <span>
                       <span className="text-gray-400">Stock: </span>
-                      <span className="font-semibold">{item.product.stock}</span>
+                      <span className="font-semibold">{item.product?.stock ?? "—"}</span>
                     </span>
                     <span>
                       <span className="text-gray-400">Cant.: </span>

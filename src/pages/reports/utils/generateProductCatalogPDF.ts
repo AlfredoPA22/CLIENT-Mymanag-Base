@@ -54,6 +54,36 @@ const imgFormat = (dataUrl: string): string => {
   return "JPEG";
 };
 
+// Encaja la imagen DENTRO del recuadro sin deformarla (como "object-fit:
+// contain") — antes se estiraba a boxW×boxH exactos, ignorando su relación
+// de aspecto real, por eso se veían achatadas/alargadas. Devuelve el
+// tamaño y el corrimiento para centrarla; null si no se pudo leer.
+const fitImageBox = (
+  doc: jsPDF,
+  imageData: string,
+  boxW: number,
+  boxH: number
+): { drawW: number; drawH: number; offsetX: number; offsetY: number } | null => {
+  try {
+    const props = doc.getImageProperties(imageData);
+    const ratio = props.width / props.height;
+    let drawW = boxW;
+    let drawH = boxW / ratio;
+    if (drawH > boxH) {
+      drawH = boxH;
+      drawW = boxH * ratio;
+    }
+    return {
+      drawW,
+      drawH,
+      offsetX: (boxW - drawW) / 2,
+      offsetY: (boxH - drawH) / 2,
+    };
+  } catch {
+    return null;
+  }
+};
+
 // ── Layout helpers ────────────────────────────────────────────
 const hRule = (doc: jsPDF, y: number, x1 = MARGIN, x2 = PAGE_W - MARGIN) => {
   doc.setDrawColor(...RULE);
@@ -191,16 +221,17 @@ const drawCard = (
   doc.setFillColor(...BG_IMG);
   doc.rect(x, y + 2, COL_W, IMG_H, "F");
 
-  // Image or placeholder
-  if (imageData) {
+  // Image or placeholder — encajada dentro del recuadro sin deformarse.
+  const fit = imageData ? fitImageBox(doc, imageData, COL_W, IMG_H) : null;
+  if (imageData && fit) {
     try {
       doc.addImage(
         imageData,
         imgFormat(imageData),
-        x,
-        y + 2,
-        COL_W,
-        IMG_H,
+        x + fit.offsetX,
+        y + 2 + fit.offsetY,
+        fit.drawW,
+        fit.drawH,
         undefined,
         "FAST"
       );

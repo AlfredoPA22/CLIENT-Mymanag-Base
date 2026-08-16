@@ -206,16 +206,34 @@ const SaleOrderList = ({ storeOnly = false }: SaleOrderListProps) => {
       rowData.payment_method === paymentMethod.CONTADO &&
       rowData.contado_payment_method === "QR" &&
       rowData.is_paid;
+    const hasPaidCommission = !!rowData.has_paid_commission;
+    const hasWarning = isQrPaid || hasPaidCommission;
+
     confirmDialog({
-      message: isQrPaid ? (
+      message: hasWarning ? (
         <div className="flex flex-col gap-2">
-          <div className="flex items-center gap-2 text-red-600 font-bold text-base">
-            <i className="pi pi-exclamation-triangle text-2xl" />
-            <span>¡Esta venta se cobró por QR!</span>
-          </div>
-          <p className="text-sm bg-red-50 border border-red-200 rounded px-3 py-2 text-red-700">
-            El dinero de <strong>{formatAmount(rowData.total)} {rowData.currency ?? currency}</strong> ya se recibió y la devolución de ese monto debe gestionarse manualmente.
-          </p>
+          {isQrPaid && (
+            <>
+              <div className="flex items-center gap-2 text-red-600 font-bold text-base">
+                <i className="pi pi-exclamation-triangle text-2xl" />
+                <span>¡Esta venta se cobró por QR!</span>
+              </div>
+              <p className="text-sm bg-red-50 border border-red-200 rounded px-3 py-2 text-red-700">
+                El dinero de <strong>{formatAmount(rowData.total)} {rowData.currency ?? currency}</strong> ya se recibió y la devolución de ese monto debe gestionarse manualmente.
+              </p>
+            </>
+          )}
+          {hasPaidCommission && (
+            <>
+              <div className="flex items-center gap-2 text-amber-600 font-bold text-base">
+                <i className="pi pi-exclamation-triangle text-2xl" />
+                <span>¡Ya se pagó la comisión de esta venta!</span>
+              </div>
+              <p className="text-sm bg-amber-50 border border-amber-200 rounded px-3 py-2 text-amber-700">
+                La comisión del vendedor ya se marcó como pagada. Si eliminás la venta, ese pago queda sin la venta que lo respalda — tendrás que resolverlo manualmente con el vendedor.
+              </p>
+            </>
+          )}
           <p className="text-sm text-gray-700">¿Deseas eliminarla de todas formas?</p>
         </div>
       ) : (

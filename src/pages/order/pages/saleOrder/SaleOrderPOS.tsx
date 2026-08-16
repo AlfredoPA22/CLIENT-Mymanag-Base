@@ -9,6 +9,8 @@ import { useEffect, useMemo, useState } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { ActionMeta, SingleValue } from "react-select";
+import { useAbility } from "../../../../casl/AbilityContext";
+import { canDoAny } from "../../../../casl/ability";
 import BarcodeScannerButton from "../../../../components/barcodeScanner/BarcodeScannerButton";
 import ProductImagePlaceholder from "../../../../components/ProductImagePlaceholder/ProductImagePlaceholder";
 import SelectInput from "../../../../components/SelectInput/SelectInput";
@@ -94,6 +96,8 @@ interface CartPanelProps {
 
 const CartPanel = ({ cart, total, currency, convertPrice, convertToBase, onIncrement, onDecrement, onSetQuantity, onRemove, onUpdateDiscount, onCheckout }: CartPanelProps) => {
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const ability = useAbility();
+  const canApplyDiscount = canDoAny(ability, ["APPLY_DISCOUNT"]);
 
   return (
     <div className="flex flex-col gap-3 h-full">
@@ -134,17 +138,19 @@ const CartPanel = ({ cart, total, currency, convertPrice, convertToBase, onIncre
               </div>
 
               <div className="flex items-center justify-between gap-2">
-                <button
-                  type="button"
-                  className="text-xs text-blue-600 hover:underline"
-                  onClick={() => setExpandedId(isExpanded ? null : line.product._id)}
-                >
-                  {discount > 0 ? `Descuento: -${formatAmount(discount)} ${currency}` : "Agregar descuento"}
-                </button>
+                {canApplyDiscount ? (
+                  <button
+                    type="button"
+                    className="text-xs text-blue-600 hover:underline"
+                    onClick={() => setExpandedId(isExpanded ? null : line.product._id)}
+                  >
+                    {discount > 0 ? `Descuento: -${formatAmount(discount)} ${currency}` : "Agregar descuento"}
+                  </button>
+                ) : <span />}
                 <span className="text-sm font-semibold text-gray-700">{formatAmount(gross - discount)} {currency}</span>
               </div>
 
-              {isExpanded && (
+              {canApplyDiscount && isExpanded && (
                 <div className="flex items-center gap-2 bg-gray-50 rounded-lg p-2">
                   <SelectButton
                     value={line.discountType}
@@ -205,7 +211,7 @@ const SaleOrderPOS = () => {
   const qrAvailable = useQrPaymentAvailable();
 
   const { listProduct, loadingListProduct } = useProductList();
-  const { listClientSelect } = useClientList();
+  const { listClientSelect, refetchListClient } = useClientList();
   const { listWarehouse: listWarehouseRaw } = useWarehouseList();
   const listWarehouse = listWarehouseRaw ?? [];
   const { data: companyData } = useQuery(DETAIL_COMPANY);
@@ -610,6 +616,11 @@ const SaleOrderPOS = () => {
   const handleOpenCheckout = () => {
     setShowMobileCart(false);
     setShowCheckout(true);
+    // La lista de clientes se trae una sola vez al entrar a POS — si alguien
+    // creó o editó un cliente desde otra pantalla mientras esta sesión
+    // seguía abierta (turnos largos), quedaba desactualizada. Se refresca
+    // acá para que el que se busca esté siempre.
+    refetchListClient();
   };
 
   const handleClientChange = async (

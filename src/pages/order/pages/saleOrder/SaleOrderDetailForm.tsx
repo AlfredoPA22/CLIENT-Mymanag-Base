@@ -5,6 +5,9 @@ import { Card } from "primereact/card";
 import { SelectButton } from "primereact/selectbutton";
 import { FC, useMemo, useState } from "react";
 import { useDispatch } from "react-redux";
+import { PermissionGuard } from "../../../auth/pages/PermissionGuard";
+import { useAbility } from "../../../../casl/AbilityContext";
+import { canDoAny } from "../../../../casl/ability";
 import BarcodeScannerButton from "../../../../components/barcodeScanner/BarcodeScannerButton";
 import DropdownInput from "../../../../components/dropdownInput/DropdownInput";
 import { OrderDetailFormSkeleton } from "../../../../components/skeleton/OrderDetailFormSkeleton";
@@ -47,6 +50,8 @@ const SaleOrderDetailForm: FC<SaleOrderDetailFormProps> = ({ saleOrderId }) => {
   const dispatch = useDispatch();
   const apolloClient = useApolloClient();
   const { currency } = useAuth();
+  const ability = useAbility();
+  const canSellBelowMin = canDoAny(ability, ["SELL_BELOW_MIN_PRICE"]);
 
   // Moneda de esta nota en particular: si se está vendiendo en la moneda
   // alterna (ej. Bs con empresa en $), los precios de producto (guardados
@@ -168,6 +173,30 @@ const SaleOrderDetailForm: FC<SaleOrderDetailFormProps> = ({ saleOrderId }) => {
 
   const [selectedProduct, setSelectedProduct] = useState<IProduct | null>(null);
   const [selectedWarehouse, setSelectedWarehouse] = useState<IWarehouse | null>(null);
+
+  // Piso de precio de este producto (min_sale_price, o si no está configurado
+  // el propio sale_price), convertido a la moneda de la nota — mismo criterio
+  // que ya aplica el backend (ver assertPriceAboveMinimum en
+  // saleOrder.service.ts). Sin el permiso, no se deja escribir por debajo.
+  const priceFloorBase = selectedProduct
+    ? selectedProduct.min_sale_price ?? selectedProduct.sale_price
+    : null;
+  const priceFloor =
+    priceFloorBase != null && priceFloorBase > 0
+      ? round2(convertCurrency(priceFloorBase, currency, noteCurrency, noteExchangeRate))
+      : null;
+
+  const handleSalePriceBlur = () => {
+    if (canSellBelowMin || priceFloor == null) return;
+    const current = Number(values.sale_price) || 0;
+    if (current > 0 && current < priceFloor) {
+      setFieldValue("sale_price", priceFloor);
+      showToast({
+        detail: `El precio mínimo para este producto es ${priceFloor} ${noteCurrency}.`,
+        severity: ToastSeverity.Warn,
+      });
+    }
+  };
   const showLineWarehouse =
     !!selectedProduct && selectedProduct.stock_type === stockType.INDIVIDUAL && !noteWarehouse;
   const [discountType, setDiscountType] = useState<string>("NONE");
@@ -514,34 +543,36 @@ const SaleOrderDetailForm: FC<SaleOrderDetailFormProps> = ({ saleOrderId }) => {
             </section>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3 border-t pt-2">
-            <SelectButton
-              value={customDiscountType}
-              options={DISCOUNT_TYPES}
-              onChange={(e) => {
-                const val = (e.value as string) ?? "NONE";
-                setCustomDiscountType(val);
-                if (val === "NONE") setCustomDiscountValue("");
-              }}
-              className="w-full sm:w-auto flex text-sm [&_.p-button]:flex-1 sm:[&_.p-button]:flex-none [&_.p-button]:justify-center sm:[&_.p-button]:whitespace-nowrap"
-            />
-            {customDiscountType !== "NONE" && (
-              <input
-                type="number"
-                value={customDiscountValue}
-                onChange={(e) => setCustomDiscountValue(e.target.value)}
-                placeholder={customDiscountType === "PORCENTUAL" ? "% descuento" : `Descuento (${noteCurrency})`}
-                min={0}
-                className="p-inputtext p-component w-32 text-sm"
+          <PermissionGuard permissions={["APPLY_DISCOUNT"]}>
+            <div className="flex flex-wrap items-center gap-3 border-t pt-2">
+              <SelectButton
+                value={customDiscountType}
+                options={DISCOUNT_TYPES}
+                onChange={(e) => {
+                  const val = (e.value as string) ?? "NONE";
+                  setCustomDiscountType(val);
+                  if (val === "NONE") setCustomDiscountValue("");
+                }}
+                className="w-full sm:w-auto flex text-sm [&_.p-button]:flex-1 sm:[&_.p-button]:flex-none [&_.p-button]:justify-center sm:[&_.p-button]:whitespace-nowrap"
               />
-            )}
-          </div>
+              {customDiscountType !== "NONE" && (
+                <input
+                  type="number"
+                  value={customDiscountValue}
+                  onChange={(e) => setCustomDiscountValue(e.target.value)}
+                  placeholder={customDiscountType === "PORCENTUAL" ? "% descuento" : `Descuento (${noteCurrency})`}
+                  min={0}
+                  className="p-inputtext p-component w-32 text-sm"
+                />
+              )}
+            </div>
+          </PermissionGuard>
         </div>
       ) : (
       <form onSubmit={handleSubmit} className="flex flex-col gap-2">
 
         {/* Fila 1: campos principales + botón */}
-        <div className="flex flex-col md:flex-row justify-center items-center gap-2">
+        <div className="flex flex-col md:flex-row justify-center items-start gap-2">
           <section
             className={`grid w-full md:w-auto ${
               showLineWarehouse ? "xl:grid-cols-6" : "xl:grid-cols-4"
@@ -593,6 +624,8 @@ const SaleOrderDetailForm: FC<SaleOrderDetailFormProps> = ({ saleOrderId }) => {
               value={values.sale_price}
               error={errors.sale_price ?? ""}
               onChange={handleChange}
+              onBlur={handleSalePriceBlur}
+              min={!canSellBelowMin && priceFloor != null ? priceFloor : undefined}
             />
             <FieldTextInput
               className="md:col-span-1"
@@ -606,7 +639,8 @@ const SaleOrderDetailForm: FC<SaleOrderDetailFormProps> = ({ saleOrderId }) => {
               onChange={handleChange}
             />
           </section>
-          <section className="flex items-end justify-center w-full md:w-auto">
+          <section className="flex flex-col justify-center w-full md:w-auto">
+            <label className="mb-1 invisible hidden md:block">Agregar</label>
             <Button
               icon="pi pi-plus"
               type="submit"
@@ -619,6 +653,7 @@ const SaleOrderDetailForm: FC<SaleOrderDetailFormProps> = ({ saleOrderId }) => {
         </div>
 
         {/* Fila 2: descuento */}
+        <PermissionGuard permissions={["APPLY_DISCOUNT"]}>
         <div className="flex flex-wrap items-center gap-3 border-t pt-2">
           <SelectButton
             value={discountType}
@@ -656,6 +691,7 @@ const SaleOrderDetailForm: FC<SaleOrderDetailFormProps> = ({ saleOrderId }) => {
             </div>
           )}
         </div>
+        </PermissionGuard>
 
       </form>
       )}

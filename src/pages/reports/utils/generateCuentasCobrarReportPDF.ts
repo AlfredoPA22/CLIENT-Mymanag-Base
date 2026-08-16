@@ -1,6 +1,6 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import { ISaleOrder } from "../../../utils/interfaces/SaleOrder";
+import { ICuentaCobrarRow } from "../../../utils/interfaces/SaleOrder";
 import { convertCurrency, formatAmount } from "../../../utils/currency";
 
 const INK: [number, number, number] = [30, 41, 59];
@@ -20,14 +20,14 @@ const drawRule = (doc: jsPDF, y: number) => {
   doc.line(MARGIN, y, PAGE_W - MARGIN, y);
 };
 
-// Una factura puede haberse hecho en la moneda alterna de la empresa (Bs) —
+// Una nota puede haberse hecho en la moneda alterna de la empresa (Bs) —
 // este reporte siempre se muestra en la moneda de la empresa, así que cada
 // monto se convierte primero con el tipo de cambio congelado en su nota.
-const toCompanyAmount = (order: ISaleOrder, amount: number, baseCurrency: string) =>
-  convertCurrency(amount, order.currency ?? baseCurrency, baseCurrency, order.exchange_rate);
+const toCompanyAmount = (row: ICuentaCobrarRow, amount: number, baseCurrency: string) =>
+  convertCurrency(amount, row.sale_order.currency ?? baseCurrency, baseCurrency, row.sale_order.exchange_rate);
 
 export const generateCuentasCobrarReportPDF = (
-  data: ISaleOrder[],
+  data: ICuentaCobrarRow[],
   currency: string,
   filters: { startDate?: Date | null; endDate?: Date | null }
 ) => {
@@ -71,20 +71,41 @@ export const generateCuentasCobrarReportPDF = (
     : "Sin filtro";
   doc.text(`${desde}  —  ${hasta}`, MARGIN + 18, filterY);
 
-  const total = data.reduce((s, o) => s + toCompanyAmount(o, Number(o.total) || 0, currency), 0);
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(7);
-  doc.setTextColor(...INK_MID);
-  doc.text("TOTAL PENDIENTE", PAGE_W - MARGIN, filterY, { align: "right" });
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(13);
-  doc.setTextColor(220, 38, 38);
-  doc.text(`${formatAmount(total)} ${currency}`, PAGE_W - MARGIN, filterY + 9, { align: "right" });
+  drawRule(doc, filterY + 6);
 
-  drawRule(doc, filterY + 16);
+  // ── Resumen: vendido / pagado / pendiente ──────────────────
+  const totalSold = data.reduce((s, r) => s + toCompanyAmount(r, Number(r.sale_order.total) || 0, currency), 0);
+  const totalPaid = data.reduce((s, r) => s + toCompanyAmount(r, r.total_paid || 0, currency), 0);
+  const totalPending = data.reduce((s, r) => s + toCompanyAmount(r, r.total_pending || 0, currency), 0);
+
+  const summaryY = filterY + 16;
+  const colW = (PAGE_W - MARGIN * 2) / 3;
+  const summaryCols: [string, number, [number, number, number]][] = [
+    ["VENDIDO", totalSold, INK],
+    ["PAGADO", totalPaid, [22, 163, 74]],
+    ["PENDIENTE", totalPending, [220, 38, 38]],
+  ];
+  summaryCols.forEach(([label, amount, color], i) => {
+    const x = MARGIN + colW * i;
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(7);
+    doc.setTextColor(...INK_MID);
+    doc.text(label, x, summaryY, { align: i === 0 ? "left" : i === 2 ? "right" : "center" });
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(13);
+    doc.setTextColor(...color);
+    doc.text(
+      `${formatAmount(amount)} ${currency}`,
+      x,
+      summaryY + 8,
+      { align: i === 0 ? "left" : i === 2 ? "right" : "center" }
+    );
+  });
+
+  drawRule(doc, summaryY + 14);
 
   autoTable(doc, {
-    head: [["Código", "Fecha", "Cliente", `Total (${currency})`]],
+    head: [["Código", "Fecha", "Cliente", "Vendido", "Pagado", "Pendiente"]],
     headStyles: {
       fillColor: TABLE_HEAD,
       textColor: INK,
@@ -93,21 +114,25 @@ export const generateCuentasCobrarReportPDF = (
       halign: "center",
       cellPadding: { top: 4, right: 3, bottom: 4, left: 3 },
     },
-    body: data.map((o) => [
-      o.code,
-      new Date(Number(o.date)).toLocaleDateString("es-ES"),
-      o.client?.fullName || "-",
-      formatAmount(toCompanyAmount(o, Number(o.total || 0), currency)),
+    body: data.map((r) => [
+      r.sale_order.code,
+      new Date(Number(r.sale_order.date)).toLocaleDateString("es-ES"),
+      r.sale_order.client?.fullName || "-",
+      formatAmount(toCompanyAmount(r, Number(r.sale_order.total || 0), currency)),
+      formatAmount(toCompanyAmount(r, r.total_paid || 0, currency)),
+      formatAmount(toCompanyAmount(r, r.total_pending || 0, currency)),
     ]),
     bodyStyles: { fontSize: 8.5, textColor: INK, cellPadding: 4 },
     alternateRowStyles: { fillColor: ROW_ALT },
-    startY: filterY + 22,
+    startY: summaryY + 20,
     theme: "plain",
     columnStyles: {
-      0: { cellWidth: 32, halign: "center" },
-      1: { cellWidth: 28, halign: "center" },
-      2: { cellWidth: 98 },
+      0: { cellWidth: 26, halign: "center" },
+      1: { cellWidth: 22, halign: "center" },
+      2: { cellWidth: 58 },
       3: { cellWidth: 24, halign: "right" },
+      4: { cellWidth: 24, halign: "right", textColor: [22, 163, 74] },
+      5: { cellWidth: 28, halign: "right", textColor: [220, 38, 38], fontStyle: "bold" },
     },
     margin: { left: MARGIN, right: MARGIN },
     tableLineColor: RULE,

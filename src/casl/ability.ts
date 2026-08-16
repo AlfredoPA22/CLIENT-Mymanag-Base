@@ -213,6 +213,12 @@ export function buildAbility(permissions: string[]): AppAbility {
       case "DELETE_SALE":
         can("delete", "Sale");
         break;
+      case "APPLY_DISCOUNT":
+        can("applyDiscount", "Sale");
+        break;
+      case "SELL_BELOW_MIN_PRICE":
+        can("sellBelowMin", "Sale");
+        break;
 
       // ── Pagos ───────────────────────────────────────────────────────────────
       case "ALL_PAYMENTS":
@@ -275,6 +281,18 @@ export function buildAbility(permissions: string[]): AppAbility {
         break;
       case "CLOSE_CASH_REGISTER":
         can("update", "CashRegister");
+        break;
+
+      // ── Comisiones ──────────────────────────────────────────────────────────
+      case "ALL_COMMISSION":
+        can("manage", "Commission");
+        break;
+      case "COMMISSION_REPORT":
+        can("list", "Commission");
+        can("read", "Commission");
+        break;
+      case "PAY_COMMISSION":
+        can("update", "Commission");
         break;
     }
   }
@@ -349,6 +367,8 @@ const PERMISSION_MAP: Record<string, Array<[string, string]>> = {
   DETAIL_SALE: [["read", "Sale"]],
   EDIT_SALE: [["update", "Sale"]],
   DELETE_SALE: [["delete", "Sale"]],
+  APPLY_DISCOUNT: [["applyDiscount", "Sale"]],
+  SELL_BELOW_MIN_PRICE: [["sellBelowMin", "Sale"]],
   ALL_PAYMENTS: [["manage", "Payment"]],
   LIST_PAYMENT: [["list", "Payment"]],
   CREATE_PAYMENT: [["create", "Payment"]],
@@ -366,6 +386,9 @@ const PERMISSION_MAP: Record<string, Array<[string, string]>> = {
   LIST_CASH_REGISTER: [["list", "CashRegister"]],
   OPEN_CASH_REGISTER: [["create", "CashRegister"]],
   CLOSE_CASH_REGISTER: [["update", "CashRegister"]],
+  ALL_COMMISSION: [["manage", "Commission"]],
+  COMMISSION_REPORT: [["read", "Commission"]],
+  PAY_COMMISSION: [["update", "Commission"]],
 };
 
 /**

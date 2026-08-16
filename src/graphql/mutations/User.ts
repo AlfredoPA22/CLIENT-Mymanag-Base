@@ -12,6 +12,7 @@ export const CREATE_USER = gql`
     $role: String!
     $user_name: String!
     $is_global: Boolean!
+    $commission_rate: Float
   ) {
     createUser(
       userInput: {
@@ -19,6 +20,7 @@ export const CREATE_USER = gql`
         role: $role
         user_name: $user_name
         is_global: $is_global
+        commission_rate: $commission_rate
       }
     ) {
       _id
@@ -32,6 +34,7 @@ export const UPDATE_USER = gql`
     $role: String!
     $user_name: String!
     $is_global: Boolean!
+    $commission_rate: Float
   ) {
     updateUser(
       userId: $userId
@@ -39,6 +42,7 @@ export const UPDATE_USER = gql`
         user_name: $user_name
         role: $role
         is_global: $is_global
+        commission_rate: $commission_rate
       }
     ) {
       _id

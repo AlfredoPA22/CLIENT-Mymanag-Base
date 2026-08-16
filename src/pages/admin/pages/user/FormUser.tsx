@@ -2,10 +2,12 @@ import { useMutation } from "@apollo/client";
 import { Button } from "primereact/button";
 
 import { AutoCompleteChangeEvent } from "primereact/autocomplete";
+import { InputNumberChangeEvent } from "primereact/inputnumber";
 import { InputSwitchChangeEvent } from "primereact/inputswitch";
 import { FC, useEffect, useState } from "react";
 import DropdownInput from "../../../../components/dropdownInput/DropdownInput";
 import FieldInputSwitch from "../../../../components/inputSwitch/FieldInputSwitch";
+import FieldNumberInput from "../../../../components/FieldNumberInput/FieldNumberInput";
 import LoadingSpinner from "../../../../components/LoadingSpinner/LoadingSpinner";
 import PasswordInput from "../../../../components/PasswordInput/PasswordInput";
 import FieldTextInput from "../../../../components/textInput/FieldTextInput";
@@ -43,6 +45,7 @@ const UserForm: FC<UserFormProps> = ({ setVisibleForm, userToEdit }) => {
     password: "",
     role: userToEdit?.role?._id || "",
     is_global: userToEdit?.is_global || false,
+    commission_rate: userToEdit?.commission_rate ?? null,
   };
 
   const handleRoleChange = async (e: AutoCompleteChangeEvent) => {
@@ -55,6 +58,11 @@ const UserForm: FC<UserFormProps> = ({ setVisibleForm, userToEdit }) => {
   const handleIsGlobalChange = (e: InputSwitchChangeEvent) => {
     setFieldValue(e.target.name, e.value);
   };
+
+  const handleCommissionRateChange = (e: InputNumberChangeEvent) => {
+    setFieldValue("commission_rate", e.value ?? null);
+  };
+
   const onSubmit = async () => {
     if (userToEdit) {
       await updateUser({
@@ -63,6 +71,7 @@ const UserForm: FC<UserFormProps> = ({ setVisibleForm, userToEdit }) => {
           user_name: values.user_name,
           role: values.role,
           is_global: values.is_global,
+          commission_rate: values.commission_rate,
         },
       });
     } else {
@@ -151,6 +160,18 @@ const UserForm: FC<UserFormProps> = ({ setVisibleForm, userToEdit }) => {
           tooltip="Acceso global: permite ver todas las transacciones. Desactivado: solo las propias."
           checked={values.is_global}
           onChange={handleIsGlobalChange}
+        />
+
+        <FieldNumberInput
+          label="Comisión por venta (%)"
+          name="commission_rate"
+          placeholder="Ej. 5"
+          value={values.commission_rate ?? null}
+          error={errors.commission_rate ? errors.commission_rate : ""}
+          onChange={handleCommissionRateChange}
+          min={0}
+          max={100}
+          suffix=" %"
         />
       </section>
 

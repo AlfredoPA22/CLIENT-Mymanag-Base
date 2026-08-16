@@ -25,12 +25,12 @@ const SalePaymentTicket = () => {
   const { saleOrderId, paymentId } = useParams();
   const { currency } = useAuth();
 
-  const { data, loading } = useQuery(LIST_SALE_PAYMENT_BY_SALE_ORDER, {
+  const { data, loading, error } = useQuery(LIST_SALE_PAYMENT_BY_SALE_ORDER, {
     variables: { saleOrderId },
     fetchPolicy: "network-only",
     skip: !saleOrderId,
   });
-  const { data: detailData, loading: loadingDetail } = useQuery(DETAIL_SALE_PAYMENT_BY_SALE_ORDER, {
+  const { data: detailData, loading: loadingDetail, error: errorDetail } = useQuery(DETAIL_SALE_PAYMENT_BY_SALE_ORDER, {
     variables: { saleOrderId },
     fetchPolicy: "network-only",
     skip: !saleOrderId,
@@ -42,8 +42,25 @@ const SalePaymentTicket = () => {
   );
   const detail = detailData?.detailSalePaymentBySaleOrder;
 
-  if (loading || loadingDetail || !payment || !detail) {
+  if (loading || loadingDetail) {
     return <LoadingSpinner />;
+  }
+
+  // Sin esto, un pago eliminado entre que se generó el link y se abrió la
+  // pestaña (o un error de red) dejaba esta página girando en el spinner
+  // para siempre, sin ningún aviso.
+  if (error || errorDetail || !saleOrderId || !paymentId || !payment || !detail) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-200 p-6">
+        <div className="bg-white rounded-lg shadow p-6 text-center max-w-sm">
+          <i className="pi pi-exclamation-triangle text-4xl text-amber-500 mb-3" />
+          <p className="font-semibold text-gray-700">No se pudo cargar el comprobante</p>
+          <p className="text-sm text-gray-500 mt-1">
+            El pago no existe o fue eliminado. Volvé a la venta e intentá de nuevo.
+          </p>
+        </div>
+      </div>
+    );
   }
 
   const company = companyData?.detailCompany;

@@ -29,10 +29,12 @@ import { showToast } from "../../../../utils/toastUtils";
 import SerialToDetail from "./SerialToDetail";
 import { setIsBlocked } from "../../../../redux/slices/blockUISlice";
 import useAuth from "../../../auth/hooks/useAuth";
-import { convertCurrency, formatAmount } from "../../../../utils/currency";
+import { convertCurrency, formatAmount, round2 } from "../../../../utils/currency";
 import TextLink from "../../../../components/TextLink/TextLink";
 import { ROUTES_MOCK } from "../../../../routes/RouteMocks";
 import RowActionButtons, { RowAction } from "../../../../components/table/RowActionButtons";
+import { useAbility } from "../../../../casl/AbilityContext";
+import { canDoAny } from "../../../../casl/ability";
 
 interface SaleOrderDetailListProps {
   saleOrderId: string;
@@ -65,10 +67,18 @@ const SaleOrderDetailList: FC<SaleOrderDetailListProps> = ({
     useState<ISaleOrderDetail>();
   const [mobileEditVisible, setMobileEditVisible] = useState(false);
   const [mobileEditData, setMobileEditData] = useState<MobileEditState | null>(null);
+  const [mobileEditFloor, setMobileEditFloor] = useState<number | null>(null);
 
   const client = useApolloClient();
   const dispatch = useDispatch();
   const { currency } = useAuth();
+  const ability = useAbility();
+  // Sin este permiso, no se deja tocar el descuento de una línea ya
+  // existente — antes esta tabla dejaba los controles totalmente editables
+  // sin importar el permiso (el backend sí bloqueaba el guardado, pero recién
+  // ahí se enteraba el usuario, con un error crudo).
+  const canApplyDiscount = canDoAny(ability, ["APPLY_DISCOUNT"]);
+  const canSellBelowMin = canDoAny(ability, ["SELL_BELOW_MIN_PRICE"]);
 
   const [deleteProductToSaleOrderDetail] = useMutation(
     DELETE_PRODUCT_TO_SALE_ORDER_DETAIL,
@@ -106,6 +116,16 @@ const SaleOrderDetailList: FC<SaleOrderDetailListProps> = ({
   const displayCurrency = viewCurrency ?? noteCurrency;
   const convertForDisplay = (amount: number) =>
     convertCurrency(amount, noteCurrency, displayCurrency, noteExchangeRate);
+
+  // Piso de precio del producto de esta línea (mismo criterio que usa el
+  // backend en assertPriceAboveMinimum): min_sale_price si está configurado,
+  // si no el propio sale_price, convertido de la moneda base a la de la nota.
+  const priceFloorFor = (rowData: ISaleOrderDetail): number | null => {
+    if (!rowData.product) return null;
+    const floorBase = rowData.product.min_sale_price ?? rowData.product.sale_price;
+    if (!floorBase || floorBase <= 0) return null;
+    return round2(convertCurrency(floorBase, currency, noteCurrency, noteExchangeRate));
+  };
 
   // Serializado con menos seriales asignados que unidades vendidas — no se
   // puede aprobar la venta así, y entre muchos productos es fácil pasarlo
@@ -149,7 +169,20 @@ const SaleOrderDetailList: FC<SaleOrderDetailListProps> = ({
       discount_type: detail.discount_type || "",
       discount_value: detail.discount_value ?? "",
     });
+    setMobileEditFloor(priceFloorFor(detail));
     setMobileEditVisible(true);
+  };
+
+  const handleMobilePriceBlur = () => {
+    if (canSellBelowMin || mobileEditFloor == null) return;
+    const current = Number(mobileEditData?.sale_price) || 0;
+    if (current > 0 && current < mobileEditFloor) {
+      setMobileEditData((prev) => (prev ? { ...prev, sale_price: mobileEditFloor } : null));
+      showToast({
+        detail: `El precio mínimo para este producto es ${formatAmount(mobileEditFloor)} ${noteCurrency}.`,
+        severity: ToastSeverity.Warn,
+      });
+    }
   };
 
   const handleMobileEditSave = async () => {
@@ -302,7 +335,29 @@ const SaleOrderDetailList: FC<SaleOrderDetailListProps> = ({
       body: (rowData: ISaleOrderDetail) => (
         <LabelInput className="justify-center" label={`${formatAmount(convertForDisplay(rowData.sale_price))} ${displayCurrency}`} />
       ),
-      fieldEditor: (options: ColumnEditorOptions) => numberEditor(options, true),
+      fieldEditor: (options: ColumnEditorOptions) => {
+        const rowData = options.rowData as ISaleOrderDetail;
+        const floor = priceFloorFor(rowData);
+        return numberEditor(
+          options,
+          true,
+          !canSellBelowMin && floor != null
+            ? {
+                min: floor,
+                onBlur: () => {
+                  const current = Number(options.value) || 0;
+                  if (current > 0 && current < floor) {
+                    options.editorCallback!(floor);
+                    showToast({
+                      detail: `El precio mínimo para este producto es ${formatAmount(floor)} ${noteCurrency}.`,
+                      severity: ToastSeverity.Warn,
+                    });
+                  }
+                },
+              }
+            : {}
+        );
+      },
     },
     {
       field: "quantity",
@@ -324,14 +379,25 @@ const SaleOrderDetailList: FC<SaleOrderDetailListProps> = ({
         return <span className="text-xs text-orange-600">{formatAmount(convertForDisplay(rowData.discount_value ?? 0))} {displayCurrency}</span>;
       },
       fieldEditor: (options: ColumnEditorOptions) => (
-        <Dropdown
-          value={options.value ?? ""}
-          options={discountTypeOptions}
-          optionLabel="label"
-          optionValue="value"
-          onChange={(e) => options.editorCallback!(e.value)}
-          className="w-full text-sm"
-        />
+        // Mismo armazón que numberEditor (FieldNumberInput: label vacía +
+        // input + slot de error) para que quede a la misma altura que el
+        // resto de los editores de la fila — un <Dropdown> suelto, sin esos
+        // espaciadores, queda centrado en una celda más alta y se ve corrido.
+        <section className="flex flex-col p-inputtext-sm">
+          <label className="mb-1 flex gap-1 font-bold"></label>
+          <Dropdown
+            value={options.value ?? ""}
+            options={discountTypeOptions}
+            optionLabel="label"
+            optionValue="value"
+            onChange={(e) => options.editorCallback!(e.value)}
+            className="w-full text-sm"
+            disabled={!canApplyDiscount}
+          />
+          <small className="p-error text-xs block h-5">
+            {!canApplyDiscount && "Sin permiso"}
+          </small>
+        </section>
       ),
     },
     {
@@ -344,7 +410,7 @@ const SaleOrderDetailList: FC<SaleOrderDetailListProps> = ({
         if (amt === 0) return <span className="text-gray-400 text-xs">—</span>;
         return <span className="text-xs text-orange-500">-{formatAmount(convertForDisplay(amt))} {displayCurrency}</span>;
       },
-      fieldEditor: (options: ColumnEditorOptions) => numberEditor(options, true),
+      fieldEditor: (options: ColumnEditorOptions) => numberEditor(options, true, { disabled: !canApplyDiscount }),
     },
     {
       field: "subtotal",
@@ -374,7 +440,7 @@ const SaleOrderDetailList: FC<SaleOrderDetailListProps> = ({
         return <>—</>;
       },
     },
-  ], [noteCurrency, displayCurrency]);
+  ], [noteCurrency, displayCurrency, canApplyDiscount, canSellBelowMin, currency, noteExchangeRate]);
 
   const { filters, renderFilterInput } = useTableGlobalFilter(columns);
 
@@ -514,13 +580,14 @@ const SaleOrderDetailList: FC<SaleOrderDetailListProps> = ({
               <input
                 type="number"
                 className="p-inputtext p-component w-full"
-                min={0}
+                min={!canSellBelowMin && mobileEditFloor != null ? mobileEditFloor : 0}
                 value={mobileEditData?.sale_price ?? ""}
                 onChange={(e) =>
                   setMobileEditData((prev) =>
                     prev ? { ...prev, sale_price: e.target.value } : null
                   )
                 }
+                onBlur={handleMobilePriceBlur}
               />
             </div>
             <div className="flex flex-col gap-1">
@@ -539,7 +606,10 @@ const SaleOrderDetailList: FC<SaleOrderDetailListProps> = ({
               />
             </div>
             <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium text-gray-700">Descuento</label>
+              <label className="text-sm font-medium text-gray-700">
+                Descuento
+                {!canApplyDiscount && <span className="text-xs text-gray-400 font-normal"> (sin permiso)</span>}
+              </label>
               <SelectButton
                 value={mobileEditData?.discount_type ?? ""}
                 options={discountTypeOptions}
@@ -554,6 +624,7 @@ const SaleOrderDetailList: FC<SaleOrderDetailListProps> = ({
                   );
                 }}
                 className="w-full flex [&_.p-button]:flex-1 [&_.p-button]:justify-center"
+                disabled={!canApplyDiscount}
               />
             </div>
             {mobileEditData?.discount_type && (
@@ -567,6 +638,7 @@ const SaleOrderDetailList: FC<SaleOrderDetailListProps> = ({
                   className="p-inputtext p-component w-full"
                   min={0}
                   value={mobileEditData?.discount_value ?? ""}
+                  disabled={!canApplyDiscount}
                   onChange={(e) =>
                     setMobileEditData((prev) =>
                       prev ? { ...prev, discount_value: e.target.value } : null

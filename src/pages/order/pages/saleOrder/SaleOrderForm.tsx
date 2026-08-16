@@ -1,4 +1,5 @@
 import { useApolloClient, useMutation, useQuery } from "@apollo/client";
+import { PermissionGuard } from "../../../auth/pages/PermissionGuard";
 import { Button } from "primereact/button";
 import { Calendar } from "primereact/calendar";
 import { Dialog } from "primereact/dialog";
@@ -609,14 +610,16 @@ const SaleOrderForm = () => {
           </div>
         }
       >
-        <GeneralDiscountEditor
-          discountType={orderDiscountType}
-          discountValue={orderDiscountValue}
-          onChangeType={setOrderDiscountType}
-          onChangeValue={setOrderDiscountValue}
-          subtotal={(saleOrderData?.total ?? 0) + (saleOrderData?.discount_amount ?? 0)}
-          currency={saleOrderData?.currency ?? currency}
-        />
+        <PermissionGuard permissions={["APPLY_DISCOUNT"]}>
+          <GeneralDiscountEditor
+            discountType={orderDiscountType}
+            discountValue={orderDiscountValue}
+            onChangeType={setOrderDiscountType}
+            onChangeValue={setOrderDiscountValue}
+            subtotal={(saleOrderData?.total ?? 0) + (saleOrderData?.discount_amount ?? 0)}
+            currency={saleOrderData?.currency ?? currency}
+          />
+        </PermissionGuard>
       </Dialog>
     </form>
   );

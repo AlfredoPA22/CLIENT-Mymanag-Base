@@ -11,6 +11,7 @@ const useClientList = () => {
     data: { listClient: listClient } = [],
     loading: loadingListClient,
     error,
+    refetch: refetchListClient,
   } = useQuery(LIST_CLIENT, { fetchPolicy: "network-only" });
 
   const [listClientSelect, setListClientSelect] = useState<IReactSelect[]>([]);
@@ -33,7 +34,7 @@ const useClientList = () => {
       });
     }
   }, [error]);
-  return { listClientSelect, listClient, loadingListClient };
+  return { listClientSelect, listClient, loadingListClient, refetchListClient };
 };
 
 export default useClientList;

@@ -93,7 +93,19 @@ export const generateInventoryValueReportPDF = (
   doc.setTextColor(...INK);
   doc.text(`${formatAmount(totalVenta)} ${currency}`, PAGE_W - MARGIN, filterY + 19, { align: "right" });
 
-  drawRule(doc, filterY + 25, PAGE_W);
+  // ── Nota explicativa ────────────────────────────────────────
+  const noteY = filterY + 31;
+  doc.setFont("helvetica", "italic");
+  doc.setFontSize(6.8);
+  doc.setTextColor(...INK_LIGHT);
+  const note =
+    "Cómo se calcula: cada producto se valoriza a dos precios — el costo de su última compra y su precio de venta vigente — multiplicados por su stock actual según el sistema. " +
+    "El stock usado es el total registrado al momento de generar este reporte (no distingue entre lo disponible para vender y lo ya reservado en ventas pendientes de aprobar), " +
+    "y los valores no incluyen impuestos ni otros gastos.";
+  const noteLines = doc.splitTextToSize(note, PAGE_W - MARGIN * 2) as string[];
+  doc.text(noteLines, MARGIN, noteY);
+
+  drawRule(doc, noteY + noteLines.length * 3.2 + 3, PAGE_W);
 
   // Columns total: 24+55+40+24+24+24+14+32+32 = 269 (fills landscape with MARGIN=14 each side)
   autoTable(doc, {
@@ -129,7 +141,7 @@ export const generateInventoryValueReportPDF = (
     ]),
     bodyStyles: { fontSize: 7.5, textColor: INK, cellPadding: 3 },
     alternateRowStyles: { fillColor: ROW_ALT },
-    startY: filterY + 31,
+    startY: noteY + noteLines.length * 3.2 + 7,
     theme: "plain",
     columnStyles: {
       0: { cellWidth: 24, halign: "center" },

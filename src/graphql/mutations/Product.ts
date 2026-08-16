@@ -9,6 +9,7 @@ export const CREATE_PRODUCT = gql`
     $images: [String!]
     $show_in_store: Boolean
     $sale_price: Float
+    $min_sale_price: Float
     $store_price: Float
     $store_discount_price: Float
     $category: String!
@@ -26,6 +27,7 @@ export const CREATE_PRODUCT = gql`
         images: $images
         show_in_store: $show_in_store
         sale_price: $sale_price
+        min_sale_price: $min_sale_price
         store_price: $store_price
         store_discount_price: $store_discount_price
         category: $category
@@ -59,6 +61,7 @@ export const UPDATE_PRODUCT = gql`
     $show_in_store: Boolean
     $description: String!
     $sale_price: Float!
+    $min_sale_price: Float
     $store_price: Float
     $store_discount_price: Float
     $stock_type: StockType!
@@ -78,6 +81,7 @@ export const UPDATE_PRODUCT = gql`
         name: $name
         description: $description
         sale_price: $sale_price
+        min_sale_price: $min_sale_price
         store_price: $store_price
         store_discount_price: $store_discount_price
         stock_type: $stock_type

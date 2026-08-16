@@ -98,6 +98,7 @@ const ProductForm: FC<ProductFormProps> = ({
     image: "",
     show_in_store: productToEdit?.show_in_store ?? true,
     sale_price: productToEdit?.sale_price || 0,
+    min_sale_price: productToEdit?.min_sale_price ?? null,
     store_price: productToEdit?.store_price ?? null,
     store_discount_price: productToEdit?.store_discount_price ?? null,
     category: productToEdit?.category._id || "",
@@ -381,6 +382,16 @@ const ProductForm: FC<ProductFormProps> = ({
             error={errors.sale_price || ""}
             onChange={(e: InputNumberChangeEvent) =>
               setFieldValue("sale_price", e.value || 0)
+            }
+          />
+          <FieldNumberInput
+            label="Precio de venta mínimo (opcional)"
+            name="min_sale_price"
+            placeholder="Sin mínimo — se usa el precio de venta"
+            value={values.min_sale_price ?? null}
+            error={errors.min_sale_price || ""}
+            onChange={(e: InputNumberChangeEvent) =>
+              setFieldValue("min_sale_price", e.value ?? null)
             }
           />
           <FieldSimpleFileUpload

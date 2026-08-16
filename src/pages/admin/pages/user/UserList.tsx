@@ -167,10 +167,17 @@ const UserList = () => {
     setVisibleDetail(true);
   };
 
+  const commissionRateBodyTemplate = (rowData: IUser) => (
+    <span className={rowData.commission_rate ? "font-semibold text-gray-700" : "text-gray-400"}>
+      {rowData.commission_rate ? `${rowData.commission_rate}%` : "—"}
+    </span>
+  );
+
   const [columns] = useState<DataTableColumn<IUser>[]>([
     { field: "user_name", header: "Usuario", sortable: true, style: { width: "15%" } },
     { field: "role.name", header: "Rol", sortable: true, style: { width: "15%" } },
-    { field: "role.description", header: "Descripcion", style: { width: "30%" } },
+    { field: "role.description", header: "Descripcion", style: { width: "25%" } },
+    { field: "commission_rate", header: "Comisión", sortable: true, body: commissionRateBodyTemplate, style: { width: "10%", textAlign: "center" } },
     { field: "is_global", header: "Global", sortable: true, body: isGlobalBodyTemplate, style: { width: "10%", textAlign: "center" } },
     { field: "is_active", header: "Estado", sortable: true, body: statusBodyTemplate, style: { width: "10%", textAlign: "center" } },
   ]);

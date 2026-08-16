@@ -25,6 +25,7 @@ export const LIST_SALE_ORDER = gql`
       source
       currency
       exchange_rate
+      has_paid_commission
     }
   }
 `;
@@ -185,19 +186,23 @@ export const REPORT_SALE_ORDER_BY_YEAR = gql`
 export const REPORT_CUENTAS_COBRAR = gql`
   query ReportCuentasCobrar($startDate: Date, $endDate: Date) {
     reportCuentasCobrar(startDate: $startDate, endDate: $endDate) {
-      _id
-      code
-      date
-      client {
+      total_paid
+      total_pending
+      sale_order {
         _id
-        fullName
+        code
+        date
+        client {
+          _id
+          fullName
+        }
+        total
+        status
+        payment_method
+        is_paid
+        currency
+        exchange_rate
       }
-      total
-      status
-      payment_method
-      is_paid
-      currency
-      exchange_rate
     }
   }
 `;

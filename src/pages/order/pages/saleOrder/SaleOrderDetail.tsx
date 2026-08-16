@@ -390,6 +390,26 @@ const SaleOrderDetail: FC<SaleOrderDetailProps> = ({ saleOrderId, viewCurrency, 
 
   if (loadingSaleOrder && !data) return <OrderSkeleton />;
 
+  // Sin esto, un link viejo (notificación, recordatorio de pago) a una venta
+  // que ya fue eliminada renderizaba toda la página igual, con casi todo en
+  // blanco/undefined (el resto del componente usa `data?.findSaleOrder.campo`,
+  // que no crashea pero tampoco avisa nada) — mejor un mensaje claro. Ojo:
+  // solo para ESE caso puntual — el backend tira exactamente "Orden de venta
+  // no encontrada" cuando no existe (findSaleOrder en saleOrder.service.ts).
+  // Cualquier otro error (sin permiso, de red, etc.) ya se muestra con su
+  // mensaje real vía el toast de arriba; mostrar este cartel también ahí
+  // sería engañoso ("es posible que haya sido eliminada" cuando en realidad
+  // es un tema de permisos).
+  if (!loadingSaleOrder && !data?.findSaleOrder && errorSaleOrder?.message === "Orden de venta no encontrada") {
+    return (
+      <div className="p-5 shadow-lg rounded-lg border border-gray-200 bg-white mb-2 flex flex-col items-center justify-center gap-2 text-center py-16">
+        <i className="pi pi-exclamation-triangle text-4xl text-amber-500" />
+        <p className="font-semibold text-gray-700">Venta no encontrada</p>
+        <p className="text-sm text-gray-500">Es posible que haya sido eliminada.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="p-5 shadow-lg rounded-lg border border-gray-200 bg-white mb-2">
       <SectionHeader
@@ -870,14 +890,16 @@ const SaleOrderDetail: FC<SaleOrderDetailProps> = ({ saleOrderId, viewCurrency, 
           </div>
         }
       >
-        <GeneralDiscountEditor
-          discountType={orderDiscountType}
-          discountValue={orderDiscountValue}
-          onChangeType={setOrderDiscountType}
-          onChangeValue={setOrderDiscountValue}
-          subtotal={sumSubtotals}
-          currency={noteCurrency}
-        />
+        <PermissionGuard permissions={["APPLY_DISCOUNT"]}>
+          <GeneralDiscountEditor
+            discountType={orderDiscountType}
+            discountValue={orderDiscountValue}
+            onChangeType={setOrderDiscountType}
+            onChangeValue={setOrderDiscountValue}
+            subtotal={sumSubtotals}
+            currency={noteCurrency}
+          />
+        </PermissionGuard>
       </Dialog>
 
       {/* ── Dialog de edición de método de pago ─────────────────── */}

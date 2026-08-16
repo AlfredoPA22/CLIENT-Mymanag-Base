@@ -7,7 +7,7 @@ import {
   AiOutlineUser,
 } from "react-icons/ai";
 import { BiImport, BiTransfer, BiRevision } from "react-icons/bi";
-import { FiChevronLeft, FiCreditCard, FiPackage, FiSearch, FiShoppingBag, FiTruck, FiX } from "react-icons/fi";
+import { FiChevronLeft, FiCreditCard, FiPackage, FiPercent, FiSearch, FiShoppingBag, FiTruck, FiX } from "react-icons/fi";
 import { HiOutlineUsers } from "react-icons/hi";
 import {
   MdCategory,
@@ -159,6 +159,12 @@ const SidebarMenu = ({
           icon: <FiCreditCard />,
           to: ROUTES_MOCK.PAYMENTS,
           permission: ["LIST_PAYMENT"],
+        },
+        {
+          label: "Comisiones",
+          icon: <FiPercent />,
+          to: ROUTES_MOCK.COMMISSIONS,
+          permission: ["COMMISSION_REPORT"],
         },
       ],
     },

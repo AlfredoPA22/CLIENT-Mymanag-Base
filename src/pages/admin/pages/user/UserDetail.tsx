@@ -14,12 +14,12 @@ const UserDetail: FC<UserDetailProps> = ({ user }) => {
   const { listPermissionSelect } = usePermissionList();
 
   const filteredTree: TreeNode[] = useMemo(() => {
-    if (!user.role.permission || !listPermissionSelect) return [];
+    if (!user.role?.permission || !listPermissionSelect) return [];
 
     return listPermissionSelect
       .map((category): TreeNode | null => {
         const matchedChildren = category.children?.filter((child) =>
-          user.role.permission.includes(child.key)
+          user.role!.permission.includes(child.key)
         );
 
         if (matchedChildren && matchedChildren.length > 0) {
@@ -36,7 +36,7 @@ const UserDetail: FC<UserDetailProps> = ({ user }) => {
         return null;
       })
       .filter((node): node is TreeNode => node !== null);
-  }, [user.role.permission, listPermissionSelect]);
+  }, [user.role, listPermissionSelect]);
 
   return (
     <div className="flex flex-col gap-4">
@@ -54,13 +54,15 @@ const UserDetail: FC<UserDetailProps> = ({ user }) => {
           <div className="flex items-center gap-2">
             <i className="pi pi-id-card text-blue-500 shrink-0" />
             <span className="font-medium shrink-0">Rol:</span>
-            <span className="break-words">{user.role.name}</span>
+            <span className="break-words">
+              {user.role?.name ?? <span className="text-gray-400 italic">Rol eliminado</span>}
+            </span>
           </div>
 
           <div className="flex items-start gap-2">
             <i className="pi pi-align-left text-blue-500 shrink-0 mt-0.5" />
             <span className="font-medium shrink-0">Descripción:</span>
-            <span className="break-words">{user.role.description}</span>
+            <span className="break-words">{user.role?.description}</span>
           </div>
 
           {/* 🌳 Permisos del usuario */}

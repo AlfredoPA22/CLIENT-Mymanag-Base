@@ -1,10 +1,11 @@
 import { ColumnEditorOptions } from "primereact/column";
-import { InputNumberChangeEvent } from "primereact/inputnumber";
+import { InputNumberChangeEvent, InputNumberProps } from "primereact/inputnumber";
 import FieldNumberInput from "../FieldNumberInput/FieldNumberInput";
 
 export const numberEditor = (
   options: ColumnEditorOptions,
-  minFractionDigits: boolean = false
+  minFractionDigits: boolean = false,
+  extraProps: Partial<InputNumberProps> = {}
 ) => (
   <FieldNumberInput
     className="md:col-span-1"
@@ -17,5 +18,6 @@ export const numberEditor = (
     onChange={
       (e: InputNumberChangeEvent) => options.editorCallback!(e.value) // Usa '!' para asegurarte de que 'editorCallback' no sea undefined
     }
+    {...extraProps}
   />
 );

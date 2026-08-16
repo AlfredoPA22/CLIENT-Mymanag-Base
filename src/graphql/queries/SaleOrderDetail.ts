@@ -9,6 +9,8 @@ export const LIST_SALE_ORDER_DETAIL = gql`
         code
         name
         stock_type
+        sale_price
+        min_sale_price
       }
       custom_name
       custom_cost

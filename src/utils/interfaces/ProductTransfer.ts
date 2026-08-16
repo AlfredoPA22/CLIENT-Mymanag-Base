@@ -28,7 +28,10 @@ export interface IProductTransferDetail {
   _id: string;
   quantity: number;
   serials: string[];
-  product: Pick<IProduct, "_id" | "code" | "name" | "stock_type" | "stock">;
+  // null si el producto fue eliminado (referencia huérfana) — el backend
+  // ahora bloquea borrar un producto mientras exista un ProductTransferDetail
+  // apuntándolo, pero datos viejos podrían seguir teniendo esto en null.
+  product: Pick<IProduct, "_id" | "code" | "name" | "stock_type" | "stock"> | null;
 }
 
 export interface IAddSerialToTransferDetailInput {

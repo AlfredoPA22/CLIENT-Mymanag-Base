@@ -21,9 +21,13 @@ export interface IUser {
   _id: string;
   user_name: string;
   password: string;
-  role: IRole;
+  // null si el rol asignado fue eliminado (referencia huérfana) — el backend
+  // ahora valida el rol al crear/editar un usuario, pero datos viejos podrían
+  // seguir teniendo esto en null.
+  role: IRole | null;
   is_active: boolean;
   is_global: boolean;
+  commission_rate?: number | null;
 }
 
 export interface IUserInput {
@@ -31,6 +35,7 @@ export interface IUserInput {
   password: string;
   role: string;
   is_global: boolean;
+  commission_rate?: number | null;
 }
 
 export interface IChangePasswordInput {

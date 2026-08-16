@@ -28,4 +28,5 @@ export const ROUTES_MOCK = {
   SALE_RETURNS: "/devoluciones",
   PAYMENTS: "/pagos",
   CASH_REGISTER: "/caja",
+  COMMISSIONS: "/comisiones",
 };

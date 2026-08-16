@@ -34,6 +34,7 @@ import ViewProductTransfer from "../pages/transfer/ViewProductTransfer";
 import SaleReturnList from "../pages/order/pages/saleReturn/SaleReturnList";
 import StoreSettings from "../pages/store/StoreSettings";
 import CashRegisterPage from "../pages/cashRegister/CashRegisterPage";
+import CommissionList from "../pages/commission/CommissionList";
 
 const PrivateRoutes: FC = () => {
   return (
@@ -244,6 +245,16 @@ const PrivateRoutes: FC = () => {
             element={
               <PermissionRoute permissions={["LIST_CASH_REGISTER"]}>
                 <CashRegisterPage />
+              </PermissionRoute>
+            }
+          />
+
+          {/* comisiones */}
+          <Route
+            path={`${ROUTES_MOCK.COMMISSIONS}`}
+            element={
+              <PermissionRoute permissions={["COMMISSION_REPORT"]}>
+                <CommissionList />
               </PermissionRoute>
             }
           />

@@ -12,6 +12,7 @@ export interface IProduct {
   last_cost_price: number;
   name: string;
   sale_price: number;
+  min_sale_price?: number | null;
   store_price?: number | null;
   store_discount_price?: number | null;
   status: string;
@@ -34,6 +35,7 @@ export interface IProductInput {
   images?: string[];
   show_in_store?: boolean;
   sale_price?: number;
+  min_sale_price?: number | null;
   store_price?: number | null;
   store_discount_price?: number | null;
   category: string;
