@@ -16,6 +16,8 @@ export const UPDATE_COMPANY = gql`
       store_enabled
       store_banner_image
       pos_sale_mode_enabled
+      sale_pdf_footer_note
+      sale_pdf_footer_image
       store_theme {
         primary
         primaryDark

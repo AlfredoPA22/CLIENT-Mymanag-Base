@@ -13,6 +13,9 @@ import SaleOrderReportFilter from "./SaleOrderReportFilter";
 import InventoryValueReportFilter from "./InventoryValueReportFilter";
 import CuentasCobrarReportFilter from "./CuentasCobrarReportFilter";
 import ProfitabilityReportFilter from "./ProfitabilityReportFilter";
+import CommissionReportFilter from "./CommissionReportFilter";
+import TransferReportFilter from "./TransferReportFilter";
+import CashRegisterReportFilter from "./CashRegisterReportFilter";
 import { generateClientReportPDF } from "../utils/generateClientReportPDF";
 import { generateLowStockReportPDF } from "../utils/generateLowStockReportPDF";
 
@@ -24,6 +27,9 @@ const ReportsPage = () => {
   const [visibleInventoryValue, setVisibleInventoryValue] = useState(false);
   const [visibleCuentasCobrar, setVisibleCuentasCobrar] = useState(false);
   const [visibleProfitability, setVisibleProfitability] = useState(false);
+  const [visibleCommission, setVisibleCommission] = useState(false);
+  const [visibleTransfer, setVisibleTransfer] = useState(false);
+  const [visibleCashRegister, setVisibleCashRegister] = useState(false);
   const [loadingClients, setLoadingClients] = useState(false);
   const [loadingLowStock, setLoadingLowStock] = useState(false);
 
@@ -94,6 +100,12 @@ const ReportsPage = () => {
           permission: "PRODUCT_REPORT",
           onClick: () => setVisibleCatalog(true),
         },
+        {
+          label: "Transferencias",
+          icon: "pi pi-arrow-right-arrow-left",
+          permission: "LIST_TRANSFER",
+          onClick: () => setVisibleTransfer(true),
+        },
       ],
     },
     {
@@ -121,6 +133,12 @@ const ReportsPage = () => {
           onClick: handleClientReport,
           loading: loadingClients,
         },
+        {
+          label: "Comisiones",
+          icon: "pi pi-percentage",
+          permission: "COMMISSION_REPORT",
+          onClick: () => setVisibleCommission(true),
+        },
       ],
     },
     {
@@ -134,6 +152,20 @@ const ReportsPage = () => {
           icon: "pi pi-chart-bar",
           permission: "PURCHASE_ORDER_REPORT",
           onClick: () => setVisiblePurchaseOrderFilter(true),
+        },
+      ],
+    },
+    {
+      label: "Caja",
+      icon: "pi pi-wallet",
+      color: "bg-sky-50 border-sky-100",
+      iconColor: "text-sky-500",
+      reports: [
+        {
+          label: "Histórico de arqueos",
+          icon: "pi pi-history",
+          permission: "LIST_CASH_REGISTER",
+          onClick: () => setVisibleCashRegister(true),
         },
       ],
     },
@@ -254,6 +286,33 @@ const ReportsPage = () => {
         onHide={() => setVisibleProfitability(false)}
       >
         <ProfitabilityReportFilter setVisible={setVisibleProfitability} />
+      </Dialog>
+
+      <Dialog
+        className="xl:w-[40vw] w-[90vw]"
+        header="Reporte de comisiones"
+        visible={visibleCommission}
+        onHide={() => setVisibleCommission(false)}
+      >
+        <CommissionReportFilter setVisible={setVisibleCommission} />
+      </Dialog>
+
+      <Dialog
+        className="xl:w-[45vw] w-[90vw]"
+        header="Reporte de transferencias"
+        visible={visibleTransfer}
+        onHide={() => setVisibleTransfer(false)}
+      >
+        <TransferReportFilter setVisible={setVisibleTransfer} />
+      </Dialog>
+
+      <Dialog
+        className="xl:w-[45vw] w-[90vw]"
+        header="Histórico de arqueos de caja"
+        visible={visibleCashRegister}
+        onHide={() => setVisibleCashRegister(false)}
+      >
+        <CashRegisterReportFilter setVisible={setVisibleCashRegister} />
       </Dialog>
     </Card>
   );

@@ -18,6 +18,8 @@ export interface ICompany {
   store_banner_image?: string;
   store_theme?: IStoreTheme;
   pos_sale_mode_enabled?: boolean;
+  sale_pdf_footer_note?: string;
+  sale_pdf_footer_image?: string;
   plan: string;
   status: string;
   trial_expires_at?: string | null;
@@ -39,4 +41,6 @@ export interface ICompanyInput {
   store_banner_image?: string;
   store_theme?: IStoreTheme;
   pos_sale_mode_enabled?: boolean;
+  sale_pdf_footer_note?: string;
+  sale_pdf_footer_image?: string;
 }

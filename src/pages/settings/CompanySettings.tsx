@@ -9,6 +9,7 @@ import FieldSimpleFileUpload from "../../components/fileuploadInput/FileUploadIn
 import LabelInput from "../../components/labelInput/LabelInput";
 import LoadingSpinner from "../../components/LoadingSpinner/LoadingSpinner";
 import SectionHeader from "../../components/sectionHeader/SectionHeader";
+import FieldTextareaInput from "../../components/textAreaInput/FieldTextareaInput";
 import FieldTextInput from "../../components/textInput/FieldTextInput";
 import useAuth from "../auth/hooks/useAuth";
 import { useFormikForm } from "../../hooks/useFormikForm";
@@ -62,6 +63,7 @@ interface CompanyFormProps {
 
 const CompanySettingsForm = ({ company, canEdit, saveCompany, loadingUpdate }: CompanyFormProps) => {
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [selectedFooterImage, setSelectedFooterImage] = useState<File | null>(null);
 
   const initialValues: ICompanyInput = {
     legal_name: company.legal_name ?? "",
@@ -74,6 +76,8 @@ const CompanySettingsForm = ({ company, canEdit, saveCompany, loadingUpdate }: C
     exchange_rate: company.exchange_rate ?? null,
     payment_exchange_rate_source: company.payment_exchange_rate_source ?? paymentExchangeRateSource.ACTUAL,
     image: company.image ?? "",
+    sale_pdf_footer_note: company.sale_pdf_footer_note ?? "",
+    sale_pdf_footer_image: company.sale_pdf_footer_image ?? "",
   };
 
   const onSubmit = async () => {
@@ -81,9 +85,14 @@ const CompanySettingsForm = ({ company, canEdit, saveCompany, loadingUpdate }: C
       const url = await uploadImage(selectedImage);
       values.image = url ?? values.image;
     }
+    if (selectedFooterImage) {
+      const url = await uploadImage(selectedFooterImage);
+      values.sale_pdf_footer_image = url ?? values.sale_pdf_footer_image;
+    }
     await saveCompany(values);
     resetForm({ values });
     setSelectedImage(null);
+    setSelectedFooterImage(null);
   };
 
   const {
@@ -125,9 +134,29 @@ const CompanySettingsForm = ({ company, canEdit, saveCompany, loadingUpdate }: C
     setFieldValue("image", "");
   };
 
+  const onFooterImageSelect = (e: { files: File[] }) => {
+    const file = e.files[0];
+    setSelectedFooterImage(file);
+    setFieldValue("sale_pdf_footer_image", file.name ?? "");
+  };
+
+  const handleFooterImageClear = () => {
+    setSelectedFooterImage(null);
+    setFieldValue("sale_pdf_footer_image", company.sale_pdf_footer_image ?? "");
+  };
+
+  const handleFooterImageRemove = () => {
+    setSelectedFooterImage(null);
+    setFieldValue("sale_pdf_footer_image", "");
+  };
+
   const previewSrc = selectedImage
     ? URL.createObjectURL(selectedImage)
     : values.image || "";
+
+  const footerImagePreviewSrc = selectedFooterImage
+    ? URL.createObjectURL(selectedFooterImage)
+    : values.sale_pdf_footer_image || "";
 
   const initials = (company.name ?? "")
     .split(" ")
@@ -136,7 +165,7 @@ const CompanySettingsForm = ({ company, canEdit, saveCompany, loadingUpdate }: C
     .join("")
     .toUpperCase();
 
-  const isDirty = dirty || !!selectedImage;
+  const isDirty = dirty || !!selectedImage || !!selectedFooterImage;
 
   const expiresAtRaw =
     company.plan === companyPlan.FREE
@@ -409,6 +438,83 @@ const CompanySettingsForm = ({ company, canEdit, saveCompany, loadingUpdate }: C
               </p>
             </div>
           )}
+        </div>
+
+        {/* Pie de página del PDF de ventas */}
+        <div className="flex flex-col gap-3 border-t border-gray-100 pt-4">
+          <div>
+            <span className="text-sm font-medium text-gray-700">Pie de página del PDF de ventas</span>
+            <p className="text-xs text-gray-500">
+              Texto y/o imagen que se agregan al final del PDF de la nota de venta (garantía, términos, redes, un sello, etc.). Se deja en blanco si no se configura nada.
+            </p>
+          </div>
+
+          <FieldTextareaInput
+            label="Texto del pie de página (opcional)"
+            name="sale_pdf_footer_note"
+            placeholder="Ej: Garantía de 6 meses. Consultas al 700-00000."
+            value={values.sale_pdf_footer_note ?? ""}
+            rows={3}
+            cols={30}
+            error={errors.sale_pdf_footer_note}
+            onChange={handleChange}
+            disabled={!canEdit}
+          />
+
+          <div className="flex flex-col gap-2">
+            <span className="text-sm text-gray-700">Imagen del pie de página (opcional)</span>
+            <div className="flex items-center gap-4 flex-wrap">
+              {footerImagePreviewSrc && (
+                <div className="w-20 h-20 rounded-lg border border-gray-200 overflow-hidden flex items-center justify-center bg-gray-100 shadow-sm flex-shrink-0">
+                  <img src={footerImagePreviewSrc} alt="Pie de página" className="w-full h-full object-contain" />
+                </div>
+              )}
+
+              {canEdit && (
+                <div className="flex flex-col gap-2">
+                  {!selectedFooterImage && (
+                    <FieldSimpleFileUpload
+                      id="sale_pdf_footer_image"
+                      label=""
+                      name="sale_pdf_footer_image"
+                      chooseLabel={footerImagePreviewSrc ? "Cambiar imagen" : "Subir imagen"}
+                      mode="basic"
+                      auto={false}
+                      customUpload
+                      accept="image/*"
+                      maxFileSize={5000000}
+                      onSelect={onFooterImageSelect}
+                      onFileClear={handleFooterImageClear}
+                      file={selectedFooterImage}
+                      style={{ display: "block" }}
+                    />
+                  )}
+                  {selectedFooterImage && (
+                    <Button
+                      type="button"
+                      label="Quitar selección"
+                      icon="pi pi-times"
+                      severity="secondary"
+                      text
+                      size="small"
+                      onClick={handleFooterImageClear}
+                    />
+                  )}
+                  {!selectedFooterImage && footerImagePreviewSrc && (
+                    <Button
+                      type="button"
+                      label="Quitar imagen"
+                      icon="pi pi-trash"
+                      severity="danger"
+                      text
+                      size="small"
+                      onClick={handleFooterImageRemove}
+                    />
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
         {canEdit && (

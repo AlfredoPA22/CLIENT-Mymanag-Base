@@ -772,7 +772,6 @@ const SaleOrderPOS = () => {
         options={saleOrderPaymentMethodOptions}
         value={paymentMethod}
         onChange={(e) => setPaymentMethod(e.value)}
-        appendTo={document.body}
       />
       {paymentMethod === "Contado" && (
         <DropdownInput
@@ -785,7 +784,6 @@ const SaleOrderPOS = () => {
           options={getSalePaymentMethodOptions(qrAvailable)}
           value={contadoPaymentMethod}
           onChange={(e) => setContadoPaymentMethod(e.value)}
-          appendTo={document.body}
         />
       )}
     </div>
@@ -1088,7 +1086,6 @@ const SaleOrderPOS = () => {
             options={listWarehouse}
             value={pendingWarehouse}
             onChange={(e) => setPendingWarehouse(e.value)}
-            appendTo={document.body}
           />
           <Button
             label="Continuar"

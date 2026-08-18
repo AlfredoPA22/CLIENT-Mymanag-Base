@@ -299,14 +299,49 @@ export const generatePDF = async (
     );
   }
 
+  // ── PIE PERSONALIZADO DE LA EMPRESA (texto y/o imagen, opcional) ──
+  // Se calcula ANTES de las firmas porque va anclado al fondo de la página
+  // (como un pie de página real, no pegado a las firmas) — hace falta saber
+  // cuánto ocupa para dejarle su lugar reservado y que las firmas no lo
+  // choquen si ambos caen en la misma página.
+  const footerNote = (dataCompany?.sale_pdf_footer_note || "").trim();
+  const footerImageUrl = dataCompany?.sale_pdf_footer_image?.trim();
+
+  let footerImageData: string | null = null;
+  if (footerImageUrl) {
+    try {
+      footerImageData = await toBase64(footerImageUrl);
+    } catch { /* sin imagen */ }
+  }
+
+  const footerNoteLines: string[] = footerNote
+    ? doc.splitTextToSize(footerNote, PAGE_W - 2 * MARGIN - (footerImageData ? 26 : 0))
+    : [];
+
+  const hasCustomFooter = !!footerImageData || footerNoteLines.length > 0;
+  const imageBoxSize = footerImageData ? 20 : 0;
+  const customFooterHeight = Math.max(imageBoxSize, footerNoteLines.length * 4);
+
+  // Posición fija pegada arriba de la regla del pie de página (y=283) —
+  // sea en la página que ya venía o en una nueva, siempre queda al fondo.
+  const customFooterBottom = 279;
+  const customFooterY = customFooterBottom - customFooterHeight;
+
   // ── FIRMAS ───────────────────────────────────────────────
   // Si el total ya quedó muy abajo en la página (nota con muchos productos
   // o seriales), las firmas no entran antes del pie — se pasan a una
-  // página nueva en vez de superponerse con drawPaginatedFooter.
+  // página nueva en vez de superponerse con drawPaginatedFooter o con el
+  // pie personalizado de arriba.
   const signatureLineY = finalY + (hasDiscount ? 50 : 36);
+  const signatureBlockHeight = 10; // línea + label
+  const gapToCustomFooter = hasCustomFooter ? 12 : 0;
 
   let sigY = signatureLineY;
-  if (sigY > 265) {
+  const maxSigY = hasCustomFooter
+    ? customFooterY - gapToCustomFooter - signatureBlockHeight
+    : 265;
+
+  if (sigY > maxSigY) {
     doc.addPage();
     sigY = 40;
   }
@@ -327,6 +362,23 @@ export const generatePDF = async (
   doc.setTextColor(...INK_MID);
   doc.text("Entregué conforme", (col1X1 + col1X2) / 2, sigY + 5, { align: "center" });
   doc.text("Recibí conforme", (col2X1 + col2X2) / 2, sigY + 5, { align: "center" });
+
+  // ── PIE PERSONALIZADO — dibujado al fondo de la página (última página,
+  // que en este punto ya es la que quedó activa tras el posible addPage) ──
+  if (hasCustomFooter) {
+    let textX = MARGIN;
+    if (footerImageData) {
+      doc.addImage(footerImageData, "JPEG", MARGIN, customFooterY, imageBoxSize, imageBoxSize);
+      textX = MARGIN + imageBoxSize + 6;
+    }
+
+    if (footerNoteLines.length > 0) {
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(7.5);
+      doc.setTextColor(...INK_LIGHT);
+      doc.text(footerNoteLines, textX, customFooterY + 4);
+    }
+  }
 
   // ── PAGE FOOTER (numeración real, se repite en cada página) ──
   drawPaginatedFooter(doc, drawRule, INK_LIGHT, MARGIN, PAGE_W);

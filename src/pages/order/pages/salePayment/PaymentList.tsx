@@ -34,6 +34,9 @@ const STATUS_OPTIONS = [
   { label: "Pagada", value: "Pagada" },
 ];
 
+const statCardBase =
+  "bg-white rounded-2xl border border-slate-100 border-t-4 shadow-sm p-4 flex flex-col gap-3";
+
 interface ReceivableRow {
   saleOrder: ISaleOrder;
   totalPaid: number;
@@ -226,21 +229,60 @@ const PaymentList = () => {
 
   if (loading) return <LoadingSpinner />;
 
-  // Cada fila queda pendiente en la moneda de SU venta — sumarlas todas
-  // juntas mezclaría Bs y $ en un solo número sin sentido, así que se
+  // Cada fila queda pendiente/pagada en la moneda de SU venta — sumarlas
+  // todas juntas mezclaría Bs y $ en un solo número sin sentido, así que se
   // agrupan por moneda (lo mismo que ya se muestra fila por fila arriba).
   const pendingByCurrency = new Map<string, number>();
+  const paidByCurrency = new Map<string, number>();
   filteredData.forEach((r) => {
     const cur = r.saleOrder.currency ?? currency;
     pendingByCurrency.set(cur, (pendingByCurrency.get(cur) ?? 0) + r.totalPending);
+    paidByCurrency.set(cur, (paidByCurrency.get(cur) ?? 0) + r.totalPaid);
   });
   const totalsPending: [string, number][] =
     pendingByCurrency.size > 0
       ? Array.from(pendingByCurrency.entries()).map(([cur, amount]) => [cur, round2(amount)])
       : [[currency, 0]];
+  const totalsPaid: [string, number][] =
+    paidByCurrency.size > 0
+      ? Array.from(paidByCurrency.entries()).map(([cur, amount]) => [cur, round2(amount)])
+      : [[currency, 0]];
 
   return (
     <div className="flex flex-col gap-3">
+      {/* ── Resumen ────────────────────────────────────────────── */}
+      <div className="grid grid-cols-2 gap-3">
+        <div className={`${statCardBase} border-t-amber-400`}>
+          <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center">
+            <i className="pi pi-clock text-amber-500" />
+          </div>
+          <div>
+            {totalsPending.map(([cur, amount]) => (
+              <p key={cur} className="text-2xl font-bold text-slate-800">
+                {formatAmount(amount)}
+                <span className="text-sm font-medium text-slate-400 ml-1">{cur}</span>
+              </p>
+            ))}
+            <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wide">Total pendiente</p>
+          </div>
+        </div>
+
+        <div className={`${statCardBase} border-t-teal-400`}>
+          <div className="w-10 h-10 rounded-xl bg-teal-50 flex items-center justify-center">
+            <i className="pi pi-check-circle text-teal-500" />
+          </div>
+          <div>
+            {totalsPaid.map(([cur, amount]) => (
+              <p key={cur} className="text-2xl font-bold text-slate-800">
+                {formatAmount(amount)}
+                <span className="text-sm font-medium text-slate-400 ml-1">{cur}</span>
+              </p>
+            ))}
+            <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wide">Total pagado</p>
+          </div>
+        </div>
+      </div>
+
       {/* ── Panel de filtros ───────────────────────────────────── */}
       <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
         <div
@@ -351,13 +393,6 @@ const PaymentList = () => {
         header={
           <div className="flex justify-between items-center m-2 px-5">
             <h1 className="text-2xl font-bold">{`Pagos (${filteredData.length})`}</h1>
-            <span className="text-sm font-semibold text-red-600 flex flex-col items-end gap-0.5">
-              {totalsPending.map(([cur, amount]) => (
-                <span key={cur}>
-                  Por cobrar en {cur}: {formatAmount(amount)} {cur}
-                </span>
-              ))}
-            </span>
           </div>
         }
       >

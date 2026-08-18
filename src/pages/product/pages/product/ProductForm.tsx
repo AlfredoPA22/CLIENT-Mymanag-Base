@@ -7,7 +7,6 @@ import { useDispatch } from "react-redux";
 import CreatableAutoComplete from "../../../../components/creatableAutoComplete/CreatableAutoComplete";
 import DropdownInput from "../../../../components/dropdownInput/DropdownInput";
 import FieldNumberInput from "../../../../components/FieldNumberInput/FieldNumberInput";
-import FieldSimpleFileUpload from "../../../../components/fileuploadInput/FileUploadInput";
 import FieldInputSwitch from "../../../../components/inputSwitch/FieldInputSwitch";
 import { FiX } from "react-icons/fi";
 import FieldTextareaInput from "../../../../components/textAreaInput/FieldTextareaInput";
@@ -85,10 +84,19 @@ const ProductForm: FC<ProductFormProps> = ({
     null
   );
   const [selectedBrand, setSelectedBrand] = useState<IReactSelect | null>(null);
-  const [selectedImage, setSelectedImage] = useState<File | null>(null);
-  const [galleryUrls, setGalleryUrls] = useState<string[]>(
-    productToEdit?.images || []
-  );
+  // El campo "image" (principal) se manejaba antes con un input de archivo
+  // aparte — se quitó porque si se subía un PDF y se eliminaba, el botón
+  // desaparecía sin forma de volver a agregar. Ahora la principal es
+  // simplemente la primera imagen de la galería. Si el producto ya tenía una
+  // "image" guardada que no está en su galería (dato viejo, previo a este
+  // cambio), se antepone para no perderla al editar.
+  const [galleryUrls, setGalleryUrls] = useState<string[]>(() => {
+    const existingGallery = productToEdit?.images || [];
+    if (productToEdit?.image && !existingGallery.includes(productToEdit.image)) {
+      return [productToEdit.image, ...existingGallery];
+    }
+    return existingGallery;
+  });
   const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
   const [galleryDirty, setGalleryDirty] = useState(false);
   const [hasStorePrice, setHasStorePrice] = useState(
@@ -121,15 +129,11 @@ const ProductForm: FC<ProductFormProps> = ({
   };
 
   const onSubmit = async () => {
-    if (selectedImage) {
-      const data = await uploadImage(selectedImage);
-      values.image = data;
-    }
-
     const newlyUploaded = await Promise.all(
       galleryFiles.map((file) => uploadImage(file))
     );
     values.images = [...galleryUrls, ...newlyUploaded];
+    values.image = values.images[0] ?? "";
     values.store_price = hasStorePrice ? values.store_price ?? null : null;
     values.store_discount_price = hasStorePrice
       ? values.store_discount_price ?? null
@@ -220,17 +224,6 @@ const ProductForm: FC<ProductFormProps> = ({
     } finally {
       dispatch(setIsBlocked(false));
     }
-  };
-
-  const onFileSelect = (e: { files: File[] }) => {
-    const file: File = e.files[0];
-    setSelectedImage(file);
-
-    setFieldValue("image", file.name || "");
-  };
-
-  const handleFileClear = () => {
-    setSelectedImage(null);
   };
 
   const handleGallerySelect = (e: ChangeEvent<HTMLInputElement>) => {
@@ -337,6 +330,75 @@ const ProductForm: FC<ProductFormProps> = ({
             onChange={handleChange}
           />
         </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-gray-700">
+            Galería de imágenes
+          </label>
+          <p className="text-xs text-gray-400">
+            La primera imagen se usa como la principal del producto.
+          </p>
+          <div className="flex flex-wrap gap-3">
+            {galleryUrls.map((url, index) => (
+              <div
+                key={`existing-${url}`}
+                className="relative w-20 h-20 rounded-lg overflow-hidden border border-gray-200"
+              >
+                <img
+                  src={url}
+                  alt={`Imagen ${index + 1}`}
+                  className="w-full h-full object-cover"
+                />
+                {index === 0 && (
+                  <span className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[9px] text-center py-0.5">
+                    Principal
+                  </span>
+                )}
+                <button
+                  type="button"
+                  onClick={() => removeExistingGalleryImage(index)}
+                  className="absolute top-0.5 right-0.5 bg-white/90 rounded-full p-0.5 shadow"
+                >
+                  <FiX size={12} />
+                </button>
+              </div>
+            ))}
+            {galleryFiles.map((file, index) => (
+              <div
+                key={`pending-${file.name}-${index}`}
+                className="relative w-20 h-20 rounded-lg overflow-hidden border border-gray-200"
+              >
+                <img
+                  src={URL.createObjectURL(file)}
+                  alt={file.name}
+                  className="w-full h-full object-cover"
+                />
+                {galleryUrls.length === 0 && index === 0 && (
+                  <span className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[9px] text-center py-0.5">
+                    Principal
+                  </span>
+                )}
+                <button
+                  type="button"
+                  onClick={() => removePendingGalleryFile(index)}
+                  className="absolute top-0.5 right-0.5 bg-white/90 rounded-full p-0.5 shadow"
+                >
+                  <FiX size={12} />
+                </button>
+              </div>
+            ))}
+            <label className="w-20 h-20 flex items-center justify-center rounded-lg border border-dashed border-gray-300 text-xs text-gray-400 cursor-pointer hover:border-[#A0C82E] hover:text-[#A0C82E]">
+              + Agregar
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                className="hidden"
+                onChange={handleGallerySelect}
+              />
+            </label>
+          </div>
+        </div>
       </section>
 
       {/* 2. Clasificación y precios */}
@@ -388,82 +450,20 @@ const ProductForm: FC<ProductFormProps> = ({
               setFieldValue("min_sale_price", e.value ?? null)
             }
           />
-          <FieldSimpleFileUpload
-            id="image"
-            label="Imagen"
-            onSelect={onFileSelect}
-            name="image"
-            chooseLabel="Buscar archivo"
-            mode="basic"
-            auto={false}
-            customUpload={true}
-            style={{ display: values.image ? "none" : "block" }}
-            onFileClear={handleFileClear}
-            file={selectedImage}
-          />
-          <FieldInputSwitch
-            label="Mostrar en tienda online"
-            name="show_in_store"
-            checked={!!values.show_in_store}
-            onChange={(e) => setFieldValue("show_in_store", !!e.value)}
-          />
         </div>
+      </section>
 
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700">
-            Galería de imágenes (opcional)
-          </label>
-          <div className="flex flex-wrap gap-3">
-            {galleryUrls.map((url, index) => (
-              <div
-                key={`existing-${url}`}
-                className="relative w-20 h-20 rounded-lg overflow-hidden border border-gray-200"
-              >
-                <img
-                  src={url}
-                  alt={`Imagen ${index + 1}`}
-                  className="w-full h-full object-cover"
-                />
-                <button
-                  type="button"
-                  onClick={() => removeExistingGalleryImage(index)}
-                  className="absolute top-0.5 right-0.5 bg-white/90 rounded-full p-0.5 shadow"
-                >
-                  <FiX size={12} />
-                </button>
-              </div>
-            ))}
-            {galleryFiles.map((file, index) => (
-              <div
-                key={`pending-${file.name}-${index}`}
-                className="relative w-20 h-20 rounded-lg overflow-hidden border border-gray-200"
-              >
-                <img
-                  src={URL.createObjectURL(file)}
-                  alt={file.name}
-                  className="w-full h-full object-cover"
-                />
-                <button
-                  type="button"
-                  onClick={() => removePendingGalleryFile(index)}
-                  className="absolute top-0.5 right-0.5 bg-white/90 rounded-full p-0.5 shadow"
-                >
-                  <FiX size={12} />
-                </button>
-              </div>
-            ))}
-            <label className="w-20 h-20 flex items-center justify-center rounded-lg border border-dashed border-gray-300 text-xs text-gray-400 cursor-pointer hover:border-[#A0C82E] hover:text-[#A0C82E]">
-              + Agregar
-              <input
-                type="file"
-                accept="image/*"
-                multiple
-                className="hidden"
-                onChange={handleGallerySelect}
-              />
-            </label>
-          </div>
-        </div>
+      {/* 3. Tienda online */}
+      <section className="space-y-4">
+        <Divider align="center">
+          <span className="font-semibold text-sm">Tienda online</span>
+        </Divider>
+        <FieldInputSwitch
+          label="Mostrar en tienda online"
+          name="show_in_store"
+          checked={!!values.show_in_store}
+          onChange={(e) => setFieldValue("show_in_store", !!e.value)}
+        />
 
         <div className="space-y-2 border border-gray-200 rounded-lg p-4">
           <div className="flex items-center justify-between">
@@ -520,7 +520,7 @@ const ProductForm: FC<ProductFormProps> = ({
         </div>
       </section>
 
-      {/* 3. Gestión de stock */}
+      {/* 4. Gestión de stock */}
       <section className="space-y-4">
         <Divider align="center">
           <span className="font-semibold text-sm">Gestión de stock</span>
