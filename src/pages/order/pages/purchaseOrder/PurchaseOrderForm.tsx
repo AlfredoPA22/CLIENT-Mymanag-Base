@@ -5,9 +5,8 @@ import { Tag } from "primereact/tag";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { ActionMeta, SingleValue } from "react-select";
+import CreatableAutoComplete from "../../../../components/creatableAutoComplete/CreatableAutoComplete";
 import LabelInput from "../../../../components/labelInput/LabelInput";
-import SelectInput from "../../../../components/SelectInput/SelectInput";
 import { CREATE_PROVIDER } from "../../../../graphql/mutations/Provider";
 import {
   APPROVE_PURCHASE_ORDER,
@@ -16,7 +15,6 @@ import {
 import { GENERATE_CODE } from "../../../../graphql/queries/CodeGenerator";
 import { DETAIL_COMPANY } from "../../../../graphql/queries/Company";
 import { LIST_PRODUCT } from "../../../../graphql/queries/Product";
-import { LIST_PROVIDER } from "../../../../graphql/queries/Provider";
 import {
   FIND_PURCHASE_ORDER_TO_PDF,
   LIST_PURCHASE_ORDER,
@@ -52,7 +50,7 @@ const PurchaseOrderForm = () => {
     fetchPolicy: "network-only",
   });
 
-  const { listProviderSelect } = useProviderList();
+  const { listProviderSelect, refetchListProvider } = useProviderList();
   const { currency } = useAuth();
   const client = useApolloClient();
 
@@ -68,9 +66,10 @@ const PurchaseOrderForm = () => {
     refetchQueries: [{ query: LIST_PURCHASE_ORDER }, { query: LIST_PRODUCT }],
   });
 
-  const [createProvider] = useMutation(CREATE_PROVIDER, {
-    refetchQueries: [{ query: LIST_PROVIDER }],
-  });
+  // Sin refetchQueries acá — mismo bug ya encontrado en ProductForm.tsx: el
+  // matching implícito por documento podía dejar el select vacío al reabrir
+  // el formulario. Se llama a refetchListProvider directamente más abajo.
+  const [createProvider] = useMutation(CREATE_PROVIDER);
 
   const { purchaseOrderInitialized, purchaseOrderData } = useSelector(
     (state: RootState) => state.purchaseOrderSlice
@@ -139,9 +138,9 @@ const PurchaseOrderForm = () => {
     }
   };
 
-  const handleProviderChange = async (event: SingleValue<IReactSelect>, action: ActionMeta<IReactSelect>) => {
-    setSelectedProvider(event);
-    setFieldValue(action.name || "", event ? event.value : "");
+  const handleProviderChange = (value: IReactSelect | null) => {
+    setSelectedProvider(value);
+    setFieldValue("provider", value ? value.value : "");
   };
 
   const onCreateProvider = async (inputValue: string) => {
@@ -152,6 +151,7 @@ const PurchaseOrderForm = () => {
         showToast({ detail: "Proveedor creado", severity: ToastSeverity.Success });
         setSelectedProvider({ value: data.createProvider._id, label: data.createProvider.name });
         setFieldValue("provider", data.createProvider._id);
+        await refetchListProvider();
       }
     } catch (error: any) {
       showToast({ detail: error.message, severity: ToastSeverity.Error });
@@ -202,10 +202,10 @@ const PurchaseOrderForm = () => {
               className="w-full"
             />
           </div>
-          <SelectInput
+          <CreatableAutoComplete
             label="Proveedor"
             name="provider"
-            placeholder="Seleccionar proveedor"
+            placeholder="Seleccionar o escribir proveedor"
             mandatory
             options={listProviderSelect}
             error={errors.provider ? errors.provider : ""}

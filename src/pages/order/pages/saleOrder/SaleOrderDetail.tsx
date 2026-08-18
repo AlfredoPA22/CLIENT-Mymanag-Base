@@ -82,7 +82,6 @@ const SaleOrderDetail: FC<SaleOrderDetailProps> = ({ saleOrderId, viewCurrency, 
   const qrAvailable = useQrPaymentAvailable();
 
   const [showReturnDialog, setShowReturnDialog] = useState(false);
-  const [showReturnDetailDialog, setShowReturnDetailDialog] = useState(false);
   const [showApproveDialog, setShowApproveDialog] = useState(false);
   const [returnReason, setReturnReason] = useState("");
   const [returnQuantities, setReturnQuantities] = useState<Record<string, number>>({});
@@ -158,24 +157,25 @@ const SaleOrderDetail: FC<SaleOrderDetailProps> = ({ saleOrderId, viewCurrency, 
     );
   };
 
-  const handleOpenReturnDetail = () => {
-    if (existingReturn) {
-      loadReturnDetail({ variables: { saleReturnId: existingReturn._id } });
-      setShowReturnDetailDialog(true);
-    }
-  };
-
   // Los ítems sin inventario no se pueden devolver desde acá (no hay stock
   // que reponer) — se anula la venta si hace falta revertirlos.
   const details: any[] = (detailsData?.listSaleOrderDetail ?? []).filter(
     (d: any) => d.product
   );
 
+  // Un solo diálogo para "ver lo ya devuelto" + "agregar más items" — antes
+  // eran dos botones/modales separados (uno de solo lectura, otro para
+  // sumar productos a la misma devolución), lo que resultaba confuso al
+  // no quedar claro que "Agregar más items" pertenecía a la devolución que
+  // se veía en el otro botón.
   const handleOpenDialog = () => {
     setReturnReason("");
     setReturnQuantities({});
     setShowReturnDialog(true);
     loadDetails({ variables: { saleOrderId } });
+    if (existingReturn) {
+      loadReturnDetail({ variables: { saleReturnId: existingReturn._id } });
+    }
   };
 
   const handleCloseDialog = () => {
@@ -571,30 +571,32 @@ const SaleOrderDetail: FC<SaleOrderDetailProps> = ({ saleOrderId, viewCurrency, 
                   />
                 </PermissionGuard>
               )}
-              <PermissionGuard permissions={["DETAIL_SALE"]}>
-                {existingReturn && (
+              {/* Un solo botón para ver la devolución existente Y agregarle más
+                  items — antes eran dos botones/modales separados. */}
+              {existingReturn ? (
+                <PermissionGuard permissions={["DETAIL_SALE", "CREATE_SALE", "EDIT_SALE"]}>
                   <Button
                     icon="pi pi-replay"
                     type="button"
                     severity="warning"
                     label={`Devolución: ${existingReturn.code}`}
-                    onClick={handleOpenReturnDetail}
+                    onClick={handleOpenDialog}
                     outlined
                     className="w-full"
                   />
-                )}
-              </PermissionGuard>
-              <PermissionGuard permissions={["CREATE_SALE", "EDIT_SALE"]}>
-                <Button
-                  icon="pi pi-plus-circle"
-                  type="button"
-                  severity="warning"
-                  label={existingReturn ? "Agregar más items" : "Registrar devolución"}
-                  onClick={handleOpenDialog}
-                  outlined={!!existingReturn}
-                  className="w-full"
-                />
-              </PermissionGuard>
+                </PermissionGuard>
+              ) : (
+                <PermissionGuard permissions={["CREATE_SALE", "EDIT_SALE"]}>
+                  <Button
+                    icon="pi pi-plus-circle"
+                    type="button"
+                    severity="warning"
+                    label="Registrar devolución"
+                    onClick={handleOpenDialog}
+                    className="w-full"
+                  />
+                </PermissionGuard>
+              )}
             </div>
           )}
 
@@ -607,7 +609,7 @@ const SaleOrderDetail: FC<SaleOrderDetailProps> = ({ saleOrderId, viewCurrency, 
                     type="button"
                     severity="warning"
                     label={`Devolución: ${existingReturn.code}`}
-                    onClick={handleOpenReturnDetail}
+                    onClick={handleOpenDialog}
                     outlined
                     className="w-full"
                   />
@@ -740,10 +742,14 @@ const SaleOrderDetail: FC<SaleOrderDetailProps> = ({ saleOrderId, viewCurrency, 
 
       </div>
 
-      {/* ── Dialog de devolución parcial ───────────────────────── */}
+      {/* ── Dialog de devolución: ver lo ya devuelto + agregar más items ──
+          Antes eran dos botones/modales separados (uno de solo lectura,
+          otro para sumar productos a la misma devolución) — confuso, no
+          quedaba claro que "Agregar más items" pertenecía a la devolución
+          del otro botón. Ahora es un único diálogo. */}
       <Dialog
         header={existingReturn
-          ? `Agregar items a devolución — ${existingReturn.code}`
+          ? `Devolución — ${existingReturn.code}`
           : `Registrar devolución — ${data?.findSaleOrder.code}`}
         visible={showReturnDialog}
         onHide={handleCloseDialog}
@@ -751,123 +757,190 @@ const SaleOrderDetail: FC<SaleOrderDetailProps> = ({ saleOrderId, viewCurrency, 
         breakpoints={{ "640px": "95vw" }}
         footer={
           <div className="flex justify-end gap-2 pt-2">
-            <Button label="Cancelar" severity="secondary" outlined onClick={handleCloseDialog} />
             <Button
-              label={existingReturn ? "Agregar items" : "Confirmar devolución"}
-              icon="pi pi-replay"
-              severity="warning"
-              onClick={handleCreateReturn}
-              disabled={!hasSelectedItems || (!existingReturn && !returnReason.trim())}
+              label={existingReturn ? "Cerrar" : "Cancelar"}
+              severity="secondary"
+              outlined
+              onClick={handleCloseDialog}
             />
+            <PermissionGuard permissions={["CREATE_SALE", "EDIT_SALE"]}>
+              {details.length > 0 && (
+                <Button
+                  label={existingReturn ? "Agregar items" : "Confirmar devolución"}
+                  icon="pi pi-replay"
+                  severity="warning"
+                  onClick={handleCreateReturn}
+                  disabled={!hasSelectedItems || (!existingReturn && !returnReason.trim())}
+                />
+              )}
+            </PermissionGuard>
           </div>
         }
       >
         <div className="flex flex-col gap-4 pt-1">
-          {existingReturn ? (
-            <p className="text-sm text-blue-600 bg-blue-50 border border-blue-200 rounded px-3 py-2">
-              Los productos seleccionados se agregarán a la devolución <strong>{existingReturn.code}</strong>.
-            </p>
-          ) : (
-            <p className="text-sm text-gray-500">
-              Indica la cantidad a devolver por producto. Deja en <strong>0</strong> los que no se devuelven.
-            </p>
-          )}
-
-          {/* Botón devolver todo */}
-          {!loadingDetails && details.length > 0 && (
-            <div className="flex justify-end">
-              <Button
-                label="Devolver todo"
-                icon="pi pi-replay"
-                size="small"
-                severity="warning"
-                outlined
-                onClick={handleSelectAll}
-              />
+          {/* Ya devuelto — solo si esta venta ya tiene una devolución registrada */}
+          {existingReturn && (
+            <div className="flex flex-col gap-2">
+              {existingReturn.reason && (
+                <p className="text-sm text-gray-600">
+                  <span className="font-medium">Motivo:</span> {existingReturn.reason}
+                </p>
+              )}
+              {loadingReturnDetail ? (
+                <div className="flex justify-center py-4">
+                  <i className="pi pi-spin pi-spinner text-2xl text-gray-400" />
+                </div>
+              ) : (
+                <div className="border border-gray-200 rounded-lg overflow-hidden">
+                  <table className="w-full text-sm table-fixed">
+                    <thead className="bg-gray-50 text-gray-500 text-xs uppercase">
+                      <tr>
+                        <th className="px-3 py-2 text-left w-[55%]">Producto</th>
+                        <th className="px-3 py-2 text-center w-[15%]">Cant.</th>
+                        <th className="px-3 py-2 text-right w-[30%]">Subtotal</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {returnDetails.map((item: any, idx: number) => (
+                        <tr key={item._id} className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}>
+                          <td className="px-3 py-2 font-medium text-gray-700 break-words">{item.product?.name ?? "—"}</td>
+                          <td className="px-3 py-2 text-center text-gray-500">{item.quantity}</td>
+                          <td className="px-3 py-2 text-right text-gray-700">{formatAmount(item.subtotal)} {noteCurrency}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                    <tfoot className="bg-orange-50 font-semibold text-orange-700">
+                      <tr>
+                        <td className="px-3 py-2" colSpan={2}>Total devuelto</td>
+                        <td className="px-3 py-2 text-right">{formatAmount(existingReturn.total ?? 0)} {noteCurrency}</td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              )}
             </div>
           )}
 
-          {/* Lista de productos / estado vacío */}
-          {loadingDetails ? (
-            <div className="flex justify-center py-4">
-              <i className="pi pi-spin pi-spinner text-2xl text-gray-400" />
-            </div>
-          ) : details.length === 0 ? (
-            <div className="flex flex-col items-center gap-2 py-6 text-gray-400">
-              <i className="pi pi-check-circle text-3xl text-green-400" />
-              <span className="text-sm">Todos los productos de esta venta ya fueron devueltos.</span>
-            </div>
-          ) : (
-            <div className="flex flex-col divide-y divide-gray-200 border border-gray-200 rounded-lg overflow-hidden">
-              {details.map((detail: any, idx: number) => (
-                <div
-                  key={detail._id}
-                  className={`flex items-center justify-between gap-3 px-3 py-2 ${idx % 2 === 0 ? "bg-white" : "bg-gray-50"}`}
-                >
-                  <div className="min-w-0 flex-1">
-                    <p className="font-medium text-gray-700 text-sm break-words leading-snug">
-                      {detail.product?.name ?? "—"}
-                    </p>
-                    <p className="text-xs text-gray-400 mt-0.5">Disponible: {detail.quantity}</p>
-                  </div>
-                  <InputNumber
-                    value={returnQuantities[detail._id] ?? 0}
-                    onValueChange={(e) =>
-                      setReturnQuantities((prev) => ({
-                        ...prev,
-                        [detail._id]: Math.min(Math.max(e.value ?? 0, 0), detail.quantity),
-                      }))
-                    }
-                    min={0}
-                    max={detail.quantity}
-                    showButtons
-                    buttonLayout="horizontal"
-                    decrementButtonClassName="p-button-secondary p-button-sm"
-                    incrementButtonClassName="p-button-secondary p-button-sm"
-                    incrementButtonIcon="pi pi-plus"
-                    decrementButtonIcon="pi pi-minus"
-                    inputStyle={{ width: "2.5rem", textAlign: "center", fontSize: "0.85rem" }}
+          {/* Agregar más items — requiere permiso de editar la venta; un
+              usuario que solo puede VER la devolución (DETAIL_SALE) llega
+              hasta acá y no ve nada más. */}
+          <PermissionGuard permissions={["CREATE_SALE", "EDIT_SALE"]}>
+            <>
+              {existingReturn && details.length > 0 && (
+                <p className="text-sm font-semibold text-gray-700 border-t border-gray-200 pt-3">
+                  Agregar más items a esta devolución
+                </p>
+              )}
+
+              {existingReturn ? (
+                details.length > 0 && (
+                  <p className="text-sm text-blue-600 bg-blue-50 border border-blue-200 rounded px-3 py-2">
+                    Los productos seleccionados se agregarán a esta devolución.
+                  </p>
+                )
+              ) : (
+                <p className="text-sm text-gray-500">
+                  Indica la cantidad a devolver por producto. Deja en <strong>0</strong> los que no se devuelven.
+                </p>
+              )}
+
+              {/* Botón devolver todo */}
+              {!loadingDetails && details.length > 0 && (
+                <div className="flex justify-end">
+                  <Button
+                    label="Devolver todo"
+                    icon="pi pi-replay"
+                    size="small"
+                    severity="warning"
+                    outlined
+                    onClick={handleSelectAll}
                   />
                 </div>
-              ))}
-            </div>
-          )}
+              )}
 
-          {/* Resumen de lo seleccionado */}
-          {hasSelectedItems && (
-            <div className="flex justify-end text-sm font-medium text-orange-600">
-              Total a devolver: {formatAmount(returnTotal)} {noteCurrency}
-            </div>
-          )}
+              {/* Lista de productos / estado vacío */}
+              {loadingDetails ? (
+                <div className="flex justify-center py-4">
+                  <i className="pi pi-spin pi-spinner text-2xl text-gray-400" />
+                </div>
+              ) : details.length === 0 ? (
+                <div className="flex flex-col items-center gap-2 py-6 text-gray-400">
+                  <i className="pi pi-check-circle text-3xl text-green-400" />
+                  <span className="text-sm">Todos los productos de esta venta ya fueron devueltos.</span>
+                </div>
+              ) : (
+                <div className="flex flex-col divide-y divide-gray-200 border border-gray-200 rounded-lg overflow-hidden">
+                  {details.map((detail: any, idx: number) => (
+                    <div
+                      key={detail._id}
+                      className={`flex items-center justify-between gap-3 px-3 py-2 ${idx % 2 === 0 ? "bg-white" : "bg-gray-50"}`}
+                    >
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium text-gray-700 text-sm break-words leading-snug">
+                          {detail.product?.name ?? "—"}
+                        </p>
+                        <p className="text-xs text-gray-400 mt-0.5">Disponible: {detail.quantity}</p>
+                      </div>
+                      <InputNumber
+                        value={returnQuantities[detail._id] ?? 0}
+                        onValueChange={(e) =>
+                          setReturnQuantities((prev) => ({
+                            ...prev,
+                            [detail._id]: Math.min(Math.max(e.value ?? 0, 0), detail.quantity),
+                          }))
+                        }
+                        min={0}
+                        max={detail.quantity}
+                        showButtons
+                        buttonLayout="horizontal"
+                        decrementButtonClassName="p-button-secondary p-button-sm"
+                        incrementButtonClassName="p-button-secondary p-button-sm"
+                        incrementButtonIcon="pi pi-plus"
+                        decrementButtonIcon="pi pi-minus"
+                        inputStyle={{ width: "2.5rem", textAlign: "center", fontSize: "0.85rem" }}
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
 
-          {hasSelectedItems && refundAmount > 0 && (
-            <div className="flex flex-col gap-2">
-              <div className="flex items-center gap-2 text-red-600 font-bold text-base">
-                <i className="pi pi-exclamation-triangle text-2xl" />
-                <span>¡Esta devolución genera saldo a favor del cliente!</span>
-              </div>
-              <p className="text-sm bg-red-50 border border-red-200 rounded px-3 py-2 text-red-700">
-                Esta devolución implica reembolsar{" "}
-                <strong>{formatAmount(refundAmount)} {noteCurrency}</strong> al cliente, y ese reembolso debe gestionarse manualmente.
-              </p>
-            </div>
-          )}
+              {/* Resumen de lo seleccionado */}
+              {hasSelectedItems && (
+                <div className="flex justify-end text-sm font-medium text-orange-600">
+                  Total a devolver: {formatAmount(returnTotal)} {noteCurrency}
+                </div>
+              )}
 
-          {/* Motivo — solo para devoluciones nuevas */}
-          {!existingReturn && (
-            <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium text-gray-700">
-                Motivo <span className="text-red-500">*</span>
-              </label>
-              <InputTextarea
-                value={returnReason}
-                onChange={(e) => setReturnReason(e.target.value)}
-                rows={2}
-                placeholder="Ej: Producto defectuoso, cliente cambió de opinión..."
-                autoResize
-              />
-            </div>
-          )}
+              {hasSelectedItems && refundAmount > 0 && (
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center gap-2 text-red-600 font-bold text-base">
+                    <i className="pi pi-exclamation-triangle text-2xl" />
+                    <span>¡Esta devolución genera saldo a favor del cliente!</span>
+                  </div>
+                  <p className="text-sm bg-red-50 border border-red-200 rounded px-3 py-2 text-red-700">
+                    Esta devolución implica reembolsar{" "}
+                    <strong>{formatAmount(refundAmount)} {noteCurrency}</strong> al cliente, y ese reembolso debe gestionarse manualmente.
+                  </p>
+                </div>
+              )}
+
+              {/* Motivo — solo para devoluciones nuevas */}
+              {!existingReturn && (
+                <div className="flex flex-col gap-1">
+                  <label className="text-sm font-medium text-gray-700">
+                    Motivo <span className="text-red-500">*</span>
+                  </label>
+                  <InputTextarea
+                    value={returnReason}
+                    onChange={(e) => setReturnReason(e.target.value)}
+                    rows={2}
+                    placeholder="Ej: Producto defectuoso, cliente cambió de opinión..."
+                    autoResize
+                  />
+                </div>
+              )}
+            </>
+          </PermissionGuard>
         </div>
       </Dialog>
 
@@ -942,61 +1015,6 @@ const SaleOrderDetail: FC<SaleOrderDetailProps> = ({ saleOrderId, viewCurrency, 
               value={editContadoPaymentMethod}
               onChange={(e) => setEditContadoPaymentMethod(e.value)}
             />
-          )}
-        </div>
-      </Dialog>
-
-      {/* ── Dialog detalle de devolución ───────────────────────── */}
-      <Dialog
-        header={`Devolución ${existingReturn?.code ?? ""}`}
-        visible={showReturnDetailDialog}
-        onHide={() => setShowReturnDetailDialog(false)}
-        style={{ width: "520px" }}
-        breakpoints={{ "640px": "95vw" }}
-        footer={
-          <div className="flex justify-end pt-2">
-            <Button label="Cerrar" severity="secondary" outlined onClick={() => setShowReturnDetailDialog(false)} />
-          </div>
-        }
-      >
-        <div className="flex flex-col gap-4 pt-1">
-          {existingReturn?.reason && (
-            <p className="text-sm text-gray-600">
-              <span className="font-medium">Motivo:</span> {existingReturn.reason}
-            </p>
-          )}
-
-          {loadingReturnDetail ? (
-            <div className="flex justify-center py-4">
-              <i className="pi pi-spin pi-spinner text-2xl text-gray-400" />
-            </div>
-          ) : (
-            <div className="border border-gray-200 rounded-lg overflow-hidden">
-              <table className="w-full text-sm table-fixed">
-                <thead className="bg-gray-50 text-gray-500 text-xs uppercase">
-                  <tr>
-                    <th className="px-3 py-2 text-left w-[55%]">Producto</th>
-                    <th className="px-3 py-2 text-center w-[15%]">Cant.</th>
-                    <th className="px-3 py-2 text-right w-[30%]">Subtotal</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {returnDetails.map((item: any, idx: number) => (
-                    <tr key={item._id} className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}>
-                      <td className="px-3 py-2 font-medium text-gray-700 break-words">{item.product?.name ?? "—"}</td>
-                      <td className="px-3 py-2 text-center text-gray-500">{item.quantity}</td>
-                      <td className="px-3 py-2 text-right text-gray-700">{formatAmount(item.subtotal)} {noteCurrency}</td>
-                    </tr>
-                  ))}
-                </tbody>
-                <tfoot className="bg-orange-50 font-semibold text-orange-700">
-                  <tr>
-                    <td className="px-3 py-2" colSpan={2}>Total devuelto</td>
-                    <td className="px-3 py-2 text-right">{formatAmount(existingReturn?.total ?? 0)} {noteCurrency}</td>
-                  </tr>
-                </tfoot>
-              </table>
-            </div>
           )}
         </div>
       </Dialog>

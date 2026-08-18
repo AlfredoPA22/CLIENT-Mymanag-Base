@@ -11,6 +11,7 @@ const useCategoryList = () => {
     data: { listCategory: listCategory } = [],
     loading: loadingListCategory,
     error,
+    refetch: refetchListCategory,
   } = useQuery(LIST_CATEGORY, { fetchPolicy: "network-only" });
 
   const [listCategorySelect, setListCategorySelect] = useState<IReactSelect[]>(
@@ -38,7 +39,7 @@ const useCategoryList = () => {
     }
   }, [error]);
 
-  return { listCategory, listCategorySelect, loadingListCategory };
+  return { listCategory, listCategorySelect, loadingListCategory, refetchListCategory };
 };
 
 export default useCategoryList;

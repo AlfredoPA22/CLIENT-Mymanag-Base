@@ -3,8 +3,7 @@ import { Button } from "primereact/button";
 import { Divider } from "primereact/divider";
 import { FC, useState } from "react";
 import { useDispatch } from "react-redux";
-import { ActionMeta, SingleValue } from "react-select";
-import SelectInput from "../../../../components/SelectInput/SelectInput";
+import CreatableAutoComplete from "../../../../components/creatableAutoComplete/CreatableAutoComplete";
 import FieldTextInput from "../../../../components/textInput/FieldTextInput";
 import { ADD_MANY_SERIALS_TO_PURCHASE_ORDER_DETAIL } from "../../../../graphql/mutations/PurchaseOrderDetail";
 import { CREATE_WAREHOUSE } from "../../../../graphql/mutations/Warehouse";
@@ -12,7 +11,6 @@ import {
   LIST_PURCHASE_ORDER_DETAIL,
   LIST_SERIAL_BY_PURCHASE_ORDER_DETAIL,
 } from "../../../../graphql/queries/PurchaseOrderDetail";
-import { LIST_WAREHOUSE } from "../../../../graphql/queries/Warehouse";
 import { setIsBlocked } from "../../../../redux/slices/blockUISlice";
 import { ToastSeverity } from "../../../../utils/enums/toast.enum";
 import { IReactSelect } from "../../../../utils/interfaces/Select";
@@ -34,7 +32,7 @@ const AddManySerialsToDetailForm: FC<AddManySerialsToDetailFormProps> = ({
   onSuccess,
 }) => {
   const dispatch = useDispatch();
-  const { listWarehouseSelect } = useWarehouseList();
+  const { listWarehouseSelect, refetchListWarehouse } = useWarehouseList();
 
   const [selectedWarehouse, setSelectedWarehouse] =
     useState<IReactSelect | null>(null);
@@ -62,15 +60,13 @@ const AddManySerialsToDetailForm: FC<AddManySerialsToDetailFormProps> = ({
     }
   );
 
-  const [createWarehouse] = useMutation(CREATE_WAREHOUSE, {
-    refetchQueries: [{ query: LIST_WAREHOUSE }],
-  });
+  // Sin refetchQueries acá — mismo bug de select vacío ya encontrado en
+  // ProductForm.tsx/PurchaseOrderDetailForm.tsx. Se llama a
+  // refetchListWarehouse directamente en onCreateWarehouse.
+  const [createWarehouse] = useMutation(CREATE_WAREHOUSE);
 
-  const handleWarehouseChange = async (
-    event: SingleValue<IReactSelect>,
-    _action: ActionMeta<IReactSelect>
-  ) => {
-    setSelectedWarehouse(event);
+  const handleWarehouseChange = (value: IReactSelect | null) => {
+    setSelectedWarehouse(value);
   };
 
   const onCreateWarehouse = async (inputValue: string) => {
@@ -85,6 +81,7 @@ const AddManySerialsToDetailForm: FC<AddManySerialsToDetailFormProps> = ({
           value: data.createWarehouse._id,
           label: data.createWarehouse.name,
         });
+        await refetchListWarehouse();
       }
     } catch (error: any) {
       showToast({ detail: error.message, severity: ToastSeverity.Error });
@@ -191,10 +188,10 @@ const AddManySerialsToDetailForm: FC<AddManySerialsToDetailFormProps> = ({
     <div className="border border-gray-200 rounded-lg p-4 bg-gray-50/50 flex flex-col gap-2">
       {/* ── Almacén ─────────────────────────────────────── */}
       <div className="w-full sm:w-1/2">
-        <SelectInput
+        <CreatableAutoComplete
           label="Almacén"
           name="warehouse"
-          placeholder="Seleccionar almacén"
+          placeholder="Seleccionar o escribir almacén"
           mandatory
           options={listWarehouseSelect}
           onChange={handleWarehouseChange}

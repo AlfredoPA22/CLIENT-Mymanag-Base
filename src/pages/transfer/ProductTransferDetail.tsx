@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from "@apollo/client";
+import { useApolloClient, useMutation, useQuery } from "@apollo/client";
 import { Button } from "primereact/button";
 import { Tag } from "primereact/tag";
 import { FC, useEffect } from "react";
@@ -7,13 +7,12 @@ import { useNavigate } from "react-router-dom";
 import LabelInput from "../../components/labelInput/LabelInput";
 import { OrderSkeleton } from "../../components/skeleton/OrderSkeleton";
 import SectionHeader from "../../components/sectionHeader/SectionHeader";
-import {
-  APPROVE_PRODUCT_TRANSFER,
-  DELETE_PRODUCT_TRANSFER,
-} from "../../graphql/mutations/ProductTransfer";
+import { APPROVE_PRODUCT_TRANSFER } from "../../graphql/mutations/ProductTransfer";
+import { DETAIL_COMPANY } from "../../graphql/queries/Company";
 import {
   FIND_PRODUCT_TRANSFER,
   LIST_PRODUCT_TRANSFER,
+  LIST_PRODUCT_TRANSFER_DETAIL,
 } from "../../graphql/queries/ProductTransfer";
 import { setIsBlocked } from "../../redux/slices/blockUISlice";
 import { ROUTES_MOCK } from "../../routes/RouteMocks";
@@ -23,7 +22,7 @@ import { showToast } from "../../utils/toastUtils";
 import { getDate } from "../order/utils/getDate";
 import { getStatus } from "../order/utils/getStatus";
 import { confirmDialog } from "primereact/confirmdialog";
-import useAuth from "../auth/hooks/useAuth";
+import { generateProductTransferPDF } from "./utils/generateProductTransferPDF";
 
 interface ProductTransferDetailProps {
   transferId: string;
@@ -36,9 +35,7 @@ const ProductTransferDetail: FC<ProductTransferDetailProps> = ({
 }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { permissions } = useAuth();
-
-  const canDelete = permissions.includes("DELETE_TRANSFER");
+  const apolloClient = useApolloClient();
 
   const { data, loading, error } = useQuery(FIND_PRODUCT_TRANSFER, {
     variables: { transferId },
@@ -46,10 +43,6 @@ const ProductTransferDetail: FC<ProductTransferDetailProps> = ({
   });
 
   const [approveProductTransfer] = useMutation(APPROVE_PRODUCT_TRANSFER, {
-    refetchQueries: [{ query: LIST_PRODUCT_TRANSFER }],
-  });
-
-  const [deleteProductTransfer] = useMutation(DELETE_PRODUCT_TRANSFER, {
     refetchQueries: [{ query: LIST_PRODUCT_TRANSFER }],
   });
 
@@ -85,30 +78,28 @@ const ProductTransferDetail: FC<ProductTransferDetailProps> = ({
     });
   };
 
-  const handleDelete = async () => {
+  const handleGeneratePDF = async () => {
     try {
       dispatch(setIsBlocked(true));
-      const { data: result } = await deleteProductTransfer({ variables: { transferId } });
-      if (result?.deleteProductTransfer?.success) {
-        showToast({ detail: "Transferencia eliminada.", severity: ToastSeverity.Success });
-        navigate(ROUTES_MOCK.TRANSFERS);
-      }
+      const { data: detailData } = await apolloClient.query({
+        query: LIST_PRODUCT_TRANSFER_DETAIL,
+        variables: { transferId },
+        fetchPolicy: "network-only",
+      });
+      const { data: dataCompany } = await apolloClient.query({
+        query: DETAIL_COMPANY,
+        fetchPolicy: "network-only",
+      });
+      await generateProductTransferPDF(
+        transfer,
+        detailData.listProductTransferDetail,
+        dataCompany.detailCompany
+      );
     } catch (error: any) {
       showToast({ detail: error.message, severity: ToastSeverity.Error });
     } finally {
       dispatch(setIsBlocked(false));
     }
-  };
-
-  const confirmDelete = () => {
-    confirmDialog({
-      message: "¿Está seguro que desea eliminar esta transferencia?",
-      header: "Confirmación",
-      icon: "pi pi-info-circle",
-      defaultFocus: "reject",
-      acceptClassName: "p-button-danger",
-      accept: handleDelete,
-    });
   };
 
   if (loading) return <OrderSkeleton />;
@@ -187,6 +178,16 @@ const ProductTransferDetail: FC<ProductTransferDetailProps> = ({
             )}
           </div>
 
+          <Button
+            icon="pi pi-download"
+            type="button"
+            severity="secondary"
+            label="Imprimir transferencia"
+            outlined
+            className="w-full"
+            onClick={handleGeneratePDF}
+          />
+
           {isBorrador && (
             <div className="flex flex-col gap-2">
               <Button
@@ -200,17 +201,6 @@ const ProductTransferDetail: FC<ProductTransferDetailProps> = ({
                 tooltip={approveBlocked ? "Hay productos serializados con seriales incompletos" : undefined}
                 tooltipOptions={{ position: "top" }}
               />
-              {canDelete && (
-                <Button
-                  icon="pi pi-trash"
-                  type="button"
-                  severity="danger"
-                  label="Eliminar transferencia"
-                  outlined
-                  className="w-full"
-                  onClick={confirmDelete}
-                />
-              )}
             </div>
           )}
         </section>

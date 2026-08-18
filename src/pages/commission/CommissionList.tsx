@@ -1,20 +1,24 @@
-import { useMutation, useQuery } from "@apollo/client";
+import { useApolloClient, useMutation, useQuery } from "@apollo/client";
 import { Button } from "primereact/button";
 import { Calendar } from "primereact/calendar";
 import { Card } from "primereact/card";
+import { confirmDialog } from "primereact/confirmdialog";
 import { Dropdown } from "primereact/dropdown";
 import { Tag } from "primereact/tag";
 import { useMemo, useState } from "react";
-import { PermissionGuard } from "../auth/pages/PermissionGuard";
+import { useDispatch } from "react-redux";
 import { useAbility } from "../../casl/AbilityContext";
 import { canDoAny } from "../../casl/ability";
 import Table from "../../components/datatable/Table";
 import LoadingSpinner from "../../components/LoadingSpinner/LoadingSpinner";
+import RowActionButtons, { RowAction } from "../../components/table/RowActionButtons";
 import TextLink from "../../components/TextLink/TextLink";
-import { MARK_COMMISSION_PAID } from "../../graphql/mutations/Commission";
+import { MARK_COMMISSION_PAID, REVERT_COMMISSION_PAYMENT } from "../../graphql/mutations/Commission";
 import { LIST_COMMISSIONS } from "../../graphql/queries/Commission";
 import { LIST_USER } from "../../graphql/queries/User";
+import { DETAIL_COMPANY } from "../../graphql/queries/Company";
 import { ROUTES_MOCK } from "../../routes/RouteMocks";
+import { setIsBlocked } from "../../redux/slices/blockUISlice";
 import { commissionStatus } from "../../utils/enums/commissionStatus.enum";
 import { ToastSeverity } from "../../utils/enums/toast.enum";
 import { ICommission } from "../../utils/interfaces/Commission";
@@ -23,6 +27,8 @@ import { formatAmount } from "../../utils/currency";
 import { showToast } from "../../utils/toastUtils";
 import useAuth from "../auth/hooks/useAuth";
 import { getDate } from "../order/utils/getDate";
+import { generateCommissionReportPDF } from "./utils/generateCommissionReportPDF";
+import { generateCommissionPDF } from "./utils/generateCommissionPDF";
 
 const DROPDOWN_PANEL_PROPS = {
   panelStyle: { maxWidth: "95vw" },
@@ -47,6 +53,8 @@ const CommissionList = () => {
   const { currency, isGlobal } = useAuth();
   const ability = useAbility();
   const canPay = canDoAny(ability, ["PAY_COMMISSION"]);
+  const client = useApolloClient();
+  const dispatch = useDispatch();
 
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [startDate, setStartDate] = useState<Date | null>(null);
@@ -86,6 +94,7 @@ const CommissionList = () => {
   });
 
   const [markCommissionPaid] = useMutation(MARK_COMMISSION_PAID);
+  const [revertCommissionPayment] = useMutation(REVERT_COMMISSION_PAYMENT);
 
   const filteredData: ICommission[] = data?.listCommissions ?? [];
 
@@ -105,6 +114,46 @@ const CommissionList = () => {
     setStatusFilter("");
   };
 
+  const handleGeneratePDF = () => {
+    const sellerLabel = sellerOptions.find((s: any) => s.value === sellerFilter)?.label;
+    generateCommissionReportPDF(filteredData, currency, {
+      sellerLabel,
+      status: statusFilter || undefined,
+      startDate,
+      endDate,
+    });
+  };
+
+  const handleOpenTicket = (commissionId: string) => {
+    window.open(`${ROUTES_MOCK.COMMISSIONS}/${commissionId}/ticket`, "_blank");
+  };
+
+  const handleGenerateCommissionPDF = async (rowData: ICommission) => {
+    try {
+      dispatch(setIsBlocked(true));
+      const { data: dataCompany } = await client.query({ query: DETAIL_COMPANY, fetchPolicy: "network-only" });
+      await generateCommissionPDF(rowData, currency, dataCompany.detailCompany);
+    } catch (error: any) {
+      showToast({ detail: error.message, severity: ToastSeverity.Error });
+    } finally {
+      dispatch(setIsBlocked(false));
+    }
+  };
+
+  const buildCommissionActions = (rowData: ICommission): RowAction[] => {
+    const actions: RowAction[] = [
+      { label: "Imprimir ticket (térmica)", icon: "pi pi-print", severity: "secondary", onClick: () => handleOpenTicket(rowData._id) },
+      { label: "Imprimir comisión", icon: "pi pi-download", severity: "secondary", onClick: () => handleGenerateCommissionPDF(rowData) },
+    ];
+    if (canPay && rowData.status === commissionStatus.PENDIENTE) {
+      actions.push({ label: "Marcar como pagada", icon: "pi pi-check", severity: "success", onClick: () => handleMarkPaid(rowData._id) });
+    }
+    if (canPay && rowData.status === commissionStatus.PAGADA) {
+      actions.push({ label: "Anular pago", icon: "pi pi-undo", severity: "danger", onClick: () => confirmRevertPayment(rowData._id) });
+    }
+    return actions;
+  };
+
   const totalPending = filteredData
     .filter((c) => c.status === commissionStatus.PENDIENTE)
     .reduce((acc, c) => acc + c.amount, 0);
@@ -122,24 +171,35 @@ const CommissionList = () => {
     }
   };
 
+  const handleRevertPayment = async (commissionId: string) => {
+    try {
+      await revertCommissionPayment({ variables: { commissionId } });
+      showToast({ detail: "Pago de la comisión anulado — volvió a Pendiente.", severity: ToastSeverity.Success });
+      refetch();
+    } catch (error: any) {
+      showToast({ detail: error.message, severity: ToastSeverity.Error });
+    }
+  };
+
+  // Anular un pago ya hecho no es un click sin querer que se pueda deshacer
+  // solo — vale la pena una confirmación antes.
+  const confirmRevertPayment = (commissionId: string) => {
+    confirmDialog({
+      message: "¿Anular el pago de esta comisión? Vuelve a quedar Pendiente — esto no revierte ninguna transferencia real de dinero, solo el registro.",
+      header: "Anular pago",
+      icon: "pi pi-info-circle",
+      defaultFocus: "reject",
+      acceptClassName: "p-button-danger",
+      accept: () => handleRevertPayment(commissionId),
+    });
+  };
+
   const statusBodyTemplate = (rowData: ICommission) => (
     <Tag severity={statusSeverity[rowData.status] ?? "secondary"}>{rowData.status}</Tag>
   );
 
   const actionBodyTemplate = (rowData: ICommission) => (
-    <>
-      {rowData.status === commissionStatus.PENDIENTE && (
-        <PermissionGuard permissions={["PAY_COMMISSION"]}>
-          <Button
-            label="Marcar como pagada"
-            icon="pi pi-check"
-            severity="success"
-            size="small"
-            onClick={() => handleMarkPaid(rowData._id)}
-          />
-        </PermissionGuard>
-      )}
-    </>
+    <RowActionButtons actions={buildCommissionActions(rowData)} />
   );
 
   const [columns] = useState<DataTableColumn<ICommission>[]>([
@@ -308,6 +368,14 @@ const CommissionList = () => {
         <h1 className="text-xl font-bold text-gray-800">
           Comisiones <span className="text-base font-normal text-gray-400">({filteredData.length})</span>
         </h1>
+        <Button
+          icon="pi pi-download"
+          severity="secondary"
+          outlined
+          size="small"
+          onClick={handleGeneratePDF}
+          disabled={filteredData.length === 0}
+        />
       </div>
 
       {/* ── Vista mobile: cards ────────────────────────────────── */}
@@ -339,17 +407,9 @@ const CommissionList = () => {
                 Comisión: {formatAmount(c.amount)} {currency}
               </span>
             </div>
-            {c.status === commissionStatus.PENDIENTE && canPay && (
-              <div className="flex justify-end mt-2 border-t border-gray-100 pt-2">
-                <Button
-                  label="Marcar como pagada"
-                  icon="pi pi-check"
-                  severity="success"
-                  size="small"
-                  onClick={() => handleMarkPaid(c._id)}
-                />
-              </div>
-            )}
+            <div className="flex justify-end mt-2 border-t border-gray-100 pt-2">
+              <RowActionButtons actions={buildCommissionActions(c)} />
+            </div>
           </div>
         ))}
       </div>
@@ -361,6 +421,14 @@ const CommissionList = () => {
         header={
           <div className="flex justify-between items-center m-2 px-5">
             <h1 className="text-2xl font-bold">{`Comisiones (${filteredData.length})`}</h1>
+            <Button
+              label="Imprimir"
+              icon="pi pi-download"
+              severity="secondary"
+              outlined
+              onClick={handleGeneratePDF}
+              disabled={filteredData.length === 0}
+            />
           </div>
         }
       >
@@ -369,7 +437,7 @@ const CommissionList = () => {
           data={filteredData}
           emptyMessage="Sin comisiones registradas."
           size="small"
-          actionBodyTemplate={canPay ? actionBodyTemplate : undefined}
+          actionBodyTemplate={actionBodyTemplate}
         />
       </Card>
     </div>

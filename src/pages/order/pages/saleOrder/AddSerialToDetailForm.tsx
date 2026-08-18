@@ -2,6 +2,7 @@ import { useApolloClient, useMutation, useQuery } from "@apollo/client";
 import { Button } from "primereact/button";
 import { FC, useState } from "react";
 import BarcodeScannerButton from "../../../../components/barcodeScanner/BarcodeScannerButton";
+import LabelInput from "../../../../components/labelInput/LabelInput";
 import FieldTextInput from "../../../../components/textInput/FieldTextInput";
 import { ADD_SERIAL_TO_SALE_ORDER_DETAIL } from "../../../../graphql/mutations/SaleOrderDetail";
 import { FIND_PRODUCT_SERIAL_BY_SERIAL } from "../../../../graphql/queries/Product";
@@ -137,9 +138,13 @@ const AddSerialToDetailForm: FC<AddSerialToDetailFormProps> = ({
           {/* FieldTextInput trae una label vacía + una línea de error debajo,
               lo que le da más alto que el botón — se replica esa misma
               estructura acá (invisible) para que el botón quede a la misma
-              altura que el input en vez de centrado contra toda la columna. */}
+              altura que el input en vez de centrado contra toda la columna.
+              Se reusa LabelInput (con label="" real) en vez de un placeholder
+              con texto: una label vacía colapsa a altura ~0, así que un
+              mimic con un carácter de verdad queda más alto y desalinea el
+              botón hacia abajo. */}
           <div className="flex flex-col p-inputtext-sm">
-            <span className="mb-1 invisible">·</span>
+            <LabelInput label="" className="invisible" />
             <BarcodeScannerButton onScan={(value) => setFieldValue("serial", value)} />
             <span className="text-xs block h-5" />
           </div>

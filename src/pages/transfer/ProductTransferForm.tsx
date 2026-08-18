@@ -1,20 +1,23 @@
-import { useMutation } from "@apollo/client";
+import { useApolloClient, useMutation } from "@apollo/client";
 import { Button } from "primereact/button";
 import { Calendar } from "primereact/calendar";
 import { Tag } from "primereact/tag";
 import { FC, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { ActionMeta, SingleValue } from "react-select";
+import CreatableAutoComplete from "../../components/creatableAutoComplete/CreatableAutoComplete";
 import LabelInput from "../../components/labelInput/LabelInput";
-import SelectInput from "../../components/SelectInput/SelectInput";
 import {
   APPROVE_PRODUCT_TRANSFER,
   CREATE_PRODUCT_TRANSFER,
 } from "../../graphql/mutations/ProductTransfer";
 import { CREATE_WAREHOUSE } from "../../graphql/mutations/Warehouse";
-import { LIST_PRODUCT_TRANSFER } from "../../graphql/queries/ProductTransfer";
-import { LIST_WAREHOUSE } from "../../graphql/queries/Warehouse";
+import { DETAIL_COMPANY } from "../../graphql/queries/Company";
+import {
+  FIND_PRODUCT_TRANSFER,
+  LIST_PRODUCT_TRANSFER,
+  LIST_PRODUCT_TRANSFER_DETAIL,
+} from "../../graphql/queries/ProductTransfer";
 import { useFormikForm } from "../../hooks/useFormikForm";
 import {
   resetProductTransfer,
@@ -30,6 +33,7 @@ import { IReactSelect } from "../../utils/interfaces/Select";
 import { showToast } from "../../utils/toastUtils";
 import useWarehouseList from "../product/hooks/useWarehouseList";
 import { getStatus } from "../order/utils/getStatus";
+import { generateProductTransferPDF } from "./utils/generateProductTransferPDF";
 import { schemaFormProductTransfer } from "./validations/FormProductTransferValidation";
 
 interface ProductTransferFormProps {
@@ -41,7 +45,8 @@ const ProductTransferForm: FC<ProductTransferFormProps> = ({
 }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { listWarehouseSelect } = useWarehouseList();
+  const client = useApolloClient();
+  const { listWarehouseSelect, refetchListWarehouse } = useWarehouseList();
 
   const { productTransferInitialized, productTransferData } = useSelector(
     (state: RootState) => state.productTransferSlice
@@ -58,9 +63,10 @@ const ProductTransferForm: FC<ProductTransferFormProps> = ({
     refetchQueries: [{ query: LIST_PRODUCT_TRANSFER }],
   });
 
-  const [createWarehouse] = useMutation(CREATE_WAREHOUSE, {
-    refetchQueries: [{ query: LIST_WAREHOUSE }],
-  });
+  // Sin refetchQueries acá — mismo bug de select vacío ya encontrado en
+  // ProductForm.tsx/PurchaseOrderDetailForm.tsx. Se llama a
+  // refetchListWarehouse directamente en cada onCreate*Warehouse.
+  const [createWarehouse] = useMutation(CREATE_WAREHOUSE);
 
   const initialValues: IProductTransferInput = {
     date: new Date(),
@@ -105,6 +111,36 @@ const ProductTransferForm: FC<ProductTransferFormProps> = ({
     }
   };
 
+  const handleGeneratePDF = async () => {
+    if (!productTransferData?._id) return;
+    try {
+      dispatch(setIsBlocked(true));
+      const { data } = await client.query({
+        query: FIND_PRODUCT_TRANSFER,
+        variables: { transferId: productTransferData._id },
+        fetchPolicy: "network-only",
+      });
+      const { data: detailData } = await client.query({
+        query: LIST_PRODUCT_TRANSFER_DETAIL,
+        variables: { transferId: productTransferData._id },
+        fetchPolicy: "network-only",
+      });
+      const { data: dataCompany } = await client.query({
+        query: DETAIL_COMPANY,
+        fetchPolicy: "network-only",
+      });
+      await generateProductTransferPDF(
+        data.findProductTransfer,
+        detailData.listProductTransferDetail,
+        dataCompany.detailCompany
+      );
+    } catch (error: any) {
+      showToast({ detail: error.message, severity: ToastSeverity.Error });
+    } finally {
+      dispatch(setIsBlocked(false));
+    }
+  };
+
   const onCreateOriginWarehouse = async (inputValue: string) => {
     try {
       dispatch(setIsBlocked(true));
@@ -114,6 +150,7 @@ const ProductTransferForm: FC<ProductTransferFormProps> = ({
         const newOption = { value: data.createWarehouse._id, label: data.createWarehouse.name };
         setSelectedOrigin(newOption);
         setFieldValue("origin_warehouse", data.createWarehouse._id);
+        await refetchListWarehouse();
       }
     } catch (error: any) {
       showToast({ detail: error.message, severity: ToastSeverity.Error });
@@ -131,6 +168,7 @@ const ProductTransferForm: FC<ProductTransferFormProps> = ({
         const newOption = { value: data.createWarehouse._id, label: data.createWarehouse.name };
         setSelectedDestination(newOption);
         setFieldValue("destination_warehouse", data.createWarehouse._id);
+        await refetchListWarehouse();
       }
     } catch (error: any) {
       showToast({ detail: error.message, severity: ToastSeverity.Error });
@@ -139,14 +177,14 @@ const ProductTransferForm: FC<ProductTransferFormProps> = ({
     }
   };
 
-  const handleOriginChange = async (event: SingleValue<IReactSelect>, action: ActionMeta<IReactSelect>) => {
-    setSelectedOrigin(event);
-    setFieldValue(action.name || "", event ? event.value : "");
+  const handleOriginChange = (value: IReactSelect | null) => {
+    setSelectedOrigin(value);
+    setFieldValue("origin_warehouse", value ? value.value : "");
   };
 
-  const handleDestinationChange = async (event: SingleValue<IReactSelect>, action: ActionMeta<IReactSelect>) => {
-    setSelectedDestination(event);
-    setFieldValue(action.name || "", event ? event.value : "");
+  const handleDestinationChange = (value: IReactSelect | null) => {
+    setSelectedDestination(value);
+    setFieldValue("destination_warehouse", value ? value.value : "");
   };
 
   const {
@@ -194,10 +232,10 @@ const ProductTransferForm: FC<ProductTransferFormProps> = ({
               className="w-full"
             />
           </div>
-          <SelectInput
+          <CreatableAutoComplete
             label="Almacén origen"
             name="origin_warehouse"
-            placeholder="Seleccionar origen"
+            placeholder="Seleccionar o escribir origen"
             mandatory
             options={listWarehouseSelect}
             value={selectedOrigin}
@@ -206,10 +244,10 @@ const ProductTransferForm: FC<ProductTransferFormProps> = ({
             onCreateOption={onCreateOriginWarehouse}
             disabled={productTransferInitialized}
           />
-          <SelectInput
+          <CreatableAutoComplete
             label="Almacén destino"
             name="destination_warehouse"
-            placeholder="Seleccionar destino"
+            placeholder="Seleccionar o escribir destino"
             mandatory
             options={listWarehouseSelect.filter((w) => w.value !== values.origin_warehouse)}
             value={selectedDestination}
@@ -276,6 +314,14 @@ const ProductTransferForm: FC<ProductTransferFormProps> = ({
                 label="Aprobar"
                 onClick={handleApprove}
                 disabled={approveBlocked}
+                className="w-full"
+              />
+              <Button
+                icon="pi pi-download"
+                type="button"
+                severity="secondary"
+                label="Imprimir"
+                onClick={handleGeneratePDF}
                 className="w-full"
               />
             </div>

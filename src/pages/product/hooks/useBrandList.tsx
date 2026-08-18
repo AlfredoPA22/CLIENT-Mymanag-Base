@@ -11,6 +11,7 @@ const useBrandList = () => {
     data: { listBrand: listBrand } = [],
     loading: loadingListBrand,
     error,
+    refetch: refetchListBrand,
   } = useQuery(LIST_BRAND, { fetchPolicy: "network-only" });
 
   const [listBrandSelect, setListBrandSelect] = useState<IReactSelect[]>([]);
@@ -33,7 +34,7 @@ const useBrandList = () => {
       });
     }
   }, [error]);
-  return { listBrandSelect, listBrand, loadingListBrand };
+  return { listBrandSelect, listBrand, loadingListBrand, refetchListBrand };
 };
 
 export default useBrandList;

@@ -11,6 +11,7 @@ const useWarehouseList = () => {
     data: { listWarehouse: listWarehouse } = [],
     loading: loadingListWarehouse,
     error,
+    refetch: refetchListWarehouse,
   } = useQuery(LIST_WAREHOUSE, { fetchPolicy: "network-only" });
 
   const [listWarehouseSelect, setListWarehouseSelect] = useState<
@@ -37,7 +38,7 @@ const useWarehouseList = () => {
       });
     }
   }, [error]);
-  return { listWarehouseSelect, listWarehouse, loadingListWarehouse };
+  return { listWarehouseSelect, listWarehouse, loadingListWarehouse, refetchListWarehouse };
 };
 
 export default useWarehouseList;

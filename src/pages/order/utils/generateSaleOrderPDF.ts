@@ -299,6 +299,35 @@ export const generatePDF = async (
     );
   }
 
+  // ── FIRMAS ───────────────────────────────────────────────
+  // Si el total ya quedó muy abajo en la página (nota con muchos productos
+  // o seriales), las firmas no entran antes del pie — se pasan a una
+  // página nueva en vez de superponerse con drawPaginatedFooter.
+  const signatureLineY = finalY + (hasDiscount ? 50 : 36);
+
+  let sigY = signatureLineY;
+  if (sigY > 265) {
+    doc.addPage();
+    sigY = 40;
+  }
+
+  const sigWidth = 75;
+  const col1X1 = MARGIN;
+  const col1X2 = MARGIN + sigWidth;
+  const col2X2 = PAGE_W - MARGIN;
+  const col2X1 = col2X2 - sigWidth;
+
+  doc.setDrawColor(...INK_MID);
+  doc.setLineWidth(0.3);
+  doc.line(col1X1, sigY, col1X2, sigY);
+  doc.line(col2X1, sigY, col2X2, sigY);
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8);
+  doc.setTextColor(...INK_MID);
+  doc.text("Entregué conforme", (col1X1 + col1X2) / 2, sigY + 5, { align: "center" });
+  doc.text("Recibí conforme", (col2X1 + col2X2) / 2, sigY + 5, { align: "center" });
+
   // ── PAGE FOOTER (numeración real, se repite en cada página) ──
   drawPaginatedFooter(doc, drawRule, INK_LIGHT, MARGIN, PAGE_W);
 

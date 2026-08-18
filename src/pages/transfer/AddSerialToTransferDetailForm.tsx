@@ -2,6 +2,7 @@ import { useMutation } from "@apollo/client";
 import { Button } from "primereact/button";
 import { FC, useRef } from "react";
 import BarcodeScannerButton from "../../components/barcodeScanner/BarcodeScannerButton";
+import LabelInput from "../../components/labelInput/LabelInput";
 import FieldTextInput from "../../components/textInput/FieldTextInput";
 import { ADD_SERIAL_TO_TRANSFER_DETAIL } from "../../graphql/mutations/ProductTransfer";
 import { LIST_PRODUCT_TRANSFER_DETAIL } from "../../graphql/queries/ProductTransfer";
@@ -59,7 +60,7 @@ const AddSerialToTransferDetailForm: FC<AddSerialToTransferDetailFormProps> = ({
   return (
     <form
       onSubmit={handleSubmit}
-      className="flex flex-col md:flex-row gap-3 items-end mb-4"
+      className="flex flex-col md:flex-row gap-3 items-start mb-4"
     >
       <div className="flex-1 flex items-start gap-2">
         <div className="flex-1">
@@ -76,20 +77,29 @@ const AddSerialToTransferDetailForm: FC<AddSerialToTransferDetailFormProps> = ({
           />
         </div>
         {/* Misma estructura invisible que FieldTextInput (label + hueco de
-            error) para que el botón quede a la altura del input. */}
+            error) para que el botón quede a la altura del input. Se reusa
+            LabelInput con las mismas props en vez de un texto a mano, para
+            que la altura calce exacto con la del input real. */}
         <div className="flex flex-col p-inputtext-sm">
-          <span className="mb-1 invisible">Serial</span>
+          <LabelInput label="Serial" mandatory className="invisible" />
           <BarcodeScannerButton onScan={(value) => setFieldValue("serial", value)} />
           <span className="text-xs block h-5" />
         </div>
       </div>
-      <Button
-        type="submit"
-        severity="success"
-        label="Agregar"
-        icon="pi pi-plus"
-        disabled={!dirty || !isValid || isSubmitting}
-      />
+      {/* Mismo espaciador invisible que los dos de arriba — sin esto, el
+          botón (sin label ni hueco de error propios) quedaba más abajo que
+          el input al alinear la fila entera contra el borde inferior. */}
+      <div className="flex flex-col p-inputtext-sm w-full md:w-auto">
+        <LabelInput label="Serial" mandatory className="invisible" />
+        <Button
+          className="h-[50px] w-full md:w-auto"
+          type="submit"
+          severity="success"
+          label="Guardar serial"
+          disabled={!dirty || !isValid || isSubmitting}
+        />
+        <span className="text-xs block h-5" />
+      </div>
     </form>
   );
 };

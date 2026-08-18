@@ -1,0 +1,192 @@
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import { ICompany } from "../../../utils/interfaces/Company";
+import { IProductTransfer, IProductTransferDetail } from "../../../utils/interfaces/ProductTransfer";
+import { getDate } from "../../order/utils/getDate";
+import { buildSerialsRows, drawPaginatedFooter, withBottomRule } from "../../order/utils/pdfSerialsGrid";
+
+// Mismos tokens de diseño que generatePurchaseOrderPDF.ts/generateSaleOrderPDF.ts
+// — mismo documento, ahora para transferencias entre almacenes.
+const INK: [number, number, number] = [30, 41, 59];
+const INK_MID: [number, number, number] = [71, 85, 105];
+const INK_LIGHT: [number, number, number] = [148, 163, 184];
+const RULE: [number, number, number] = [203, 213, 225];
+const TABLE_HEAD: [number, number, number] = [241, 245, 249];
+const ACCENT: [number, number, number] = [160, 200, 46];
+
+const PAGE_W = 210;
+const MARGIN = 14;
+
+const DEFAULT_LOGO =
+  "https://res.cloudinary.com/dyyd4no6j/image/upload/v1750462281/Logo_Inventasys_1_tp7nlz.png";
+
+const toBase64 = (url: string): Promise<string> =>
+  fetch(url)
+    .then((res) => res.blob())
+    .then(
+      (blob) =>
+        new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        })
+    );
+
+const drawRule = (doc: jsPDF, y: number) => {
+  doc.setDrawColor(...RULE);
+  doc.setLineWidth(0.3);
+  doc.line(MARGIN, y, PAGE_W - MARGIN, y);
+};
+
+export const generateProductTransferPDF = async (
+  transfer: IProductTransfer,
+  details: IProductTransferDetail[],
+  dataCompany: ICompany
+) => {
+  const doc = new jsPDF();
+
+  // ── TOP ACCENT LINE ───────────────────────────────────────
+  doc.setFillColor(...ACCENT);
+  doc.rect(0, 0, PAGE_W, 3, "F");
+
+  // ── HEADER (white) ────────────────────────────────────────
+  const logoUrl = dataCompany?.image?.trim() ? dataCompany.image : DEFAULT_LOGO;
+  try {
+    const imgData = await toBase64(logoUrl);
+    doc.addImage(imgData, "JPEG", MARGIN, 7, 24, 24);
+  } catch { /* sin logo */ }
+
+  doc.setTextColor(...INK);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(10.5);
+  doc.text(dataCompany?.name || dataCompany?.legal_name || "Mi Empresa", 42, 13);
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(7);
+  doc.setTextColor(...INK_LIGHT);
+  const companyLines = [
+    dataCompany?.nit ? `NIT: ${dataCompany.nit}` : "",
+    dataCompany?.address || "",
+    [dataCompany?.phone, dataCompany?.email].filter(Boolean).join("   ·   "),
+  ].filter(Boolean);
+  companyLines.forEach((line, i) => doc.text(line, 42, 19 + i * 4.8));
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(16);
+  doc.setTextColor(...INK);
+  doc.text("TRANSFERENCIA", PAGE_W - MARGIN, 15, { align: "right" });
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8);
+  doc.setTextColor(...INK_MID);
+  doc.text(`N° ${transfer.code}`, PAGE_W - MARGIN, 22, { align: "right" });
+  doc.text(`Fecha: ${getDate(transfer.date) ?? "—"}`, PAGE_W - MARGIN, 28, { align: "right" });
+
+  // ── SECTION RULE ─────────────────────────────────────────
+  drawRule(doc, 35);
+
+  // ── INFO FIELDS ──────────────────────────────────────────
+  const infoY = 40;
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(7);
+  doc.setTextColor(...INK_MID);
+  doc.text("ALMACÉN ORIGEN", MARGIN, infoY);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  doc.setTextColor(...INK);
+  doc.text(transfer.origin_warehouse?.name || "—", MARGIN, infoY + 6);
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(7);
+  doc.setTextColor(...INK_MID);
+  doc.text("ALMACÉN DESTINO", MARGIN, infoY + 13);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  doc.setTextColor(...INK);
+  doc.text(transfer.destination_warehouse?.name || "—", MARGIN, infoY + 19);
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(7);
+  doc.setTextColor(...INK_MID);
+  doc.text("ESTADO", PAGE_W - MARGIN, infoY, { align: "right" });
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  doc.setTextColor(...INK);
+  doc.text(transfer.status, PAGE_W - MARGIN, infoY + 6, { align: "right" });
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(7);
+  doc.setTextColor(...INK_MID);
+  doc.text("REGISTRADO POR", PAGE_W - MARGIN, infoY + 13, { align: "right" });
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  doc.setTextColor(...INK);
+  doc.text(transfer.created_by?.user_name || "—", PAGE_W - MARGIN, infoY + 19, { align: "right" });
+
+  // ── SECTION RULE ─────────────────────────────────────────
+  drawRule(doc, infoY + 25);
+
+  // ── TABLE ────────────────────────────────────────────────
+  const columns = ["Código", "Producto", "Cantidad"];
+
+  const rows = details.flatMap((detail) => {
+    const mainRow = [
+      detail.product?.code ?? "—",
+      detail.product?.name ?? "Producto eliminado",
+      detail.quantity,
+    ];
+
+    const block = [mainRow, ...buildSerialsRows(detail.serials, 3, PAGE_W - 2 * MARGIN)];
+    block[block.length - 1] = withBottomRule(block[block.length - 1]);
+    return block;
+  });
+
+  autoTable(doc, {
+    head: [columns],
+    headStyles: {
+      fillColor: TABLE_HEAD,
+      textColor: INK,
+      fontStyle: "bold",
+      fontSize: 7.5,
+      halign: "center",
+      cellPadding: { top: 4, right: 3, bottom: 4, left: 3 },
+      lineWidth: { top: 0, right: 0, bottom: 0.3, left: 0 },
+      lineColor: RULE,
+    },
+    body: rows,
+    bodyStyles: { fontSize: 8, textColor: INK, cellPadding: 3 },
+    startY: infoY + 30,
+    theme: "plain",
+    rowPageBreak: "avoid",
+    columnStyles: {
+      0: { cellWidth: 30, halign: "center" },
+      1: { cellWidth: 122 },
+      2: { cellWidth: 30, halign: "center" },
+    },
+    margin: { left: MARGIN, right: MARGIN },
+    tableLineColor: RULE,
+    tableLineWidth: 0.3,
+  });
+
+  // ── TOTAL FOOTER ─────────────────────────────────────────
+  const totalUnits = details.reduce((sum, d) => sum + d.quantity, 0);
+  const finalY = (doc as any).lastAutoTable.finalY + 4;
+  drawRule(doc, finalY);
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(9.5);
+  doc.setTextColor(...INK);
+  doc.text(
+    `TOTAL DE UNIDADES:   ${totalUnits}`,
+    PAGE_W - MARGIN,
+    finalY + 8,
+    { align: "right" }
+  );
+
+  // ── PAGE FOOTER (numeración real, se repite en cada página) ──
+  drawPaginatedFooter(doc, drawRule, INK_LIGHT, MARGIN, PAGE_W);
+
+  doc.save(`${transfer.code}.pdf`);
+};

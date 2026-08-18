@@ -8,18 +8,16 @@ import { SelectButton } from "primereact/selectbutton";
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { ActionMeta, SingleValue } from "react-select";
 import { useAbility } from "../../../../casl/AbilityContext";
 import { canDoAny } from "../../../../casl/ability";
 import BarcodeScannerButton from "../../../../components/barcodeScanner/BarcodeScannerButton";
 import ProductImagePlaceholder from "../../../../components/ProductImagePlaceholder/ProductImagePlaceholder";
-import SelectInput from "../../../../components/SelectInput/SelectInput";
+import CreatableAutoComplete from "../../../../components/creatableAutoComplete/CreatableAutoComplete";
 import DropdownInput from "../../../../components/dropdownInput/DropdownInput";
 import { CREATE_CLIENT } from "../../../../graphql/mutations/Client";
 import { CREATE_SALE_ORDER } from "../../../../graphql/mutations/SaleOrder";
 import { ADD_SERIAL_TO_SALE_ORDER_DETAIL, CREATE_SALE_ORDER_DETAIL } from "../../../../graphql/mutations/SaleOrderDetail";
 import { DETAIL_COMPANY } from "../../../../graphql/queries/Company";
-import { LIST_CLIENT } from "../../../../graphql/queries/Client";
 import { FIND_PRODUCT_SERIAL_BY_SERIAL, LIST_PRODUCT_INVENTORY_BY_PRODUCT, SEARCH_PRODUCT } from "../../../../graphql/queries/Product";
 import { LIST_SALE_ORDER } from "../../../../graphql/queries/SaleOrder";
 import useQrPaymentAvailable from "../../../../hooks/useQrPaymentAvailable";
@@ -287,9 +285,13 @@ const SaleOrderPOS = () => {
   });
   const [createSaleOrderDetail] = useMutation(CREATE_SALE_ORDER_DETAIL);
   const [addSerialToSaleOrderDetail] = useMutation(ADD_SERIAL_TO_SALE_ORDER_DETAIL);
-  const [createClient] = useMutation(CREATE_CLIENT, {
-    refetchQueries: [{ query: LIST_CLIENT }],
-  });
+  // Sin refetchQueries acá a propósito — mismo bug ya encontrado en
+  // ProductForm.tsx/PurchaseOrderDetailForm.tsx: `{query: LIST_CLIENT}`
+  // refresca cualquier observer activo de esa query, y si queda en vuelo
+  // justo cuando este checkout se cierra y se reabre podía dejar el select
+  // de cliente vacío. Se llama a refetchListClient directamente en
+  // onCreateClient en vez de depender del matching implícito.
+  const [createClient] = useMutation(CREATE_CLIENT);
 
   const needsExchangeRate = company?.currency === "$" && !company?.exchange_rate;
 
@@ -623,11 +625,8 @@ const SaleOrderPOS = () => {
     refetchListClient();
   };
 
-  const handleClientChange = async (
-    event: SingleValue<IReactSelect>,
-    _action: ActionMeta<IReactSelect>
-  ) => {
-    setSelectedClient(event);
+  const handleClientChange = (value: IReactSelect | null) => {
+    setSelectedClient(value);
   };
 
   const onCreateClient = async (inputValue: string) => {
@@ -638,6 +637,7 @@ const SaleOrderPOS = () => {
       if (data) {
         showToast({ detail: "Cliente creado", severity: ToastSeverity.Success });
         setSelectedClient({ value: data.createClient._id, label: data.createClient.fullName });
+        await refetchListClient();
       }
     } catch (error: any) {
       showToast({ detail: error.message, severity: ToastSeverity.Error });
@@ -753,10 +753,10 @@ const SaleOrderPOS = () => {
         <span className="text-sm text-gray-500">{cart.length} producto{cart.length !== 1 ? "s" : ""}</span>
         <span className="text-lg font-bold text-green-600">{formatAmount(cartTotal)} {noteCurrency}</span>
       </div>
-      <SelectInput
+      <CreatableAutoComplete
         label="Cliente"
         name="client"
-        placeholder="Seleccionar cliente"
+        placeholder="Seleccionar o escribir cliente"
         mandatory
         options={listClientSelect}
         onChange={handleClientChange}

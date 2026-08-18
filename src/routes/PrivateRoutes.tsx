@@ -35,6 +35,7 @@ import SaleReturnList from "../pages/order/pages/saleReturn/SaleReturnList";
 import StoreSettings from "../pages/store/StoreSettings";
 import CashRegisterPage from "../pages/cashRegister/CashRegisterPage";
 import CommissionList from "../pages/commission/CommissionList";
+import CommissionTicket from "../pages/commission/CommissionTicket";
 
 const PrivateRoutes: FC = () => {
   return (
@@ -49,6 +50,10 @@ const PrivateRoutes: FC = () => {
         <Route
           path={`${ROUTES_MOCK.SALE_ORDERS}${ROUTES_MOCK.SALE_PAYMENT}/:saleOrderId/:paymentId/ticket`}
           element={<SalePaymentTicket />}
+        />
+        <Route
+          path={`${ROUTES_MOCK.COMMISSIONS}/:id/ticket`}
+          element={<CommissionTicket />}
         />
         <Route path="/" element={<Dashboard />}>
           <Route path="unauthorized" element={<UnauthorizedPage />} />

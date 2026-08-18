@@ -4,12 +4,11 @@ import { Button } from "primereact/button";
 import { InputNumberChangeEvent } from "primereact/inputnumber";
 import { ChangeEvent, FC, useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
-import { ActionMeta, SingleValue } from "react-select";
+import CreatableAutoComplete from "../../../../components/creatableAutoComplete/CreatableAutoComplete";
 import DropdownInput from "../../../../components/dropdownInput/DropdownInput";
 import FieldNumberInput from "../../../../components/FieldNumberInput/FieldNumberInput";
 import FieldSimpleFileUpload from "../../../../components/fileuploadInput/FileUploadInput";
 import FieldInputSwitch from "../../../../components/inputSwitch/FieldInputSwitch";
-import SelectInput from "../../../../components/SelectInput/SelectInput";
 import { FiX } from "react-icons/fi";
 import FieldTextareaInput from "../../../../components/textAreaInput/FieldTextareaInput";
 import FieldTextInput from "../../../../components/textInput/FieldTextInput";
@@ -19,8 +18,6 @@ import {
   CREATE_PRODUCT,
   UPDATE_PRODUCT,
 } from "../../../../graphql/mutations/Product";
-import { LIST_BRAND } from "../../../../graphql/queries/Brand";
-import { LIST_CATEGORY } from "../../../../graphql/queries/Category";
 import { LIST_PRODUCT } from "../../../../graphql/queries/Product";
 import { useFormikForm } from "../../../../hooks/useFormikForm";
 import { setIsBlocked } from "../../../../redux/slices/blockUISlice";
@@ -48,17 +45,21 @@ const ProductForm: FC<ProductFormProps> = ({
   setVisibleForm,
   productToEdit,
 }) => {
-  const { listCategorySelect } = useCategoryList();
-  const { listBrandSelect } = useBrandList();
+  const { listCategorySelect, refetchListCategory } = useCategoryList();
+  const { listBrandSelect, refetchListBrand } = useBrandList();
 
   const dispatch = useDispatch();
 
+  // Ojo: NO se agrega LIST_CATEGORY/LIST_BRAND acá — el select de categoría/
+  // marca de este mismo formulario solo muestra el nombre (nunca el contador
+  // de productos), así que crear un producto no cambia nada que este select
+  // necesite refrescar. Agregarlos disparaba un refetch de esas listas justo
+  // cuando el diálogo se cierra (o se vuelve a abrir para el siguiente
+  // producto), duplicando en vuelo la misma query que useCategoryList/
+  // useBrandList ya lanzan al montar — la causa del select vacío al crear
+  // un segundo producto seguido.
   const [createProduct] = useMutation(CREATE_PRODUCT, {
-    refetchQueries: [
-      { query: LIST_PRODUCT },
-      { query: LIST_CATEGORY },
-      { query: LIST_BRAND },
-    ],
+    refetchQueries: [{ query: LIST_PRODUCT }],
   });
   const [updateProduct] = useMutation(UPDATE_PRODUCT, {
     refetchQueries: [
@@ -67,12 +68,15 @@ const ProductForm: FC<ProductFormProps> = ({
       },
     ],
   });
-  const [createCategory] = useMutation(CREATE_CATEGORY, {
-    refetchQueries: [{ query: LIST_CATEGORY }],
-  });
-  const [createBrand] = useMutation(CREATE_BRAND, {
-    refetchQueries: [{ query: LIST_BRAND }],
-  });
+  // Sin refetchQueries acá a propósito: `{query: LIST_CATEGORY}` refresca
+  // CUALQUIER observer activo de esa query en toda la app por coincidencia de
+  // documento, no solo el de este formulario — si ese refetch todavía estaba
+  // en vuelo cuando este formulario se cierra (al guardar el producto) y se
+  // vuelve a abrir para el siguiente, terminaba dejando vacío el select del
+  // nuevo formulario. Se llama a refetchListCategory/refetchListBrand
+  // directamente (más abajo) sobre la propia query de ESTE formulario.
+  const [createCategory] = useMutation(CREATE_CATEGORY);
+  const [createBrand] = useMutation(CREATE_BRAND);
 
   const [selectedStockType, setSelectedStockType] = useState(
     stockType.SERIALIZADO
@@ -152,22 +156,16 @@ const ProductForm: FC<ProductFormProps> = ({
     setFieldValue(e.target.name, e.target.value);
   };
 
-  const handleCategoryChange = async (
-    event: SingleValue<IReactSelect>,
-    action: ActionMeta<IReactSelect>
-  ) => {
-    setSelectedCategory(event);
-    setFieldValue(action.name || "", event ? event.value : "");
+  const handleCategoryChange = (value: IReactSelect | null) => {
+    setSelectedCategory(value);
+    setFieldValue("category", value ? value.value : "");
   };
 
   const onCreateCategory = async (inputValue: string) => {
     try {
       dispatch(setIsBlocked(true));
       const { data } = await createCategory({
-        variables: {
-          name: inputValue,
-          description: "",
-        },
+        variables: { name: inputValue, description: "" },
       });
 
       if (data) {
@@ -182,6 +180,7 @@ const ProductForm: FC<ProductFormProps> = ({
         });
 
         setFieldValue("category", data.createCategory._id);
+        await refetchListCategory();
       }
     } catch (error: any) {
       showToast({ detail: error.message, severity: ToastSeverity.Error });
@@ -190,22 +189,16 @@ const ProductForm: FC<ProductFormProps> = ({
     }
   };
 
-  const handleBrandChange = async (
-    event: SingleValue<IReactSelect>,
-    action: ActionMeta<IReactSelect>
-  ) => {
-    setSelectedBrand(event);
-    setFieldValue(action.name || "", event ? event.value : "");
+  const handleBrandChange = (value: IReactSelect | null) => {
+    setSelectedBrand(value);
+    setFieldValue("brand", value ? value.value : "");
   };
 
   const onCreateBrand = async (inputValue: string) => {
     try {
       dispatch(setIsBlocked(true));
       const { data } = await createBrand({
-        variables: {
-          name: inputValue,
-          description: "",
-        },
+        variables: { name: inputValue, description: "" },
       });
 
       if (data) {
@@ -220,6 +213,7 @@ const ProductForm: FC<ProductFormProps> = ({
         });
 
         setFieldValue("brand", data.createBrand._id);
+        await refetchListBrand();
       }
     } catch (error: any) {
       showToast({ detail: error.message, severity: ToastSeverity.Error });
@@ -351,27 +345,27 @@ const ProductForm: FC<ProductFormProps> = ({
           <span className="font-semibold text-sm">Clasificación y precios</span>
         </Divider>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <SelectInput
+          <CreatableAutoComplete
             label="Categoría"
             name="category"
-            placeholder="Seleccionar categoría"
             mandatory
+            placeholder="Seleccionar o escribir categoría"
             options={listCategorySelect}
             error={errors.category || ""}
+            value={selectedCategory}
             onChange={handleCategoryChange}
             onCreateOption={onCreateCategory}
-            value={selectedCategory}
           />
-          <SelectInput
+          <CreatableAutoComplete
             label="Marca"
             name="brand"
-            placeholder="Seleccionar marca"
             mandatory
+            placeholder="Seleccionar o escribir marca"
             options={listBrandSelect}
             error={errors.brand || ""}
+            value={selectedBrand}
             onChange={handleBrandChange}
             onCreateOption={onCreateBrand}
-            value={selectedBrand}
           />
           <FieldNumberInput
             label="Precio de venta"

@@ -11,6 +11,7 @@ const useProviderList = () => {
     data: { listProvider: listProvider } = [],
     loading: loadingListProvider,
     error,
+    refetch: refetchListProvider,
   } = useQuery(LIST_PROVIDER, { fetchPolicy: "network-only" });
 
   const [listProviderSelect, setListProviderSelect] = useState<IReactSelect[]>(
@@ -37,7 +38,7 @@ const useProviderList = () => {
       });
     }
   }, [error]);
-  return { listProviderSelect, listProvider, loadingListProvider };
+  return { listProviderSelect, listProvider, loadingListProvider, refetchListProvider };
 };
 
 export default useProviderList;

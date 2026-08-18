@@ -1,4 +1,4 @@
-import { useMutation } from "@apollo/client";
+import { useApolloClient, useMutation } from "@apollo/client";
 import { Button } from "primereact/button";
 import { Card } from "primereact/card";
 import { confirmDialog } from "primereact/confirmdialog";
@@ -11,7 +11,11 @@ import LoadingSpinner from "../../components/LoadingSpinner/LoadingSpinner";
 import Table from "../../components/datatable/Table";
 import RowActionButtons, { RowAction } from "../../components/table/RowActionButtons";
 import { DELETE_PRODUCT_TRANSFER } from "../../graphql/mutations/ProductTransfer";
-import { LIST_PRODUCT_TRANSFER } from "../../graphql/queries/ProductTransfer";
+import { DETAIL_COMPANY } from "../../graphql/queries/Company";
+import {
+  LIST_PRODUCT_TRANSFER,
+  LIST_PRODUCT_TRANSFER_DETAIL,
+} from "../../graphql/queries/ProductTransfer";
 import useTableGlobalFilter from "../../hooks/useTableGlobalFilter";
 import { setIsBlocked } from "../../redux/slices/blockUISlice";
 import { ROUTES_MOCK } from "../../routes/RouteMocks";
@@ -24,12 +28,14 @@ import { getDate } from "../order/utils/getDate";
 import { getStatus } from "../order/utils/getStatus";
 import useAuth from "../auth/hooks/useAuth";
 import useProductTransferList from "./hooks/useProductTransferList";
+import { generateProductTransferPDF } from "./utils/generateProductTransferPDF";
 
 const ProductTransferList = () => {
   const { listProductTransfer, loadingListProductTransfer } =
     useProductTransferList();
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const client = useApolloClient();
   const { permissions } = useAuth();
 
   const canCreate = permissions.includes("CREATE_TRANSFER");
@@ -47,6 +53,29 @@ const ProductTransferList = () => {
       if (data?.deleteProductTransfer?.success) {
         showToast({ detail: "Transferencia eliminada.", severity: ToastSeverity.Success });
       }
+    } catch (error: any) {
+      showToast({ detail: error.message, severity: ToastSeverity.Error });
+    } finally {
+      dispatch(setIsBlocked(false));
+    }
+  };
+
+  const handleGeneratePDF = async (rowData: IProductTransfer) => {
+    try {
+      dispatch(setIsBlocked(true));
+      const [{ data: detailData }, { data: dataCompany }] = await Promise.all([
+        client.query({
+          query: LIST_PRODUCT_TRANSFER_DETAIL,
+          variables: { transferId: rowData._id },
+          fetchPolicy: "network-only",
+        }),
+        client.query({ query: DETAIL_COMPANY, fetchPolicy: "network-only" }),
+      ]);
+      await generateProductTransferPDF(
+        rowData,
+        detailData.listProductTransferDetail,
+        dataCompany.detailCompany
+      );
     } catch (error: any) {
       showToast({ detail: error.message, severity: ToastSeverity.Error });
     } finally {
@@ -109,6 +138,12 @@ const ProductTransferList = () => {
         onClick: () => confirmDelete(rowData._id),
       });
     }
+    actions.push({
+      label: "Imprimir transferencia",
+      icon: "pi pi-download",
+      severity: "warning",
+      onClick: () => handleGeneratePDF(rowData),
+    });
     return actions;
   };
 
@@ -185,7 +220,6 @@ const ProductTransferList = () => {
 
         {listProductTransfer?.map((item: IProductTransfer) => {
           const status = getStatus(item.status);
-          const isBorrador = item.status === orderStatus.BORRADOR;
           return (
             <div
               key={item._id}
@@ -212,11 +246,9 @@ const ProductTransferList = () => {
                 <span>{getDate(item.date)}</span>
                 <span>{item.created_by?.user_name}</span>
               </div>
-              {isBorrador && (canEdit || canDelete) && (
-                <div className="mt-2" onClick={(e) => e.stopPropagation()}>
-                  <RowActionButtons actions={buildTransferActions(item)} size="small" />
-                </div>
-              )}
+              <div className="mt-2" onClick={(e) => e.stopPropagation()}>
+                <RowActionButtons actions={buildTransferActions(item)} size="small" />
+              </div>
             </div>
           );
         })}

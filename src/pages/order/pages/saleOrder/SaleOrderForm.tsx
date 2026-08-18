@@ -9,11 +9,10 @@ import { Tag } from "primereact/tag";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { ActionMeta, SingleValue } from "react-select";
 import { canDoAny } from "../../../../casl/ability";
 import { useAbility } from "../../../../casl/AbilityContext";
+import CreatableAutoComplete from "../../../../components/creatableAutoComplete/CreatableAutoComplete";
 import LabelInput from "../../../../components/labelInput/LabelInput";
-import SelectInput from "../../../../components/SelectInput/SelectInput";
 import { CREATE_CLIENT } from "../../../../graphql/mutations/Client";
 import { UPDATE_COMPANY } from "../../../../graphql/mutations/Company";
 import {
@@ -21,7 +20,6 @@ import {
   CREATE_SALE_ORDER,
   UPDATE_SALE_ORDER_DISCOUNT,
 } from "../../../../graphql/mutations/SaleOrder";
-import { LIST_CLIENT } from "../../../../graphql/queries/Client";
 import { GENERATE_CODE } from "../../../../graphql/queries/CodeGenerator";
 import { DETAIL_COMPANY } from "../../../../graphql/queries/Company";
 import { FIND_CURRENT_CASH_REGISTER } from "../../../../graphql/queries/CashRegister";
@@ -69,7 +67,7 @@ const SaleOrderForm = () => {
     fetchPolicy: "network-only",
   });
 
-  const { listClientSelect } = useClientList();
+  const { listClientSelect, refetchListClient } = useClientList();
   const { listWarehouse: listWarehouseRaw } = useWarehouseList();
   const listWarehouse = listWarehouseRaw ?? [];
   const { currency } = useAuth();
@@ -126,9 +124,10 @@ const SaleOrderForm = () => {
   const [orderDiscountType, setOrderDiscountType] = useState<string>("NONE");
   const [orderDiscountValue, setOrderDiscountValue] = useState<number | null>(null);
 
-  const [createClient] = useMutation(CREATE_CLIENT, {
-    refetchQueries: [{ query: LIST_CLIENT }],
-  });
+  // Sin refetchQueries acá — mismo bug de select vacío ya encontrado en
+  // ProductForm.tsx/PurchaseOrderDetailForm.tsx/SaleOrderPOS.tsx. Se llama a
+  // refetchListClient directamente en onCreateClient.
+  const [createClient] = useMutation(CREATE_CLIENT);
 
   const { saleOrderInitialized, saleOrderData } = useSelector(
     (state: RootState) => state.saleOrderSlice
@@ -246,12 +245,9 @@ const SaleOrderForm = () => {
     }
   };
 
-  const handleClientChange = async (
-    event: SingleValue<IReactSelect>,
-    action: ActionMeta<IReactSelect>
-  ) => {
-    setSelectedClient(event);
-    setFieldValue(action.name || "", event ? event.value : "");
+  const handleClientChange = (value: IReactSelect | null) => {
+    setSelectedClient(value);
+    setFieldValue("client", value ? value.value : "");
   };
 
   const onCreateClient = async (inputValue: string) => {
@@ -278,6 +274,7 @@ const SaleOrderForm = () => {
         });
 
         setFieldValue("client", data.createClient._id);
+        await refetchListClient();
       }
     } catch (error: any) {
       showToast({ detail: error.message, severity: ToastSeverity.Error });
@@ -502,10 +499,10 @@ const SaleOrderForm = () => {
                 disabled={saleOrderInitialized}
               />
             )}
-            <SelectInput
+            <CreatableAutoComplete
               label="Cliente"
               name="client"
-              placeholder="Seleccionar cliente"
+              placeholder="Seleccionar o escribir cliente"
               mandatory
               options={listClientSelect}
               error={errors.client ? errors.client : ""}

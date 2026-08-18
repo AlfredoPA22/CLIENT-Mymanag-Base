@@ -4,15 +4,13 @@ import { Button } from "primereact/button";
 import { Card } from "primereact/card";
 import { FC, useState } from "react";
 import { useDispatch } from "react-redux";
-import { ActionMeta, SingleValue } from "react-select";
+import CreatableAutoComplete from "../../../../components/creatableAutoComplete/CreatableAutoComplete";
 import DropdownInput from "../../../../components/dropdownInput/DropdownInput";
-import SelectInput from "../../../../components/SelectInput/SelectInput";
 import { OrderDetailFormSkeleton } from "../../../../components/skeleton/OrderDetailFormSkeleton";
 import FieldTextInput from "../../../../components/textInput/FieldTextInput";
 import { CREATE_PURCHASE_ORDER_DETAIL } from "../../../../graphql/mutations/PurchaseOrderDetail";
 import { CREATE_WAREHOUSE } from "../../../../graphql/mutations/Warehouse";
 import { LIST_PURCHASE_ORDER_DETAIL } from "../../../../graphql/queries/PurchaseOrderDetail";
-import { LIST_WAREHOUSE } from "../../../../graphql/queries/Warehouse";
 import { useFormikForm } from "../../../../hooks/useFormikForm";
 import { setIsBlocked } from "../../../../redux/slices/blockUISlice";
 import { setPurchaseOrder } from "../../../../redux/slices/purchaseOrderSlice";
@@ -47,9 +45,14 @@ const PurchaseOrderDetailForm: FC<PurchaseOrderDetailFormProps> = ({
       ],
     }
   );
-  const [createWarehouse] = useMutation(CREATE_WAREHOUSE, {
-    refetchQueries: [{ query: LIST_WAREHOUSE }],
-  });
+  // Sin refetchQueries acá a propósito: `{query: LIST_WAREHOUSE}` refresca
+  // cualquier observer activo de esa query en toda la app por coincidencia de
+  // documento — si ese refetch quedaba en vuelo justo cuando este formulario
+  // se cierra y se reabre para el siguiente producto, dejaba el select de
+  // almacén vacío (mismo bug ya encontrado con categoría/marca en
+  // ProductForm.tsx). Se llama a refetchListWarehouse directamente sobre la
+  // query de ESTE formulario en vez de depender del matching implícito.
+  const [createWarehouse] = useMutation(CREATE_WAREHOUSE);
 
   const initialValues: IPurchaseOrderDetailInput = {
     product: "",
@@ -60,7 +63,7 @@ const PurchaseOrderDetailForm: FC<PurchaseOrderDetailFormProps> = ({
   };
 
   const { listProduct, loadingListProduct } = useProductList();
-  const { listWarehouseSelect } = useWarehouseList();
+  const { listWarehouseSelect, refetchListWarehouse } = useWarehouseList();
 
   const [selectedProduct, setSelectedProduct] = useState<IProduct | null>(null);
   const [selectedWarehouse, setSelectedWarehouse] =
@@ -91,12 +94,9 @@ const PurchaseOrderDetailForm: FC<PurchaseOrderDetailFormProps> = ({
     }, 0);
   };
 
-  const handleWarehouseChange = async (
-    event: SingleValue<IReactSelect>,
-    action: ActionMeta<IReactSelect>
-  ) => {
-    setSelectedWarehouse(event);
-    setFieldValue(action.name || "", event ? event.value : "");
+  const handleWarehouseChange = (value: IReactSelect | null) => {
+    setSelectedWarehouse(value);
+    setFieldValue("warehouse", value ? value.value : "");
   };
 
   const onCreateWarehouse = async (inputValue: string) => {
@@ -121,6 +121,7 @@ const PurchaseOrderDetailForm: FC<PurchaseOrderDetailFormProps> = ({
         });
 
         setFieldValue("warehouse", data.createWarehouse._id);
+        await refetchListWarehouse();
       }
     } catch (error: any) {
       showToast({ detail: error.message, severity: ToastSeverity.Error });
@@ -187,12 +188,12 @@ const PurchaseOrderDetailForm: FC<PurchaseOrderDetailFormProps> = ({
 
           {selectedProduct &&
             selectedProduct.stock_type === stockType.INDIVIDUAL && (
-              <SelectInput
+              <CreatableAutoComplete
                 key={`warehouse-${productFieldsKey}`}
                 className="2xl:w-[400px] md:col-span-2"
                 label="Almacén"
                 name="warehouse"
-                placeholder="Seleccionar almacén"
+                placeholder="Seleccionar o escribir almacén"
                 mandatory
                 options={listWarehouseSelect}
                 error={errors.warehouse ? errors.warehouse : ""}

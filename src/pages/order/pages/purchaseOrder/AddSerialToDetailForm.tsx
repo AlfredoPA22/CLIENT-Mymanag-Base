@@ -2,6 +2,7 @@ import { useMutation } from "@apollo/client";
 import { Button } from "primereact/button";
 import { FC, useRef, useState } from "react";
 import BarcodeScannerButton from "../../../../components/barcodeScanner/BarcodeScannerButton";
+import LabelInput from "../../../../components/labelInput/LabelInput";
 import FieldTextInput from "../../../../components/textInput/FieldTextInput";
 import { ADD_SERIAL_TO_PURCHASE_ORDER_DETAIL } from "../../../../graphql/mutations/PurchaseOrderDetail";
 import {
@@ -11,12 +12,10 @@ import {
 import { useFormikForm } from "../../../../hooks/useFormikForm";
 import { IAddSerialToPurchaseOrderDetailInput } from "../../../../utils/interfaces/PurchaseOrderDetail";
 import { schemaFormAddSerialToPurchaseOrderDetail } from "../../validations/FormAddSerialToPurchaseOrderDetailValidation";
-import SelectInput from "../../../../components/SelectInput/SelectInput";
+import CreatableAutoComplete from "../../../../components/creatableAutoComplete/CreatableAutoComplete";
 import useWarehouseList from "../../../product/hooks/useWarehouseList";
-import { ActionMeta, SingleValue } from "react-select";
 import { IReactSelect } from "../../../../utils/interfaces/Select";
 import { CREATE_WAREHOUSE } from "../../../../graphql/mutations/Warehouse";
-import { LIST_WAREHOUSE } from "../../../../graphql/queries/Warehouse";
 import { showToast } from "../../../../utils/toastUtils";
 import { ToastSeverity } from "../../../../utils/enums/toast.enum";
 import { useDispatch } from "react-redux";
@@ -31,7 +30,7 @@ const AddSerialToDetailForm: FC<AddSerialToDetailFormProps> = ({
   purchaseOrderId,
   purchaseOrderDetailId,
 }) => {
-  const { listWarehouseSelect } = useWarehouseList();
+  const { listWarehouseSelect, refetchListWarehouse } = useWarehouseList();
 
   const dispatch = useDispatch();
 
@@ -59,9 +58,10 @@ const AddSerialToDetailForm: FC<AddSerialToDetailFormProps> = ({
       ],
     }
   );
-  const [createWarehouse] = useMutation(CREATE_WAREHOUSE, {
-    refetchQueries: [{ query: LIST_WAREHOUSE }],
-  });
+  // Sin refetchQueries acá — mismo motivo que en PurchaseOrderDetailForm.tsx:
+  // refresca cualquier observer de LIST_WAREHOUSE en toda la app, y si queda
+  // en vuelo justo al cerrar/reabrir este formulario deja el select vacío.
+  const [createWarehouse] = useMutation(CREATE_WAREHOUSE);
 
   const initialValues: IAddSerialToPurchaseOrderDetailInput = {
     serial: "",
@@ -75,12 +75,9 @@ const AddSerialToDetailForm: FC<AddSerialToDetailFormProps> = ({
     serialInputRef.current?.focus();
   };
 
-  const handleWarehouseChange = async (
-    event: SingleValue<IReactSelect>,
-    action: ActionMeta<IReactSelect>
-  ) => {
-    setSelectedWarehouse(event);
-    setFieldValue(action.name || "", event ? event.value : "");
+  const handleWarehouseChange = (value: IReactSelect | null) => {
+    setSelectedWarehouse(value);
+    setFieldValue("warehouse", value ? value.value : "");
   };
 
   const onCreateWarehouse = async (inputValue: string) => {
@@ -105,6 +102,7 @@ const AddSerialToDetailForm: FC<AddSerialToDetailFormProps> = ({
         });
 
         setFieldValue("warehouse", data.createWarehouse._id);
+        await refetchListWarehouse();
       }
     } catch (error: any) {
       showToast({ detail: error.message, severity: ToastSeverity.Error });
@@ -134,10 +132,10 @@ const AddSerialToDetailForm: FC<AddSerialToDetailFormProps> = ({
       className="flex flex-col md:grid md:grid-cols-5 gap-2 mb-2"
     >
       <div className="col-span-2">
-        <SelectInput
+        <CreatableAutoComplete
           label="Almacén"
           name="warehouse"
-          placeholder="Seleccionar almacén"
+          placeholder="Seleccionar o escribir almacén"
           mandatory
           options={listWarehouseSelect}
           error={errors.warehouse ? errors.warehouse : ""}
@@ -163,9 +161,11 @@ const AddSerialToDetailForm: FC<AddSerialToDetailFormProps> = ({
         {/* Misma estructura invisible que FieldTextInput (label + hueco de
             error) para que el botón quede a la altura del input, no
             centrado/pegado contra toda la columna (que es más alta por la
-            label y la línea de error). */}
+            label y la línea de error). Se reusa LabelInput con las mismas
+            props (label + mandatory) en vez de un texto a mano, para que la
+            altura calce exacto con la del input real. */}
         <div className="flex flex-col p-inputtext-sm">
-          <span className="mb-1 invisible">Serial</span>
+          <LabelInput label="Serial" mandatory className="invisible" />
           <BarcodeScannerButton onScan={(value) => setFieldValue("serial", value)} />
           <span className="text-xs block h-5" />
         </div>
