@@ -100,7 +100,7 @@ const CartPanel = ({ cart, total, currency, convertPrice, convertToBase, onIncre
   return (
     <div className="flex flex-col gap-3 h-full">
       <h2 className="text-sm font-bold text-slate-800">Carrito ({cart.length})</h2>
-      <div className="flex-1 overflow-y-auto flex flex-col gap-2">
+      <div className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-2">
         {cart.length === 0 && (
           <p className="text-center text-gray-400 text-sm py-8">Todavía no agregaste productos.</p>
         )}
@@ -985,7 +985,7 @@ const SaleOrderPOS = () => {
       </div>
 
       {/* ── Carrito: sidebar fija en desktop ────────────────────── */}
-      <div className="hidden lg:block w-80 shrink-0 bg-white border border-gray-200 rounded-xl shadow-sm p-4 sticky top-4 self-start max-h-[calc(100vh-140px)]">
+      <div className="hidden lg:block w-80 shrink-0 bg-white border border-gray-200 rounded-xl shadow-sm p-4 sticky top-4 self-start h-[calc(100vh-140px)] overflow-hidden">
         <CartPanel
           cart={cart}
           total={cartTotal}
