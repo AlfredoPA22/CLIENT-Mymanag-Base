@@ -2,6 +2,7 @@ import { useApolloClient, useLazyQuery, useMutation, useQuery } from "@apollo/cl
 import { Button } from "primereact/button";
 import { Dialog } from "primereact/dialog";
 import { InputNumber } from "primereact/inputnumber";
+import { InputText } from "primereact/inputtext";
 import { InputTextarea } from "primereact/inputtextarea";
 import { Tag } from "primereact/tag";
 import { FC, useEffect, useState } from "react";
@@ -26,7 +27,7 @@ import {
   FIND_SALE_ORDER_TO_PDF,
   LIST_SALE_ORDER,
 } from "../../../../graphql/queries/SaleOrder";
-import { LIST_SALE_ORDER_DETAIL } from "../../../../graphql/queries/SaleOrderDetail";
+import { LIST_SALE_ORDER_DETAIL, LIST_SERIAL_BY_SALE_ORDER_DETAIL } from "../../../../graphql/queries/SaleOrderDetail";
 import { LIST_SALE_PAYMENT_BY_SALE_ORDER } from "../../../../graphql/queries/SalePayment";
 import { FIND_SALE_RETURN_BY_SALE_ORDER, LIST_SALE_RETURN, LIST_SALE_RETURN_DETAIL } from "../../../../graphql/queries/SaleReturn";
 import { setIsBlocked } from "../../../../redux/slices/blockUISlice";
@@ -44,6 +45,8 @@ import QrPaymentModal from "../../../../components/qrPayment/QrPaymentModal";
 import { getSocket } from "../../../../utils/socket";
 import { generatePDF } from "../../utils/generateSaleOrderPDF";
 import GeneralDiscountEditor from "../shared/GeneralDiscountEditor";
+import { stockType } from "../../../../utils/enums/stockType.enum";
+import { productSerialStatus } from "../../../../utils/enums/productSerialStatus";
 
 interface SaleOrderDetailProps {
   saleOrderId: string;
@@ -54,7 +57,105 @@ interface SaleOrderDetailProps {
 interface ReturnItem {
   saleOrderDetailId: string;
   quantity: number;
+  serials?: string[];
 }
+
+// Solo se muestra cuando la devolución de una línea serializada es PARCIAL
+// (menos que lo vendido en esa línea) — el sistema no puede adivinar cuál de
+// las varias unidades vendidas es la que el cliente devolvió físicamente, así
+// que hay que elegir exactamente esa cantidad de seriales puntuales. Si se
+// devuelve la línea completa no hace falta este picker (se liberan todos).
+interface SerialReturnPickerProps {
+  saleOrderDetailId: string;
+  quantity: number;
+  selected: string[];
+  onChange: (serials: string[]) => void;
+}
+
+const SerialReturnPicker: FC<SerialReturnPickerProps> = ({ saleOrderDetailId, quantity, selected, onChange }) => {
+  const { data, loading, error } = useQuery(LIST_SERIAL_BY_SALE_ORDER_DETAIL, {
+    variables: { saleOrderDetailId },
+    fetchPolicy: "network-only",
+  });
+  // Filtro de texto — sin esto, una línea con 50-100+ seriales (algo real en
+  // ventas grandes) obliga a scrollear un muro de botones para encontrar uno
+  // puntual en vez de simplemente escribir parte del número.
+  const [filter, setFilter] = useState("");
+
+  const serials: string[] = (data?.listProductSerialBySaleOrder ?? [])
+    .filter((s: any) => s.status === productSerialStatus.VENDIDO)
+    .map((s: any) => s.serial);
+
+  const visibleSerials = filter.trim()
+    ? serials.filter((s) => s.toLowerCase().includes(filter.trim().toLowerCase()))
+    : serials;
+
+  const toggle = (serial: string) => {
+    if (selected.includes(serial)) {
+      onChange(selected.filter((s) => s !== serial));
+    } else if (selected.length < quantity) {
+      onChange([...selected, serial]);
+    }
+  };
+
+  if (loading) {
+    return <p className="text-xs text-gray-400 mt-1">Cargando seriales vendidos...</p>;
+  }
+
+  if (error) {
+    return (
+      <p className="text-xs text-red-600 mt-1">
+        No se pudieron cargar los seriales de esta línea: {error.message}
+      </p>
+    );
+  }
+
+  if (serials.length === 0) {
+    return (
+      <p className="text-xs text-red-600 mt-1">
+        No se encontró ningún serial vendido para esta línea — no se puede hacer una devolución parcial sin elegir cuál. Probá devolviendo la línea completa.
+      </p>
+    );
+  }
+
+  return (
+    <div className="mt-1 flex flex-col gap-1">
+      <p className={`text-xs ${selected.length === quantity ? "text-green-600" : "text-amber-600"}`}>
+        Elegí cuál(es) serial(es) devolvió el cliente ({selected.length}/{quantity}):
+      </p>
+      {serials.length > 12 && (
+        <InputText
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+          placeholder={`Buscar entre ${serials.length} seriales...`}
+          className="text-xs p-1.5"
+        />
+      )}
+      <div className="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto p-0.5">
+        {visibleSerials.map((serial) => {
+          const isSelected = selected.includes(serial);
+          return (
+            <button
+              type="button"
+              key={serial}
+              onClick={() => toggle(serial)}
+              className={`text-xs font-mono px-2 py-1 rounded border transition-colors ${
+                isSelected
+                  ? "bg-orange-500 text-white border-orange-500"
+                  : "bg-white text-gray-600 border-gray-300 hover:border-orange-400"
+              }`}
+            >
+              {serial}
+            </button>
+          );
+        })}
+        {visibleSerials.length === 0 && (
+          <p className="text-xs text-gray-400">Ningún serial coincide con "{filter}".</p>
+        )}
+      </div>
+    </div>
+  );
+};
 
 const SaleOrderDetail: FC<SaleOrderDetailProps> = ({ saleOrderId, viewCurrency, onViewCurrencyChange }) => {
   const { data, loading: loadingSaleOrder, error: errorSaleOrder, refetch: refetchSaleOrder } = useQuery(FIND_SALE_ORDER, {
@@ -85,6 +186,9 @@ const SaleOrderDetail: FC<SaleOrderDetailProps> = ({ saleOrderId, viewCurrency, 
   const [showApproveDialog, setShowApproveDialog] = useState(false);
   const [returnReason, setReturnReason] = useState("");
   const [returnQuantities, setReturnQuantities] = useState<Record<string, number>>({});
+  // Seriales elegidos específicamente para devolución PARCIAL de una línea
+  // serializada — solo se usa/valida cuando esa línea no se devuelve completa.
+  const [returnSerials, setReturnSerials] = useState<Record<string, string[]>>({});
 
   const [orderDiscountType, setOrderDiscountType] = useState<string>("NONE");
   const [orderDiscountValue, setOrderDiscountValue] = useState<number | null>(null);
@@ -171,6 +275,7 @@ const SaleOrderDetail: FC<SaleOrderDetailProps> = ({ saleOrderId, viewCurrency, 
   const handleOpenDialog = () => {
     setReturnReason("");
     setReturnQuantities({});
+    setReturnSerials({});
     setShowReturnDialog(true);
     loadDetails({ variables: { saleOrderId } });
     if (existingReturn) {
@@ -182,6 +287,7 @@ const SaleOrderDetail: FC<SaleOrderDetailProps> = ({ saleOrderId, viewCurrency, 
     setShowReturnDialog(false);
     setReturnReason("");
     setReturnQuantities({});
+    setReturnSerials({});
   };
 
   const [updateSaleOrderDiscount] = useMutation(UPDATE_SALE_ORDER_DISCOUNT, {
@@ -266,7 +372,16 @@ const SaleOrderDetail: FC<SaleOrderDetailProps> = ({ saleOrderId, viewCurrency, 
   });
 
   const [createSaleReturn] = useMutation(CREATE_SALE_RETURN, {
-    refetchQueries: [{ query: LIST_SALE_ORDER }, { query: LIST_PRODUCT }, { query: LIST_SALE_RETURN }],
+    // La tabla "Productos de la venta" (SaleOrderDetailList) trae sus datos
+    // con esta misma query — sin refrescarla acá, seguía mostrando la
+    // cantidad/subtotal de antes de la devolución hasta recargar la página,
+    // aunque el total de la nota (FIND_SALE_ORDER) sí se actualizaba solo.
+    refetchQueries: [
+      { query: LIST_SALE_ORDER },
+      { query: LIST_PRODUCT },
+      { query: LIST_SALE_RETURN },
+      { query: LIST_SALE_ORDER_DETAIL, variables: { saleOrderId } },
+    ],
   });
 
   const handleCreateReturn = async () => {
@@ -275,14 +390,39 @@ const SaleOrderDetail: FC<SaleOrderDetailProps> = ({ saleOrderId, viewCurrency, 
       return;
     }
 
-    const items: ReturnItem[] = Object.entries(returnQuantities)
-      .filter(([, qty]) => qty > 0)
-      .map(([saleOrderDetailId, quantity]) => ({ saleOrderDetailId, quantity }));
+    const selectedEntries = Object.entries(returnQuantities).filter(([, qty]) => qty > 0);
 
-    if (items.length === 0) {
+    if (selectedEntries.length === 0) {
       showToast({ detail: "Selecciona al menos un producto con cantidad mayor a 0", severity: ToastSeverity.Warn });
       return;
     }
+
+    // Para cada línea serializada devuelta PARCIALMENTE, hay que haber
+    // terminado de elegir los seriales exactos antes de poder enviar —
+    // si no, el backend no sabría cuál unidad física fue la devuelta.
+    for (const [saleOrderDetailId, quantity] of selectedEntries) {
+      const detail = details.find((d: any) => d._id === saleOrderDetailId);
+      const isSerialized = detail?.product?.stock_type === stockType.SERIALIZADO;
+      const isPartial = isSerialized && detail && quantity < detail.quantity;
+      if (isPartial && (returnSerials[saleOrderDetailId]?.length ?? 0) !== quantity) {
+        showToast({
+          detail: `Elegí los ${quantity} serial(es) devueltos de "${detail.product?.name ?? "este producto"}" antes de confirmar.`,
+          severity: ToastSeverity.Warn,
+        });
+        return;
+      }
+    }
+
+    const items: ReturnItem[] = selectedEntries.map(([saleOrderDetailId, quantity]) => {
+      const detail = details.find((d: any) => d._id === saleOrderDetailId);
+      const isSerialized = detail?.product?.stock_type === stockType.SERIALIZADO;
+      const isPartial = isSerialized && detail && quantity < detail.quantity;
+      return {
+        saleOrderDetailId,
+        quantity,
+        ...(isPartial ? { serials: returnSerials[saleOrderDetailId] } : {}),
+      };
+    });
 
     try {
       dispatch(setIsBlocked(true));
@@ -337,6 +477,20 @@ const SaleOrderDetail: FC<SaleOrderDetailProps> = ({ saleOrderId, viewCurrency, 
 
   const hasSelectedItems = Object.values(returnQuantities).some((qty) => qty > 0);
 
+  // Si alguna línea serializada quedó con una devolución parcial y todavía
+  // no se terminó de elegir sus seriales puntuales, no tiene sentido dejar
+  // avanzar — antes se podía tocar "Confirmar" y recién ahí se enteraba por
+  // un toast, en vez de que el botón quede bloqueado desde el principio.
+  const hasIncompleteSerialSelection = Object.entries(returnQuantities).some(
+    ([saleOrderDetailId, quantity]) => {
+      if (quantity <= 0) return false;
+      const detail = details.find((d: any) => d._id === saleOrderDetailId);
+      const isSerialized = detail?.product?.stock_type === stockType.SERIALIZADO;
+      const isPartial = isSerialized && detail && quantity < detail.quantity;
+      return isPartial && (returnSerials[saleOrderDetailId]?.length ?? 0) !== quantity;
+    }
+  );
+
   // Moneda de la nota: la nota siempre se guarda/muestra por defecto en la
   // moneda en la que realmente se vendió.
   const noteCurrency = data?.findSaleOrder.currency ?? currency;
@@ -367,6 +521,9 @@ const SaleOrderDetail: FC<SaleOrderDetailProps> = ({ saleOrderId, viewCurrency, 
     const all: Record<string, number> = {};
     details.forEach((d: any) => { all[d._id] = d.quantity; });
     setReturnQuantities(all);
+    // "Devolver todo" deja cada línea completa — nunca queda una devolución
+    // parcial, así que no hace falta ningún serial elegido.
+    setReturnSerials({});
   };
   // Subtotal de productos = total actual + descuento general ya aplicado (viene de DB)
   const sumSubtotals = parseFloat(((data?.findSaleOrder.total ?? 0) + (data?.findSaleOrder.discount_amount ?? 0)).toFixed(2));
@@ -770,7 +927,11 @@ const SaleOrderDetail: FC<SaleOrderDetailProps> = ({ saleOrderId, viewCurrency, 
                   icon="pi pi-replay"
                   severity="warning"
                   onClick={handleCreateReturn}
-                  disabled={!hasSelectedItems || (!existingReturn && !returnReason.trim())}
+                  disabled={
+                    !hasSelectedItems ||
+                    (!existingReturn && !returnReason.trim()) ||
+                    hasIncompleteSerialSelection
+                  }
                 />
               )}
             </PermissionGuard>
@@ -870,37 +1031,56 @@ const SaleOrderDetail: FC<SaleOrderDetailProps> = ({ saleOrderId, viewCurrency, 
                 </div>
               ) : (
                 <div className="flex flex-col divide-y divide-gray-200 border border-gray-200 rounded-lg overflow-hidden">
-                  {details.map((detail: any, idx: number) => (
-                    <div
-                      key={detail._id}
-                      className={`flex items-center justify-between gap-3 px-3 py-2 ${idx % 2 === 0 ? "bg-white" : "bg-gray-50"}`}
-                    >
-                      <div className="min-w-0 flex-1">
-                        <p className="font-medium text-gray-700 text-sm break-words leading-snug">
-                          {detail.product?.name ?? "—"}
-                        </p>
-                        <p className="text-xs text-gray-400 mt-0.5">Disponible: {detail.quantity}</p>
+                  {details.map((detail: any, idx: number) => {
+                    const qty = returnQuantities[detail._id] ?? 0;
+                    const isSerialized = detail.product?.stock_type === stockType.SERIALIZADO;
+                    const isPartialSerialReturn = isSerialized && qty > 0 && qty < detail.quantity;
+                    return (
+                      <div
+                        key={detail._id}
+                        className={`flex flex-col gap-1 px-3 py-2 ${idx % 2 === 0 ? "bg-white" : "bg-gray-50"}`}
+                      >
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="min-w-0 flex-1">
+                            <p className="font-medium text-gray-700 text-sm break-words leading-snug">
+                              {detail.product?.name ?? "—"}
+                            </p>
+                            <p className="text-xs text-gray-400 mt-0.5">Disponible: {detail.quantity}</p>
+                          </div>
+                          <InputNumber
+                            value={qty}
+                            onValueChange={(e) => {
+                              const nextQty = Math.min(Math.max(e.value ?? 0, 0), detail.quantity);
+                              setReturnQuantities((prev) => ({ ...prev, [detail._id]: nextQty }));
+                              // Cualquier cambio de cantidad invalida la selección de
+                              // seriales anterior (pudo dejar de aplicar, o cambiar
+                              // cuántos hacen falta) — se limpia y se vuelve a elegir.
+                              setReturnSerials((prev) => ({ ...prev, [detail._id]: [] }));
+                            }}
+                            min={0}
+                            max={detail.quantity}
+                            showButtons
+                            buttonLayout="horizontal"
+                            decrementButtonClassName="p-button-secondary p-button-sm"
+                            incrementButtonClassName="p-button-secondary p-button-sm"
+                            incrementButtonIcon="pi pi-plus"
+                            decrementButtonIcon="pi pi-minus"
+                            inputStyle={{ width: "2.5rem", textAlign: "center", fontSize: "0.85rem" }}
+                          />
+                        </div>
+                        {isPartialSerialReturn && (
+                          <SerialReturnPicker
+                            saleOrderDetailId={detail._id}
+                            quantity={qty}
+                            selected={returnSerials[detail._id] ?? []}
+                            onChange={(serials) =>
+                              setReturnSerials((prev) => ({ ...prev, [detail._id]: serials }))
+                            }
+                          />
+                        )}
                       </div>
-                      <InputNumber
-                        value={returnQuantities[detail._id] ?? 0}
-                        onValueChange={(e) =>
-                          setReturnQuantities((prev) => ({
-                            ...prev,
-                            [detail._id]: Math.min(Math.max(e.value ?? 0, 0), detail.quantity),
-                          }))
-                        }
-                        min={0}
-                        max={detail.quantity}
-                        showButtons
-                        buttonLayout="horizontal"
-                        decrementButtonClassName="p-button-secondary p-button-sm"
-                        incrementButtonClassName="p-button-secondary p-button-sm"
-                        incrementButtonIcon="pi pi-plus"
-                        decrementButtonIcon="pi pi-minus"
-                        inputStyle={{ width: "2.5rem", textAlign: "center", fontSize: "0.85rem" }}
-                      />
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
 
