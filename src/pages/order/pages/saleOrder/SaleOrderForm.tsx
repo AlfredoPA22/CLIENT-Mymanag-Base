@@ -79,7 +79,7 @@ const SaleOrderForm = () => {
   const { data: companyData, refetch: refetchCompany } = useQuery(DETAIL_COMPANY);
   const company = companyData?.detailCompany;
 
-  const { data: cashRegisterData } = useQuery(FIND_CURRENT_CASH_REGISTER);
+  const { data: cashRegisterData, loading: loadingCashRegister } = useQuery(FIND_CURRENT_CASH_REGISTER);
   const hasOpenCashRegister = !!cashRegisterData?.findCurrentCashRegister;
 
   const [selectedClient, setSelectedClient] = useState<IReactSelect | null>(
@@ -346,7 +346,8 @@ const SaleOrderForm = () => {
   // aviso: no bloquea la venta, para no frenar a nadie a mitad de un cobro.
   const isCashSale =
     values.payment_method === "Contado" && values.contado_payment_method === "Efectivo";
-  const showNoCashRegisterWarning = isCashSale && !hasOpenCashRegister && !saleOrderInitialized;
+  const showNoCashRegisterWarning =
+    isCashSale && !loadingCashRegister && !hasOpenCashRegister && !saleOrderInitialized;
 
   return (
     <form

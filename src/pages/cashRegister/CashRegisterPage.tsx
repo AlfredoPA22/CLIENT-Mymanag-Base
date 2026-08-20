@@ -122,9 +122,9 @@ const CashRegisterPage = () => {
   const { data: listData, loading: loadingList, refetch: refetchList } =
     useQuery(LIST_CASH_REGISTER, { fetchPolicy: "network-only" });
 
-  const [openCashRegister] = useMutation(OPEN_CASH_REGISTER);
-  const [closeCashRegister] = useMutation(CLOSE_CASH_REGISTER);
-  const [addCashMovement] = useMutation(ADD_CASH_MOVEMENT);
+  const [openCashRegister, { loading: opening }] = useMutation(OPEN_CASH_REGISTER);
+  const [closeCashRegister, { loading: closing }] = useMutation(CLOSE_CASH_REGISTER);
+  const [addCashMovement, { loading: addingMovement }] = useMutation(ADD_CASH_MOVEMENT);
 
   const current: ICashRegister | null = currentData?.findCurrentCashRegister ?? null;
   const history: ICashRegister[] = listData?.listCashRegister ?? [];
@@ -135,6 +135,11 @@ const CashRegisterPage = () => {
   };
 
   const handleOpenCashRegister = async () => {
+    // Guarda extra además de deshabilitar el botón: un doble click puede
+    // disparar el segundo onClick antes de que React vuelva a renderizar
+    // con el botón ya deshabilitado — sin esto, un delay de red dejaba
+    // crear dos cajas abiertas con la misma apertura.
+    if (opening) return;
     if (openingAmount === null || openingAmount < 0) {
       showToast({ detail: "Ingresa un monto de apertura válido", severity: ToastSeverity.Warn });
       return;
@@ -166,6 +171,7 @@ const CashRegisterPage = () => {
   };
 
   const handleCloseCashRegister = async () => {
+    if (closing) return;
     if (!current?._id) return;
     if (closingAmount === null || closingAmount < 0) {
       showToast({ detail: "Ingresa un monto de cierre válido", severity: ToastSeverity.Warn });
@@ -197,6 +203,7 @@ const CashRegisterPage = () => {
   };
 
   const handleAddMovement = async () => {
+    if (addingMovement) return;
     if (!current?._id) return;
     if (movementAmount === null || movementAmount <= 0) {
       showToast({ detail: "Ingresa un monto válido", severity: ToastSeverity.Warn });
@@ -451,8 +458,8 @@ const CashRegisterPage = () => {
         breakpoints={{ "640px": "95vw" }}
         footer={
           <div className="flex justify-end gap-2 pt-2">
-            <Button label="Cancelar" severity="secondary" outlined onClick={() => setShowOpenDialog(false)} />
-            <Button label="Abrir caja" icon="pi pi-check" onClick={handleOpenCashRegister} />
+            <Button label="Cancelar" severity="secondary" outlined disabled={opening} onClick={() => setShowOpenDialog(false)} />
+            <Button label="Abrir caja" icon="pi pi-check" loading={opening} disabled={opening} onClick={handleOpenCashRegister} />
           </div>
         }
       >
@@ -504,8 +511,8 @@ const CashRegisterPage = () => {
         breakpoints={{ "640px": "95vw" }}
         footer={
           <div className="flex justify-end gap-2 pt-2">
-            <Button label="Cancelar" severity="secondary" outlined onClick={() => setShowCloseDialog(false)} />
-            <Button label="Cerrar caja" icon="pi pi-check" severity="danger" onClick={handleCloseCashRegister} />
+            <Button label="Cancelar" severity="secondary" outlined disabled={closing} onClick={() => setShowCloseDialog(false)} />
+            <Button label="Cerrar caja" icon="pi pi-check" severity="danger" loading={closing} disabled={closing} onClick={handleCloseCashRegister} />
           </div>
         }
       >
@@ -573,8 +580,8 @@ const CashRegisterPage = () => {
         breakpoints={{ "640px": "95vw" }}
         footer={
           <div className="flex justify-end gap-2 pt-2">
-            <Button label="Cerrar" severity="secondary" outlined onClick={() => setShowMovementsDialog(false)} />
-            <Button label="Agregar" icon="pi pi-check" onClick={handleAddMovement} />
+            <Button label="Cerrar" severity="secondary" outlined disabled={addingMovement} onClick={() => setShowMovementsDialog(false)} />
+            <Button label="Agregar" icon="pi pi-check" loading={addingMovement} disabled={addingMovement} onClick={handleAddMovement} />
           </div>
         }
       >
